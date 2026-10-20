@@ -1,0 +1,41 @@
+{
+  "name": "@melodesk/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Melodesk desktop app (Tauri shell + React UI)",
+  "type": "module",
+  "scripts": {
+    "dev:web": "vite",
+    "build:web": "vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@melodesk/adapter": "workspace:*",
+    "@melodesk/bridge": "workspace:*",
+    "@melodesk/ui": "workspace:*",
+    "@tanstack/react-query": "5.104.5",
+    "@tauri-apps/api": "2.12.4",
+    "@tauri-apps/plugin-sql": "2.6.0",
+    "framer-motion": "14.4.0",
+    "lucide-react": "1.60.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "zod": "4.6.7",
+    "zustand": "5.0.15"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.3.3",
+    "@tauri-apps/cli": "2.12.3",
+    "@types/node": "26.6.5",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "@vitejs/plugin-react": "6.1.2",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.4",
+    "vitest": "5.0.5"
+  }
+}

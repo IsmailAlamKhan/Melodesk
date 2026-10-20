@@ -1,0 +1,22 @@
+name: Bug report
+description: Something doesn't work
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Melodesk version and OS
+      placeholder: 0.1.0 on macOS 15.3
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Include the health banner text (e.g. `player-element-missing`) if one was shown.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce

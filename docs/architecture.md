@@ -1,0 +1,71 @@
+# Architecture
+
+## The one idea
+
+Melodesk never touches audio, auth, or ads. The official YouTube Music web app runs in a
+webview window exactly as it would in a browser. Our UI lives in a second window and talks
+to the player through a small bridge. If you remember one diagram, remember this one:
+
+```
+┌─────────────────────────────┐        typed IPC        ┌──────────────────────────────┐
+│  main window (our UI)       │ ──player_command──────▶ │  player window                │
+│  React + Zustand            │                         │  https://music.youtube.com    │
+│  validates every event      │ ◀──bridge_emit──────── │  + injected bridge script     │
+│  with Zod                   │   (opaque JSON)         │  (reads player API, DOM,      │
+└─────────────────────────────┘                         │   MediaSession; no cookies)   │
+              ▲                                          └──────────────────────────────┘
+              │ emit_to("main", "player:event")                         ▲
+              │                                                         │ eval(dispatch(cmd))
+        ┌─────┴─────────────────────────────────────────────────────────┴──────┐
+        │  Rust (apps/desktop/src-tauri): windows, tray, media keys, IPC        │
+        │  serde-validates commands; forwards events without inspecting them    │
+        └───────────────────────────────────────────────────────────────────────┘
+```
+
+## Trust model
+
+| Party                                    | Trusted? | May call                                           |
+| ---------------------------------------- | -------- | -------------------------------------------------- |
+| main window (our React app)              | yes      | `player_command`, `player_set_visible`, SQL plugin |
+| player window (Google's JS + our bridge) | **no**   | `bridge_emit` only                                 |
+| Rust shell                               | yes      | everything                                         |
+
+- Capabilities (`apps/desktop/src-tauri/capabilities/*.json`) enforce the table above. App
+  commands are registered with `tauri_build::AppManifest::commands` so they are deny-by-default.
+- `bridge_emit` checks the calling window label, bounds the payload size, and forwards the
+  JSON to the main window **without parsing it**. The UI validates with `BridgeEventSchema`
+  (Zod, strict) and counts rejections; too many flips the health banner to "degraded".
+- `player_command` is a serde `enum` with `deny_unknown_fields`, then range-checked, then
+  serialised back to JSON before `eval`. The bridge's `dispatch` is a frozen, non-configurable
+  global, so page scripts cannot replace it.
+- The bridge script runs on every document in the player webview, including Google's sign-in
+  pages. Its first line exits unless the host is exactly `music.youtube.com` and it is the top
+  frame. It never reads forms, cookies, or storage.
+- The main window has a strict CSP (`default-src 'self'`); only artwork hosts are allowed for
+  images. The player window has whatever CSP YouTube sends.
+
+## Packages
+
+- **packages/bridge** – `protocol.ts` (Zod schemas + types, shared with the UI) and `inject/`
+  (built to a single 5 kB IIFE embedded in the Rust binary via `include_str!`). Selectors are
+  versioned (`selectors.v1.ts`).
+- **packages/adapter** – parsers for YouTube's data (home, search, library …). Versioned,
+  fixture-tested in CI. The only place that knows YouTube's response shapes.
+- **packages/ui** – design tokens (`tokens.css`) and React components.
+- **packages/plugins** – plugin SDK (manifest, permissions) and first-party plugins.
+- **apps/desktop** – the Tauri shell and the React application that composes the above.
+
+## Why a second window instead of a child webview
+
+Tauri 2 supports multiple webviews in one window only behind the `unstable` feature. A
+separate hidden window is stable on all three platforms, survives Tauri upgrades, and gives us
+a natural "show the real site" escape hatch for sign-in and for anything we haven't
+re-implemented yet. Revisit when multi-webview stabilises.
+
+## Known risks
+
+- Google may refuse sign-in in a webview it detects as embedded. We set a mainstream user agent
+  on the player window; if that stops working, the fallback is unclear and the project should
+  stop and reassess rather than reach for workarounds that violate the constraints.
+- Idle memory: the YouTube Music web app alone can use 150–300 MB. Measure before promising.
+- YouTube changes its markup often. Health checks surface it; versioned selectors contain it.

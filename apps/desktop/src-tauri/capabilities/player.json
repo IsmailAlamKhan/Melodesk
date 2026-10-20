@@ -1,0 +1,10 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "player",
+  "description": "The music.youtube.com webview. Untrusted: it may only push bridge events to the UI.",
+  "windows": ["player"],
+  "remote": {
+    "urls": ["https://music.youtube.com/*"]
+  },
+  "permissions": ["allow-bridge-emit"]
+}

@@ -1,0 +1,33 @@
+{
+  "name": "melodesk-monorepo",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Melodesk — an open-source native desktop client for YouTube Music (not affiliated with Google or YouTube)",
+  "license": "MIT",
+  "packageManager": "pnpm@10.29.3",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @melodesk/desktop tauri dev",
+    "build": "pnpm --filter @melodesk/desktop tauri build",
+    "build:bridge": "pnpm --filter @melodesk/bridge build",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "test": "pnpm -r --parallel test",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "clippy": "cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --all-targets -- -D warnings",
+    "fmt:rust": "rustfmt --edition 2021 --check apps/desktop/src-tauri/src/*.rs apps/desktop/src-tauri/build.rs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.13.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "prettier": "3.9.10",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "5.0.5"
+  }
+}

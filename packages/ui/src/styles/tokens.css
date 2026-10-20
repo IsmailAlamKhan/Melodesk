@@ -1,0 +1,52 @@
+/* Design tokens. 8-pt grid, calm content-first palette, platform fonts. */
+@theme {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text', 'Segoe UI',
+    system-ui, sans-serif;
+  --font-display:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI Variable Display', 'Segoe UI',
+    system-ui, sans-serif;
+
+  --color-bg: oklch(0.145 0.004 260);
+  --color-bg-elevated: oklch(0.19 0.005 260);
+  --color-bg-overlay: oklch(0.23 0.006 260);
+  --color-fg: oklch(0.96 0.003 260);
+  --color-fg-muted: oklch(0.7 0.01 260);
+  --color-fg-subtle: oklch(0.52 0.01 260);
+  --color-border: oklch(0.3 0.006 260);
+  --color-accent: oklch(0.72 0.17 25);
+  --color-accent-fg: oklch(0.15 0.02 25);
+  --color-danger: oklch(0.68 0.2 25);
+  --color-warning: oklch(0.8 0.15 80);
+  --color-success: oklch(0.75 0.15 150);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 250ms;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --color-bg: oklch(0.985 0.002 260);
+    --color-bg-elevated: oklch(1 0 0);
+    --color-bg-overlay: oklch(0.95 0.003 260);
+    --color-fg: oklch(0.2 0.005 260);
+    --color-fg-muted: oklch(0.45 0.01 260);
+    --color-fg-subtle: oklch(0.6 0.01 260);
+    --color-border: oklch(0.88 0.005 260);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}
