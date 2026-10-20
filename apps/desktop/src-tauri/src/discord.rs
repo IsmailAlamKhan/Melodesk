@@ -7,10 +7,9 @@ use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 use serde::Deserialize;
 use tauri::State;
 
-const CLIENT_ID: &str = "1430000000000000000";
-
 #[derive(Default)]
-pub struct DiscordState(pub Mutex<Option<DiscordIpcClient>>);
+/// The connected client and the application id it was created with.
+pub struct DiscordState(pub Mutex<Option<(String, DiscordIpcClient)>>);
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -25,26 +24,41 @@ pub struct Activity {
     pub button_url: Option<String>,
 }
 
-fn connect(slot: &mut Option<DiscordIpcClient>) -> Result<(), String> {
-    if slot.is_some() {
-        return Ok(());
+/// Discord application ids are numeric snowflakes (17 to 20 digits).
+fn valid_client_id(id: &str) -> bool {
+    (17..=20).contains(&id.len()) && id.bytes().all(|b| b.is_ascii_digit())
+}
+
+fn connect(slot: &mut Option<(String, DiscordIpcClient)>, client_id: &str) -> Result<(), String> {
+    if !valid_client_id(client_id) {
+        return Err("Enter your Discord application ID in the plugin settings".into());
     }
-    let mut client = DiscordIpcClient::new(CLIENT_ID);
+    if let Some((current, _)) = slot.as_ref() {
+        if current == client_id {
+            return Ok(());
+        }
+    }
+    // A different id (or none yet): drop any old connection and open a new one.
+    if let Some((_, mut old)) = slot.take() {
+        let _ = old.close();
+    }
+    let mut client = DiscordIpcClient::new(client_id);
     client
         .connect()
         .map_err(|e| format!("Discord is not running: {e}"))?;
-    *slot = Some(client);
+    *slot = Some((client_id.to_string(), client));
     Ok(())
 }
 
 #[tauri::command]
 pub fn discord_set_activity(
     state: State<'_, DiscordState>,
+    client_id: String,
     activity: Activity,
 ) -> Result<(), String> {
     let mut slot = state.0.lock().map_err(|_| "discord state poisoned")?;
-    connect(&mut slot)?;
-    let Some(client) = slot.as_mut() else {
+    connect(&mut slot, &client_id)?;
+    let Some((_, client)) = slot.as_mut() else {
         return Ok(());
     };
     let details = truncate(&activity.details, 128);
@@ -98,7 +112,7 @@ pub fn discord_set_activity(
 #[tauri::command]
 pub fn discord_clear(state: State<'_, DiscordState>) -> Result<(), String> {
     let mut slot = state.0.lock().map_err(|_| "discord state poisoned")?;
-    if let Some(client) = slot.as_mut() {
+    if let Some((_, client)) = slot.as_mut() {
         let _ = client.clear_activity();
         let _ = client.close();
     }
@@ -108,4 +122,18 @@ pub fn discord_clear(state: State<'_, DiscordState>) -> Result<(), String> {
 
 fn truncate(s: &str, max: usize) -> String {
     s.chars().take(max).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::valid_client_id;
+
+    #[test]
+    fn accepts_only_numeric_snowflakes() {
+        assert!(valid_client_id("1430000000000000000"));
+        assert!(valid_client_id("12345678901234567"));
+        assert!(!valid_client_id("1234"));
+        assert!(!valid_client_id("abc00000000000000000"));
+        assert!(!valid_client_id(""));
+    }
 }

@@ -56,6 +56,7 @@ pub fn run() {
             app.manage(settings::SettingsState(std::sync::Mutex::new(
                 settings.clone(),
             )));
+            app.manage(discord::DiscordState::default());
             player::create_player_window(&handle)?;
             native::setup(&handle)?;
             #[cfg(target_os = "linux")]

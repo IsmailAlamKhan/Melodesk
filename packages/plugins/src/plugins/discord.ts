@@ -11,6 +11,12 @@ export const discord = definePlugin({
     permissions: ['playback:read', 'native:discord'],
   },
   settingsFields: [
+    {
+      key: 'applicationId',
+      label: 'Discord application ID',
+      type: 'text',
+      hint: 'Create an application at discord.com/developers/applications and paste its Application ID. Its name is what Discord shows after "Listening to".',
+    },
     { key: 'hideWhenPaused', label: 'Clear presence when paused', type: 'boolean', default: true },
   ],
   setup(ctx) {
@@ -18,6 +24,11 @@ export const discord = definePlugin({
     const push = (): void => {
       const { track, state } = ctx.player?.current() ?? { track: null, state: null };
       if (!ctx.native || !track) return;
+      const clientId = String(ctx.settings['applicationId'] ?? '').trim();
+      if (!clientId) {
+        status = 'Enter your Discord application ID to start';
+        return;
+      }
       const hideWhenPaused = ctx.settings['hideWhenPaused'] !== false;
       if (!state?.playing && hideWhenPaused) {
         void ctx.native.invoke('discord_clear').then(() => {
@@ -33,6 +44,7 @@ export const discord = definePlugin({
           : null;
       ctx.native
         .invoke('discord_set_activity', {
+          clientId,
           activity: {
             details: track.title,
             state: track.artist,
