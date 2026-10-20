@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { AppRouter } from './app/router';
 import { MiniPlayer } from './mini/MiniPlayer';
+import { AppearanceEffects } from './appearance/Effects';
 import { queryClient } from './data/queryClient';
 import { shouldPersistQuery, sqlitePersister } from './data/persister';
 import { subscribeToPlayer } from './player/ipc';
@@ -57,24 +58,28 @@ if (isMiniWindow) document.documentElement.dataset['window'] = 'mini';
 createRoot(root).render(
   isMiniWindow ? (
     <StrictMode>
-      <MiniPlayer />
+      <AppearanceEffects>
+        <MiniPlayer />
+      </AppearanceEffects>
     </StrictMode>
   ) : (
     <StrictMode>
-      <PersistQueryClientProvider
-        client={queryClient}
-        persistOptions={{
-          persister: sqlitePersister,
-          maxAge: 1000 * 60 * 60 * 24,
-          buster: 'v1',
-          dehydrateOptions: {
-            shouldDehydrateQuery: (q) =>
-              q.state.status === 'success' && shouldPersistQuery(q.queryKey),
-          },
-        }}
-      >
-        <AppRouter />
-      </PersistQueryClientProvider>
+      <AppearanceEffects>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{
+            persister: sqlitePersister,
+            maxAge: 1000 * 60 * 60 * 24,
+            buster: 'v1',
+            dehydrateOptions: {
+              shouldDehydrateQuery: (q) =>
+                q.state.status === 'success' && shouldPersistQuery(q.queryKey),
+            },
+          }}
+        >
+          <AppRouter />
+        </PersistQueryClientProvider>
+      </AppearanceEffects>
     </StrictMode>
   ),
 );

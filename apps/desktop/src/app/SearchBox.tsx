@@ -67,6 +67,7 @@ export function SearchBox() {
       <div className="flex h-9 items-center gap-2 rounded-full border border-border bg-bg-overlay px-3 focus-within:border-fg-subtle">
         <Search className="size-4 shrink-0 text-fg-subtle" />
         <input
+          dir="auto"
           ref={input}
           role="combobox"
           aria-expanded={list.length > 0}
@@ -130,7 +131,7 @@ export function SearchBox() {
                   />
                   <span className="min-w-0 flex-1 truncate">
                     {s.item.title}
-                    <span className="ml-2 text-xs text-fg-subtle">{s.item.kind}</span>
+                    <span className="ms-2 text-xs text-fg-subtle">{s.item.kind}</span>
                   </span>
                 </>
               ) : (

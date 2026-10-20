@@ -16,7 +16,7 @@ export function HealthBanner() {
           ? 'Melodesk can’t control YouTube Music right now. An app update is probably needed.'
           : 'Some controls may not work. An app update is probably needed.'}
       </span>
-      {health.reason && <code className="ml-auto text-xs text-fg-subtle">{health.reason}</code>}
+      {health.reason && <code className="ms-auto text-xs text-fg-subtle">{health.reason}</code>}
     </div>
   );
 }

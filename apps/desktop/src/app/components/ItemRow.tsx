@@ -71,7 +71,7 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
         }}
         className={cn(
           'group grid cursor-default items-center gap-3 rounded-md px-2 outline-none hover:bg-bg-overlay focus-visible:ring-2 focus-visible:ring-accent',
-          dense ? 'h-12' : 'h-14',
+          dense ? 'h-[calc(var(--row-h)-0.5rem)]' : 'h-(--row-h)',
           showAlbum
             ? 'grid-cols-[2rem_auto_minmax(0,3fr)_minmax(0,2fr)_auto_2.5rem]'
             : 'grid-cols-[2rem_auto_minmax(0,1fr)_auto_2.5rem]',
@@ -117,7 +117,7 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
           </div>
           <div className="truncate text-xs text-fg-muted">
             {item.isExplicit && (
-              <span className="mr-1 rounded-sm border border-fg-subtle px-1 text-[10px]">E</span>
+              <span className="me-1 rounded-sm border border-fg-subtle px-1 text-[10px]">E</span>
             )}
             {artists.length
               ? artists.map((a, i) => (

@@ -30,10 +30,10 @@ export function Layout() {
       <div data-content className="flex min-h-0 min-w-0 flex-col">
         <div data-tauri-drag-region className="flex h-14 shrink-0 items-center gap-2 px-3 pt-2">
           <IconButton label="Back" size="sm" onClick={() => navigate(-1)}>
-            <ChevronLeft />
+            <ChevronLeft className="rtl:-scale-x-100" />
           </IconButton>
           <IconButton label="Forward" size="sm" onClick={() => navigate(1)}>
-            <ChevronRight />
+            <ChevronRight className="rtl:-scale-x-100" />
           </IconButton>
           <div className="flex flex-1 justify-center">
             <SearchBox />
@@ -65,7 +65,7 @@ export function Layout() {
       {panel && (
         <aside
           aria-label={panel === 'queue' ? 'Queue' : 'Lyrics'}
-          className="flex min-h-0 flex-col border-l border-border bg-bg-elevated"
+          className="flex min-h-0 flex-col border-s border-border bg-bg-elevated"
         >
           <div data-tauri-drag-region className="h-10 shrink-0" />
           <div className="min-h-0 flex-1">

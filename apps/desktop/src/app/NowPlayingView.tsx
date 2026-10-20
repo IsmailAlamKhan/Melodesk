@@ -119,7 +119,10 @@ export function NowPlayingView() {
                   {track?.title ?? 'Nothing playing'}
                 </h1>
                 <p className="truncate text-lg text-fg-muted">{track?.artist ?? ''}</p>
-                <div className="mt-6 flex items-center gap-3 text-xs tabular-nums text-fg-subtle">
+                <div
+                  dir="ltr"
+                  className="mt-6 flex items-center gap-3 text-xs tabular-nums text-fg-subtle"
+                >
                   <span className="w-12 text-right">{fmt(scrub ?? position)}</span>
                   <Slider
                     label="Seek"
@@ -135,7 +138,7 @@ export function NowPlayingView() {
                   />
                   <span className="w-12">{fmt(duration)}</span>
                 </div>
-                <div className="mt-4 flex items-center justify-center gap-3">
+                <div dir="ltr" className="mt-4 flex items-center justify-center gap-3">
                   <IconButton
                     label="Shuffle"
                     aria-pressed={queue?.shuffle ?? false}

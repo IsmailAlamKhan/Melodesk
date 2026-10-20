@@ -123,7 +123,7 @@ function QueueRow({
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        'group flex h-14 items-center gap-2 rounded-md px-1 hover:bg-bg-overlay',
+        'group flex h-(--row-h) items-center gap-2 rounded-md px-1 hover:bg-bg-overlay',
         current && 'text-accent',
         isDragging && 'z-10 bg-bg-overlay shadow',
       )}
@@ -149,7 +149,7 @@ function QueueRow({
       )}
       <button
         type="button"
-        className="min-w-0 flex-1 text-left"
+        className="min-w-0 flex-1 text-start"
         onClick={() => void sendCommand({ type: 'queueSelect', index })}
       >
         <div className="truncate text-sm font-medium">{item.title}</div>

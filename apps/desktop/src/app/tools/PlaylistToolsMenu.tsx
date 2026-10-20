@@ -65,7 +65,7 @@ export function PlaylistToolsMenu({
       <ArrowDownAZ className="size-4" />
       {label}
       {viewSort?.key === key && (
-        <span className="ml-auto text-xs text-fg-subtle">{viewSort.dir === 'asc' ? '↑' : '↓'}</span>
+        <span className="ms-auto text-xs text-fg-subtle">{viewSort.dir === 'asc' ? '↑' : '↓'}</span>
       )}
     </DropdownMenu.Item>
   );

@@ -25,6 +25,7 @@ export function Slider({
 }: SliderProps) {
   return (
     <RadixSlider.Root
+      dir="ltr"
       className={cn(
         'group relative flex h-5 w-full touch-none items-center select-none',
         className,

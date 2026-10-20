@@ -201,7 +201,7 @@ function AddToPlaylistDialog({
       <div className="-mx-2 flex max-h-96 flex-col overflow-y-auto">
         <button
           type="button"
-          className="flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-bg-overlay"
+          className="flex items-center gap-3 rounded-md px-3 py-2 text-start text-sm hover:bg-bg-overlay"
           onClick={() => {
             open({ type: 'createPlaylist', videoIds: req.videoIds });
           }}
@@ -222,7 +222,7 @@ function AddToPlaylistDialog({
             key={p.playlistId}
             type="button"
             disabled={busy !== null || p.contains === 'ALL'}
-            className="flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm hover:bg-bg-overlay disabled:opacity-60"
+            className="flex items-center gap-3 rounded-md px-3 py-2 text-start text-sm hover:bg-bg-overlay disabled:opacity-60"
             onClick={() => {
               setBusy(p.playlistId);
               void addToPlaylist(p.playlistId, req.videoIds, p.title)

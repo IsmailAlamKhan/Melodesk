@@ -24,7 +24,7 @@ export function Sidebar() {
   return (
     <nav
       aria-label="Primary"
-      className="flex h-full min-h-0 flex-col border-r border-border bg-bg-elevated"
+      className="flex h-full min-h-0 flex-col border-e border-border bg-bg-elevated"
     >
       <div data-tauri-drag-region className="h-10 shrink-0" />
       <div className="flex flex-col gap-1 px-3">
@@ -35,7 +35,7 @@ export function Sidebar() {
             end={n.end ?? false}
             className={({ isActive }) =>
               cn(
-                'flex h-9 items-center gap-3 rounded-md px-2 text-sm transition-colors duration-(--duration-fast)',
+                'flex h-(--nav-h) items-center gap-3 rounded-md px-2 text-sm transition-colors duration-(--duration-fast)',
                 isActive
                   ? 'bg-bg-overlay text-fg'
                   : 'text-fg-muted hover:bg-bg-overlay hover:text-fg',
@@ -67,7 +67,7 @@ export function Sidebar() {
             to={routeForEndpoint(p.endpoint) ?? '#'}
             className={({ isActive }) =>
               cn(
-                'flex h-10 items-center gap-2 rounded-md px-2 text-sm',
+                'flex h-[calc(var(--nav-h)+0.25rem)] items-center gap-2 rounded-md px-2 text-sm',
                 isActive
                   ? 'bg-bg-overlay text-fg'
                   : 'text-fg-muted hover:bg-bg-overlay hover:text-fg',
@@ -93,7 +93,7 @@ export function Sidebar() {
           to="/settings"
           className={({ isActive }) =>
             cn(
-              'flex h-9 items-center gap-3 rounded-md px-2 text-sm',
+              'flex h-(--nav-h) items-center gap-3 rounded-md px-2 text-sm',
               isActive
                 ? 'bg-bg-overlay text-fg'
                 : 'text-fg-muted hover:bg-bg-overlay hover:text-fg',

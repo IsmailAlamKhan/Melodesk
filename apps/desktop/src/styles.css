@@ -30,6 +30,13 @@ body {
   background: var(--color-bg);
 }
 
+/* Native form controls follow the accent color. */
+input[type='checkbox'],
+input[type='radio'],
+input[type='range'] {
+  accent-color: var(--color-accent);
+}
+
 /* Mini player window: transparent chrome so the rounded card floats. */
 :root[data-window='mini'] body {
   background: transparent;

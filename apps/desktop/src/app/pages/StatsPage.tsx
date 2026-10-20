@@ -143,7 +143,7 @@ function TopList({
             <button
               type="button"
               onClick={() => onOpen(e)}
-              className="flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left hover:bg-bg-overlay"
+              className="flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-start hover:bg-bg-overlay"
             >
               <span className="w-5 text-xs tabular-nums text-fg-subtle">{i + 1}</span>
               {e.artworkUrl ? (

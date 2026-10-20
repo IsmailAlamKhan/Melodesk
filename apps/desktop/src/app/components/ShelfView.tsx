@@ -14,7 +14,8 @@ export function ShelfView({ shelf }: { shelf: Shelf }) {
   if (!shelf.items.length) return null;
   const scrollBy = (dir: 1 | -1): void => {
     scroller.current?.scrollBy({
-      left: dir * (scroller.current.clientWidth - 160),
+      // In RTL, scrollLeft counts leftwards from the right edge, so "forward" is negative.
+      left: dir * (document.dir === 'rtl' ? -1 : 1) * (scroller.current.clientWidth - 160),
       behavior: 'smooth',
     });
   };
@@ -42,7 +43,7 @@ export function ShelfView({ shelf }: { shelf: Shelf }) {
             {more && (
               <Link
                 to={more}
-                className="mr-2 rounded-full border border-border px-3 py-1 text-xs font-medium text-fg-muted hover:bg-bg-overlay hover:text-fg"
+                className="me-2 rounded-full border border-border px-3 py-1 text-xs font-medium text-fg-muted hover:bg-bg-overlay hover:text-fg"
               >
                 More
               </Link>
@@ -50,10 +51,10 @@ export function ShelfView({ shelf }: { shelf: Shelf }) {
             {shelf.layout === 'carousel' && (
               <>
                 <IconButton label="Scroll left" size="sm" onClick={() => scrollBy(-1)}>
-                  <ChevronLeft />
+                  <ChevronLeft className="rtl:-scale-x-100" />
                 </IconButton>
                 <IconButton label="Scroll right" size="sm" onClick={() => scrollBy(1)}>
-                  <ChevronRight />
+                  <ChevronRight className="rtl:-scale-x-100" />
                 </IconButton>
               </>
             )}

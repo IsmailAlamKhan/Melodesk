@@ -1,4 +1,9 @@
-/* Design tokens. 8-pt grid, calm content-first palette, platform fonts. */
+/* Design tokens. 8-pt grid, calm content-first palette, platform fonts.
+ *
+ * Dark is the default. The app sets data-theme="light" | "dark" | "amoled" on <html>
+ * ("system" is resolved to light/dark in JS). Text tokens are checked against WCAG AA in
+ * apps/desktop/src/appearance/tokens.test.ts, so change values there with care.
+ */
 @theme {
   --font-sans:
     -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text', 'Segoe UI',
@@ -11,12 +16,12 @@
   --color-bg-elevated: oklch(0.19 0.005 260);
   --color-bg-overlay: oklch(0.23 0.006 260);
   --color-fg: oklch(0.96 0.003 260);
-  --color-fg-muted: oklch(0.7 0.01 260);
-  --color-fg-subtle: oklch(0.52 0.01 260);
+  --color-fg-muted: oklch(0.72 0.01 260);
+  --color-fg-subtle: oklch(0.64 0.01 260);
   --color-border: oklch(0.3 0.006 260);
   --color-accent: oklch(0.72 0.17 25);
   --color-accent-fg: oklch(0.15 0.02 25);
-  --color-danger: oklch(0.68 0.2 25);
+  --color-danger: oklch(0.72 0.19 25);
   --color-warning: oklch(0.8 0.15 80);
   --color-success: oklch(0.75 0.15 150);
 
@@ -31,16 +36,33 @@
   --duration-slow: 250ms;
 }
 
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) {
-    --color-bg: oklch(0.985 0.002 260);
-    --color-bg-elevated: oklch(1 0 0);
-    --color-bg-overlay: oklch(0.95 0.003 260);
-    --color-fg: oklch(0.2 0.005 260);
-    --color-fg-muted: oklch(0.45 0.01 260);
-    --color-fg-subtle: oklch(0.6 0.01 260);
-    --color-border: oklch(0.88 0.005 260);
-  }
+:root[data-theme='light'] {
+  --color-bg: oklch(0.985 0.002 260);
+  --color-bg-elevated: oklch(1 0 0);
+  --color-bg-overlay: oklch(0.95 0.003 260);
+  --color-fg: oklch(0.2 0.005 260);
+  --color-fg-muted: oklch(0.43 0.01 260);
+  --color-fg-subtle: oklch(0.5 0.01 260);
+  --color-border: oklch(0.88 0.005 260);
+  --color-accent: oklch(0.58 0.2 25);
+  --color-accent-fg: oklch(0.99 0.01 25);
+  --color-danger: oklch(0.52 0.2 25);
+  --color-warning: oklch(0.5 0.12 80);
+  --color-success: oklch(0.48 0.13 150);
+  color-scheme: light;
+}
+
+/* True black for OLED panels: the base is #000, raised surfaces stay barely lighter. */
+:root[data-theme='amoled'] {
+  --color-bg: oklch(0 0 0);
+  --color-bg-elevated: oklch(0.12 0.004 260);
+  --color-bg-overlay: oklch(0.17 0.005 260);
+  --color-border: oklch(0.26 0.006 260);
+  color-scheme: dark;
+}
+
+:root:not([data-theme='light']) {
+  color-scheme: dark;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -49,4 +71,21 @@
     --duration-base: 0ms;
     --duration-slow: 0ms;
   }
+}
+
+/* Density: row and tile sizes follow data-density on <html>. */
+:root {
+  --row-h: 3.5rem;
+  --nav-h: 2.25rem;
+  --tile: 168px;
+}
+:root[data-density='compact'] {
+  --row-h: 2.75rem;
+  --nav-h: 1.875rem;
+  --tile: 144px;
+}
+:root[data-density='spacious'] {
+  --row-h: 4.25rem;
+  --nav-h: 2.75rem;
+  --tile: 192px;
 }

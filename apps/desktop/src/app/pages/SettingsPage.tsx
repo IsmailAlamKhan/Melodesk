@@ -9,6 +9,7 @@ import { usePlayerStore } from '../../player/store';
 import { SHORTCUT_ACTIONS, useSettings } from '../../settings/store';
 import { ShortcutField } from '../components/ShortcutField';
 import { PluginsSection } from '../components/PluginsSection';
+import { AppearanceSection } from '../components/AppearanceSection';
 import { toast } from '../toast';
 
 function Toggle({
@@ -121,6 +122,8 @@ export function SettingsPage() {
           )}
         </div>
       </section>
+
+      <AppearanceSection />
 
       <section className="flex flex-col gap-3">
         <h2 className="font-semibold">Desktop</h2>

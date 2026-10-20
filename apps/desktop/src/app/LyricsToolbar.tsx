@@ -199,7 +199,7 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
       </Popover.Root>
       {caveat && (
         <span
-          className="ml-1 text-[11px] text-fg-subtle"
+          className="ms-1 text-[11px] text-fg-subtle"
           title={
             caveat === 'kanji'
               ? 'Chinese characters and Japanese kanji are read as Mandarin offline, so romanization may be wrong.'

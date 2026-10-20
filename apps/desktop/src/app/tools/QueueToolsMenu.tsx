@@ -50,7 +50,7 @@ export function QueueToolsMenu() {
               <Moon className="size-4" />
               Sleep timer
               {remaining !== null && (
-                <span className="ml-auto text-xs text-fg-subtle">{String(remaining)} min</span>
+                <span className="ms-auto text-xs text-fg-subtle">{String(remaining)} min</span>
               )}
             </DropdownMenu.SubTrigger>
             <DropdownMenu.Portal>
@@ -78,7 +78,7 @@ export function QueueToolsMenu() {
             <DropdownMenu.SubTrigger className={itemClass}>
               <Gauge className="size-4" />
               Speed
-              <span className="ml-auto text-xs text-fg-subtle">{String(rate)}×</span>
+              <span className="ms-auto text-xs text-fg-subtle">{String(rate)}×</span>
             </DropdownMenu.SubTrigger>
             <DropdownMenu.Portal>
               <DropdownMenu.SubContent className={menuClass}>

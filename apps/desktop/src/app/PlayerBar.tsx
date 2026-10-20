@@ -131,7 +131,7 @@ export function PlayerBar() {
           </button>
         </div>
         {track && (
-          <div className="ml-1 flex items-center">
+          <div className="ms-1 flex items-center">
             <IconButton
               label={like === 'DISLIKE' ? 'Remove dislike' : 'Dislike'}
               size="sm"
@@ -151,7 +151,7 @@ export function PlayerBar() {
       </div>
 
       <div className="flex flex-col items-center gap-1">
-        <div className="flex items-center gap-1">
+        <div dir="ltr" className="flex items-center gap-1">
           <IconButton
             label={queue?.shuffle ? 'Shuffle on' : 'Shuffle'}
             size="sm"
@@ -213,7 +213,10 @@ export function PlayerBar() {
             {queue?.repeat === 'one' ? <Repeat1 /> : <Repeat />}
           </IconButton>
         </div>
-        <div className="flex w-full max-w-xl items-center gap-2 text-xs tabular-nums text-fg-subtle">
+        <div
+          dir="ltr"
+          className="flex w-full max-w-xl items-center gap-2 text-xs tabular-nums text-fg-subtle"
+        >
           <span className="w-10 text-right">{fmt(scrub ?? position)}</span>
           <Slider
             label="Seek"

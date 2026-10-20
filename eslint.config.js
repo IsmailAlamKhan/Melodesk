@@ -6,7 +6,13 @@ import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
   {
-    ignores: ['**/node_modules/**', '**/dist/**', '**/target/**', 'apps/desktop/src-tauri/gen/**'],
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/target/**',
+      'apps/desktop/src-tauri/gen/**',
+      'apps/desktop/public/**',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,

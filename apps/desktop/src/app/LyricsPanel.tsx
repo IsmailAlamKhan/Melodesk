@@ -245,6 +245,7 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
               {timed ? (
                 <button
                   type="button"
+                  dir="auto"
                   onClick={() =>
                     void sendCommand({
                       type: 'seek',
@@ -252,14 +253,16 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
                     })
                   }
                   className={cn(
-                    'w-full rounded-md px-2 py-1.5 text-left transition-colors duration-(--duration-slow) ease-(--ease-out) hover:bg-bg-overlay/60',
+                    'w-full rounded-md px-2 py-1.5 text-start transition-colors duration-(--duration-slow) ease-(--ease-out) hover:bg-bg-overlay/60',
                     i === active ? 'text-fg' : i < active ? 'text-fg-subtle' : 'text-fg-muted',
                   )}
                 >
                   {content}
                 </button>
               ) : (
-                <p className="px-2 py-1 text-fg">{content}</p>
+                <p dir="auto" className="px-2 py-1 text-fg">
+                  {content}
+                </p>
               )}
             </li>
           );

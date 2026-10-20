@@ -82,7 +82,7 @@ export function MiniPlayer() {
   }, []);
 
   const controls = (
-    <div className="flex items-center gap-1">
+    <div dir="ltr" className="flex items-center gap-1">
       <IconButton
         label="Previous"
         size="sm"
@@ -159,7 +159,7 @@ export function MiniPlayer() {
           />
         )}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/85 to-transparent" />
-        <div className="absolute top-1 right-1">{windowButtons}</div>
+        <div className="absolute top-1 end-1">{windowButtons}</div>
         <div className="absolute inset-x-3 bottom-3 flex flex-col gap-2 text-white">
           <div className="min-w-0">
             <div className="truncate text-sm font-semibold">

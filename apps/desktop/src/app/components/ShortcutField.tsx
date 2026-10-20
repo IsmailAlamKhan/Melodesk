@@ -36,7 +36,7 @@ export function ShortcutField({
         }
       }}
       className={cn(
-        'h-8 min-w-40 rounded-md border px-3 text-left font-mono text-xs',
+        'h-8 min-w-40 rounded-md border px-3 text-start font-mono text-xs',
         recording
           ? 'border-accent text-fg'
           : 'border-border bg-bg-elevated text-fg-muted hover:text-fg',

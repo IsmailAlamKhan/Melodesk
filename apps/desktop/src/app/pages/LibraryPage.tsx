@@ -112,7 +112,7 @@ export function LibrarySection({ browseId }: { browseId: string }) {
           }}
         />
         {SORTABLE.has(browseId) && (
-          <label className="ml-auto flex items-center gap-2 text-xs text-fg-muted">
+          <label className="ms-auto flex items-center gap-2 text-xs text-fg-muted">
             Sort
             <select
               value={sort}
