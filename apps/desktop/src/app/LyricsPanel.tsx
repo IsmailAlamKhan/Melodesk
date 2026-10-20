@@ -27,7 +27,7 @@ function usePositionMs(): number {
 }
 
 /** Lyrics for the current track, synced when YouTube provides timed lines; click a line to seek. */
-export function LyricsPanel() {
+export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
   const videoId = usePlayerStore((s) => s.track?.videoId ?? null);
   const title = usePlayerStore((s) => s.track?.title ?? null);
   const ready = usePlayerStore((s) => s.ready);
@@ -96,7 +96,9 @@ export function LyricsPanel() {
 
   return (
     <div ref={listRef} className="flex h-full flex-col overflow-y-auto px-4 pb-24">
-      <div className="sticky top-0 bg-bg-elevated py-3 text-xs text-fg-subtle">{title}</div>
+      {!large && (
+        <div className="sticky top-0 bg-bg-elevated py-3 text-xs text-fg-subtle">{title}</div>
+      )}
       {synced ? (
         <ol className="flex flex-col gap-1 py-6">
           {synced.map((line, i) => (
@@ -105,7 +107,9 @@ export function LyricsPanel() {
                 type="button"
                 onClick={() => void sendCommand({ type: 'seek', seconds: line.startMs / 1000 })}
                 className={cn(
-                  'w-full rounded-md px-2 py-1.5 text-left font-display text-xl leading-snug font-semibold transition-all duration-(--duration-slow) ease-(--ease-out) hover:bg-bg-overlay',
+                  large
+                    ? 'w-full rounded-md px-2 py-2 text-left font-display text-3xl leading-tight font-bold transition-all duration-(--duration-slow) ease-(--ease-out) hover:bg-bg-overlay/50'
+                    : 'w-full rounded-md px-2 py-1.5 text-left font-display text-xl leading-snug font-semibold transition-all duration-(--duration-slow) ease-(--ease-out) hover:bg-bg-overlay',
                   i === activeIndex
                     ? 'scale-100 text-fg'
                     : i < activeIndex

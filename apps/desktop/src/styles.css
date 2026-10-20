@@ -30,6 +30,11 @@ body {
   background: var(--color-bg);
 }
 
+/* Mini player window: transparent chrome so the rounded card floats. */
+:root[data-window='mini'] body {
+  background: transparent;
+}
+
 /* Native-feeling, unobtrusive scrollbars in our own UI */
 * {
   scrollbar-width: thin;

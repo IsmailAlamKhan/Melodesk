@@ -65,6 +65,10 @@ pub fn run() {
             if let Some(main) = app.get_webview_window(player::MAIN_LABEL) {
                 main.set_focus().ok();
             }
+            let show_handle = handle.clone();
+            tauri::Listener::listen_any(&handle, "app:show-main", move |_| {
+                native::show_main(&show_handle);
+            });
             Ok(())
         })
         .build(tauri::generate_context!())

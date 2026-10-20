@@ -12,6 +12,8 @@ import {
   ThumbsDown,
   Volume2,
   VolumeX,
+  Maximize2,
+  PictureInPicture2,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -21,6 +23,8 @@ import { requests } from '@melodesk/adapter';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { toast } from './toast';
+import { useUiStore } from './uiStore';
+import { invoke } from '@tauri-apps/api/core';
 
 function fmt(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
@@ -62,6 +66,7 @@ export function PlayerBar() {
   const loggedIn = usePlayerStore((s) => s.loggedIn);
   const position = useInterpolatedPosition();
   const [scrub, setScrub] = useState<number | null>(null);
+  const openNowPlaying = useUiStore((s) => s.setNowPlayingOpen);
 
   const disabled = !ready || !state || !track;
   const playing = state?.playing ?? false;
@@ -97,11 +102,18 @@ export function PlayerBar() {
     >
       <div className="flex min-w-0 items-center gap-3">
         {track?.artworkUrl ? (
-          <img
-            src={track.artworkUrl}
-            alt=""
-            className="size-12 shrink-0 rounded-sm bg-bg-overlay object-cover"
-          />
+          <button
+            type="button"
+            aria-label="Open now playing"
+            onClick={() => openNowPlaying(true)}
+            className="shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-accent"
+          >
+            <img
+              src={track.artworkUrl}
+              alt=""
+              className="size-12 rounded-sm bg-bg-overlay object-cover"
+            />
+          </button>
         ) : (
           <div className="size-12 shrink-0 rounded-sm bg-bg-overlay" />
         )}
@@ -220,6 +232,17 @@ export function PlayerBar() {
       </div>
 
       <div className="flex items-center justify-end gap-1">
+        <IconButton label="Mini player" size="sm" onClick={() => void invoke('open_mini_player')}>
+          <PictureInPicture2 />
+        </IconButton>
+        <IconButton
+          label="Now playing"
+          size="sm"
+          disabled={!track}
+          onClick={() => openNowPlaying(true)}
+        >
+          <Maximize2 />
+        </IconButton>
         {track && (
           <IconButton
             label={flags?.isVideo ? 'Switch to song' : 'Switch to video'}

@@ -5,6 +5,7 @@ import { usePlayerStore } from '../player/store';
 import { HealthBanner } from './HealthBanner';
 import { PlayerBar } from './PlayerBar';
 import { LyricsPanel } from './LyricsPanel';
+import { NowPlayingView } from './NowPlayingView';
 import { QueuePanel } from './QueuePanel';
 import { DialogHost } from './dialogs/DialogHost';
 import { SearchBox } from './SearchBox';
@@ -74,6 +75,7 @@ export function Layout() {
       <div className={cn(panel ? 'col-span-3' : 'col-span-2')}>
         <PlayerBar />
       </div>
+      <NowPlayingView />
       <Toaster />
       <DialogHost />
     </div>

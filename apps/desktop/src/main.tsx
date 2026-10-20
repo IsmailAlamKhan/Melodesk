@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { AppRouter } from './app/router';
+import { MiniPlayer } from './mini/MiniPlayer';
 import { queryClient } from './data/queryClient';
 import { shouldPersistQuery, sqlitePersister } from './data/persister';
 import { subscribeToPlayer } from './player/ipc';
@@ -10,6 +11,7 @@ import { startPluginHost } from './plugins/host';
 import { handleIncomingUrl } from './app/openUrl';
 import { router } from './app/router';
 import { listen } from '@tauri-apps/api/event';
+import { invoke } from '@tauri-apps/api/core';
 import { getCurrent, onOpenUrl } from '@tauri-apps/plugin-deep-link';
 import './styles.css';
 
@@ -31,6 +33,8 @@ void getCurrent()
 void onOpenUrl((urls) => urls.forEach(handleIncomingUrl)).catch(() => undefined);
 void listen<string[]>('app:open-url', (e) => e.payload.forEach(handleIncomingUrl));
 void listen<string>('app:navigate', (e) => void router.navigate(e.payload));
+// Dev aid: VITE_DEV_MINI=1 opens the mini player on launch.
+if (import.meta.env.DEV && import.meta.env.VITE_DEV_MINI === '1') void invoke('open_mini_player');
 if (import.meta.env.DEV && import.meta.env.VITE_CAPTURE_FIXTURES === '1') {
   void import('./dev/capture').then((m) => {
     m.startFixtureCapture();
@@ -39,21 +43,30 @@ if (import.meta.env.DEV && import.meta.env.VITE_CAPTURE_FIXTURES === '1') {
 
 const root = document.getElementById('root');
 if (!root) throw new Error('missing #root');
+const isMiniWindow = new URLSearchParams(window.location.search).get('window') === 'mini';
+if (isMiniWindow) document.documentElement.dataset['window'] = 'mini';
+
 createRoot(root).render(
-  <StrictMode>
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{
-        persister: sqlitePersister,
-        maxAge: 1000 * 60 * 60 * 24,
-        buster: 'v1',
-        dehydrateOptions: {
-          shouldDehydrateQuery: (q) =>
-            q.state.status === 'success' && shouldPersistQuery(q.queryKey),
-        },
-      }}
-    >
-      <AppRouter />
-    </PersistQueryClientProvider>
-  </StrictMode>,
+  isMiniWindow ? (
+    <StrictMode>
+      <MiniPlayer />
+    </StrictMode>
+  ) : (
+    <StrictMode>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{
+          persister: sqlitePersister,
+          maxAge: 1000 * 60 * 60 * 24,
+          buster: 'v1',
+          dehydrateOptions: {
+            shouldDehydrateQuery: (q) =>
+              q.state.status === 'success' && shouldPersistQuery(q.queryKey),
+          },
+        }}
+      >
+        <AppRouter />
+      </PersistQueryClientProvider>
+    </StrictMode>
+  ),
 );
