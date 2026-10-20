@@ -6,6 +6,7 @@ import { HealthBanner } from './HealthBanner';
 import { PlayerBar } from './PlayerBar';
 import { LyricsPanel } from './LyricsPanel';
 import { NowPlayingView } from './NowPlayingView';
+import { CommandPalette } from './CommandPalette';
 import { QueuePanel } from './QueuePanel';
 import { DialogHost } from './dialogs/DialogHost';
 import { SearchBox } from './SearchBox';
@@ -76,6 +77,7 @@ export function Layout() {
         <PlayerBar />
       </div>
       <NowPlayingView />
+      <CommandPalette />
       <Toaster />
       <DialogHost />
     </div>

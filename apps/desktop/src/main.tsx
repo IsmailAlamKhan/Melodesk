@@ -8,6 +8,7 @@ import { shouldPersistQuery, sqlitePersister } from './data/persister';
 import { subscribeToPlayer } from './player/ipc';
 import { useSettings } from './settings/store';
 import { startPluginHost } from './plugins/host';
+import { startHistoryRecorder } from './stats/recorder';
 import { handleIncomingUrl } from './app/openUrl';
 import { router } from './app/router';
 import { listen } from '@tauri-apps/api/event';
@@ -21,8 +22,13 @@ document.documentElement.dataset['platform'] = navigator.userAgent.includes('Mac
   : navigator.userAgent.includes('Windows')
     ? 'windows'
     : 'linux';
+function isMiniWindowEarly(): boolean {
+  return new URLSearchParams(window.location.search).get('window') === 'mini';
+}
+
 subscribeToPlayer();
 void useSettings.getState().load();
+if (!isMiniWindowEarly()) startHistoryRecorder();
 void startPluginHost().catch((err: unknown) => {
   console.error('plugin host failed', err);
 });
@@ -43,7 +49,7 @@ if (import.meta.env.DEV && import.meta.env.VITE_CAPTURE_FIXTURES === '1') {
 
 const root = document.getElementById('root');
 if (!root) throw new Error('missing #root');
-const isMiniWindow = new URLSearchParams(window.location.search).get('window') === 'mini';
+const isMiniWindow = isMiniWindowEarly();
 if (isMiniWindow) document.documentElement.dataset['window'] = 'mini';
 
 createRoot(root).render(

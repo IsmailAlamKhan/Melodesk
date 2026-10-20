@@ -7,6 +7,7 @@ import { HomePage } from './pages/HomePage';
 import { LibraryLayout, LibrarySection } from './pages/LibraryPage';
 import { SearchPage } from './pages/SearchPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { StatsPage } from './pages/StatsPage';
 
 // Memory history: a desktop app has no URL bar, and the player webview owns the real URLs.
 // Dev aid: VITE_DEV_ROUTE=/playlist/… opens the app on that route (there is no URL bar to type into).
@@ -60,6 +61,7 @@ export const router = createMemoryRouter(
           ],
         },
         { path: 'settings', element: <SettingsPage /> },
+        { path: 'stats', element: <StatsPage /> },
       ],
     },
   ],

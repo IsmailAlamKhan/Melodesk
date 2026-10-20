@@ -1,6 +1,6 @@
 import { BROWSE_IDS } from '@melodesk/adapter';
 import { cn } from '@melodesk/ui';
-import { Compass, Home, Library, ListMusic, Plus, Settings } from 'lucide-react';
+import { BarChart3, Compass, Home, Library, ListMusic, Plus, Settings } from 'lucide-react';
 import { NavLink } from 'react-router';
 import { useBrowse } from '../data/hooks';
 import { routeForEndpoint } from '../player/actions';
@@ -12,6 +12,7 @@ const nav = [
   { to: '/', label: 'Home', icon: Home, end: true },
   { to: '/explore', label: 'Explore', icon: Compass },
   { to: '/library', label: 'Library', icon: Library },
+  { to: '/stats', label: 'Stats', icon: BarChart3 },
 ];
 
 export function Sidebar() {
