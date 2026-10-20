@@ -62,6 +62,28 @@ separate hidden window is stable on all three platforms, survives Tauri upgrades
 a natural "show the real site" escape hatch for sign-in and for anything we haven't
 re-implemented yet. Revisit when multi-webview stabilises.
 
+## Data: the account is the source of truth
+
+Browse, search, library and account data come from the same InnerTube requests the web app
+makes, performed _by the page itself_: the bridge calls `ytmusic-app.networkManager.fetch()`,
+so the page attaches its own auth headers and context and our code never sees cookies or
+tokens. Raw responses cross IPC as opaque JSON and are parsed in the UI by `@melodesk/adapter`
+(versioned parsers, fixture-tested). TanStack Query treats everything as stale immediately and
+refetches on window focus; the SQLite-persisted cache only makes the first paint fast.
+
+Playback of anything YouTube gave us an endpoint for is done by handing that endpoint back to
+the page (`yt-navigate` event), so queue semantics, history and recommendations are exactly
+the website's. The live queue, shuffle/repeat and like state are mirrored from the page's own
+store (`store.subscribe`), and "play next"/"add to queue" insert through the same store action
+the website uses.
+
+## Gotchas learned the hard way
+
+- `app.security.freezePrototype` must stay **false**: Tauri injects the prototype freeze into
+  the remote YouTube webview too, and YouTube's Polymer code then never boots (blank page).
+- Rust tests and clippy run with `--no-default-features`; the default `custom-protocol`
+  feature embeds the built frontend, which does not exist in test jobs.
+
 ## Known risks
 
 - Google may refuse sign-in in a webview it detects as embedded. We set a mainstream user agent

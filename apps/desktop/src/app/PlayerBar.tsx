@@ -1,13 +1,33 @@
-import { IconButton, Slider } from '@melodesk/ui';
-import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import { IconButton, Slider, cn } from '@melodesk/ui';
+import {
+  Heart,
+  MonitorPlay,
+  Pause,
+  Play,
+  Repeat,
+  Repeat1,
+  Shuffle,
+  SkipBack,
+  SkipForward,
+  ThumbsDown,
+  Volume2,
+  VolumeX,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
+import { run } from '../data/innertube';
+import { queryClient } from '../data/queryClient';
+import { requests } from '@melodesk/adapter';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
+import { toast } from './toast';
 
 function fmt(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
-  const m = Math.floor(s / 60);
-  return `${String(m)}:${String(s % 60).padStart(2, '0')}`;
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = String(s % 60).padStart(2, '0');
+  return h > 0 ? `${String(h)}:${String(m).padStart(2, '0')}:${sec}` : `${String(m)}:${sec}`;
 }
 
 /** Interpolates position between bridge samples so the seek bar moves at 60 fps, not 2 fps. */
@@ -33,17 +53,42 @@ function useInterpolatedPosition(): number {
 }
 
 export function PlayerBar() {
+  const navigate = useNavigate();
   const ready = usePlayerStore((s) => s.ready);
   const state = usePlayerStore((s) => s.state);
   const track = usePlayerStore((s) => s.track);
+  const queue = usePlayerStore((s) => s.queue);
+  const flags = usePlayerStore((s) => s.flags);
+  const loggedIn = usePlayerStore((s) => s.loggedIn);
   const position = useInterpolatedPosition();
   const [scrub, setScrub] = useState<number | null>(null);
 
-  const disabled = !ready || !state;
+  const disabled = !ready || !state || !track;
   const playing = state?.playing ?? false;
   const duration = state?.duration ?? 0;
   const volume = state?.volume ?? 1;
   const muted = state?.muted ?? false;
+  const like = flags?.likeStatus ?? null;
+
+  const setLike = async (status: 'LIKE' | 'DISLIKE' | 'INDIFFERENT'): Promise<void> => {
+    if (!track?.videoId) return;
+    if (!loggedIn) {
+      toast('Sign in to like songs');
+      return;
+    }
+    const endpoint =
+      status === 'LIKE' ? 'like/like' : status === 'DISLIKE' ? 'like/dislike' : 'like/removelike';
+    await run({ endpoint, body: { target: { videoId: track.videoId } } });
+    usePlayerStore.setState((s) => (s.flags ? { flags: { ...s.flags, likeStatus: status } } : {}));
+    void queryClient.invalidateQueries({ queryKey: ['browse'] });
+    toast(
+      status === 'LIKE'
+        ? 'Saved to Liked Music'
+        : status === 'DISLIKE'
+          ? 'Disliked'
+          : 'Removed from Liked Music',
+    );
+  };
 
   return (
     <footer
@@ -62,12 +107,51 @@ export function PlayerBar() {
         )}
         <div className="min-w-0">
           <div className="truncate text-sm font-medium">{track?.title ?? 'Nothing playing'}</div>
-          <div className="truncate text-xs text-fg-muted">{track?.artist ?? ''}</div>
+          <button
+            type="button"
+            className="max-w-full truncate text-xs text-fg-muted hover:underline"
+            onClick={() =>
+              track &&
+              navigate(`/search?q=${encodeURIComponent(track.artist.split(' • ')[0] ?? '')}`)
+            }
+          >
+            {track?.artist ?? ''}
+          </button>
         </div>
+        {track && (
+          <div className="ml-1 flex items-center">
+            <IconButton
+              label={like === 'DISLIKE' ? 'Remove dislike' : 'Dislike'}
+              size="sm"
+              onClick={() => void setLike(like === 'DISLIKE' ? 'INDIFFERENT' : 'DISLIKE')}
+            >
+              <ThumbsDown className={cn(like === 'DISLIKE' && 'fill-current')} />
+            </IconButton>
+            <IconButton
+              label={like === 'LIKE' ? 'Remove from Liked Music' : 'Like'}
+              size="sm"
+              onClick={() => void setLike(like === 'LIKE' ? 'INDIFFERENT' : 'LIKE')}
+            >
+              <Heart className={cn(like === 'LIKE' && 'fill-current text-accent')} />
+            </IconButton>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col items-center gap-1">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <IconButton
+            label={queue?.shuffle ? 'Shuffle on' : 'Shuffle'}
+            size="sm"
+            disabled={disabled}
+            aria-pressed={queue?.shuffle ?? false}
+            className={cn(queue?.shuffle && 'text-accent')}
+            onClick={() =>
+              void sendCommand({ type: 'setShuffle', enabled: !(queue?.shuffle ?? false) })
+            }
+          >
+            <Shuffle />
+          </IconButton>
           <IconButton
             label="Previous"
             disabled={disabled}
@@ -90,6 +174,32 @@ export function PlayerBar() {
           >
             <SkipForward />
           </IconButton>
+          <IconButton
+            label={
+              queue?.repeat === 'one'
+                ? 'Repeat one'
+                : queue?.repeat === 'all'
+                  ? 'Repeat all'
+                  : 'Repeat'
+            }
+            size="sm"
+            disabled={disabled}
+            aria-pressed={(queue?.repeat ?? 'off') !== 'off'}
+            className={cn(queue?.repeat && queue.repeat !== 'off' && 'text-accent')}
+            onClick={() =>
+              void sendCommand({
+                type: 'setRepeat',
+                mode:
+                  queue?.repeat === 'off' || !queue
+                    ? 'all'
+                    : queue.repeat === 'all'
+                      ? 'one'
+                      : 'off',
+              })
+            }
+          >
+            {queue?.repeat === 'one' ? <Repeat1 /> : <Repeat />}
+          </IconButton>
         </div>
         <div className="flex w-full max-w-xl items-center gap-2 text-xs tabular-nums text-fg-subtle">
           <span className="w-10 text-right">{fmt(scrub ?? position)}</span>
@@ -109,7 +219,20 @@ export function PlayerBar() {
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-end gap-1">
+        {track && (
+          <IconButton
+            label={flags?.isVideo ? 'Switch to song' : 'Switch to video'}
+            size="sm"
+            aria-pressed={flags?.isVideo ?? false}
+            className={cn(flags?.isVideo && 'text-accent')}
+            onClick={() =>
+              void sendCommand({ type: 'setVideoMode', video: !(flags?.isVideo ?? false) })
+            }
+          >
+            <MonitorPlay />
+          </IconButton>
+        )}
         <IconButton
           label={muted ? 'Unmute' : 'Mute'}
           size="sm"
@@ -131,3 +254,5 @@ export function PlayerBar() {
     </footer>
   );
 }
+
+export { requests };

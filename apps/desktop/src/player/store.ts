@@ -1,5 +1,11 @@
 import { create } from 'zustand';
-import type { HealthStatus, PlaybackState, Track } from '@melodesk/bridge/protocol';
+import type {
+  HealthStatus,
+  PlaybackState,
+  PlayerFlags,
+  QueueState,
+  Track,
+} from '@melodesk/bridge/protocol';
 
 export interface PlayerStore {
   /** The bridge has attached to the player inside the webview. */
@@ -13,6 +19,9 @@ export interface PlayerStore {
   rejectedEvents: number;
   playerPath: string;
   playerVisible: boolean;
+  capabilities: Record<string, boolean>;
+  queue: QueueState | null;
+  flags: PlayerFlags | null;
 }
 
 export const usePlayerStore = create<PlayerStore>(() => ({
@@ -25,4 +34,7 @@ export const usePlayerStore = create<PlayerStore>(() => ({
   rejectedEvents: 0,
   playerPath: '/',
   playerVisible: false,
+  capabilities: {},
+  queue: null,
+  flags: null,
 }));

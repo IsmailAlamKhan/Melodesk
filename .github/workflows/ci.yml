@@ -55,4 +55,6 @@ jobs:
       - run: pnpm build:bridge
       - run: pnpm fmt:rust
       - run: pnpm clippy
-      - run: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+      # --no-default-features: the default `custom-protocol` feature embeds the built frontend,
+      # which does not exist in CI test jobs.
+      - run: pnpm test:rust

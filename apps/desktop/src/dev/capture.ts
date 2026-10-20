@@ -1,0 +1,82 @@
+/**
+ * Dev-only fixture capture. With `VITE_CAPTURE_FIXTURES=1` (and `MELODESK_FIXTURE_DIR` set for
+ * the Rust side, which writes the files), the app requests a standard set of InnerTube pages
+ * once the bridge is ready so contributors can refresh adapter fixtures in one run.
+ * Signed-in captures contain personal data: scrub them before committing.
+ */
+import { innertube } from '../player/data';
+import { sendCommand } from '../player/ipc';
+import { usePlayerStore } from '../player/store';
+
+const CAPTURE_SET: [string, Record<string, unknown>][] = [
+  ['browse', { browseId: 'FEmusic_home' }],
+  ['browse', { browseId: 'FEmusic_explore' }],
+  ['browse', { browseId: 'FEmusic_new_releases' }],
+  ['browse', { browseId: 'FEmusic_charts' }],
+  ['browse', { browseId: 'FEmusic_moods_and_genres' }],
+  ['search', { query: 'daft punk' }],
+  ['music/get_search_suggestions', { input: 'daft p' }],
+  ['browse', { browseId: 'UC_kRDKYrUlrbtrSiyu5Tflg' }], // artist (Daft Punk)
+  ['browse', { browseId: 'MPREb_oF5n1ZVsd4u' }], // album (Daft Punk — Random Access Memories)
+  ['browse', { browseId: 'VLRDCLAK5uy_kmPRjHDECIcuVwnKsx2Ng7fyNgFKWNJFs' }], // playlist
+  ['next', { videoId: 'dQw4w9WgXcQ' }],
+  ['account/account_menu', {}],
+  // Signed-in only (empty/redirect responses when logged out)
+  ['browse', { browseId: 'FEmusic_library_landing' }],
+  ['browse', { browseId: 'FEmusic_liked_playlists' }],
+  ['browse', { browseId: 'FEmusic_liked_videos' }],
+  ['browse', { browseId: 'FEmusic_liked_albums' }],
+  ['browse', { browseId: 'FEmusic_library_corpus_track_artists' }],
+  ['browse', { browseId: 'FEmusic_library_corpus_artists' }],
+  ['browse', { browseId: 'FEmusic_library_non_music_audio_list' }],
+  ['browse', { browseId: 'FEmusic_library_privately_owned_tracks' }],
+  ['browse', { browseId: 'FEmusic_history' }],
+  ['browse', { browseId: 'VLLM' }],
+  ['account/accounts_list', { requestType: 'ACCOUNTS_LIST_REQUEST_TYPE_CHANNEL_SWITCHER' }],
+];
+
+export function startFixtureCapture(): void {
+  let done = false;
+  usePlayerStore.subscribe((s) => {
+    if (done || !s.ready) return;
+    done = true;
+    void (async () => {
+      for (const [endpoint, body] of CAPTURE_SET) {
+        try {
+          const res = await innertube(endpoint, body);
+          console.warn(
+            '[capture] ok',
+            endpoint,
+            JSON.stringify(body),
+            JSON.stringify(res).length,
+            'chars',
+          );
+        } catch (err) {
+          console.warn('[capture] failed', endpoint, JSON.stringify(body), String(err));
+        }
+      }
+      if (import.meta.env.VITE_CAPTURE_PLAYBACK === '1') {
+        // End-to-end playback self-test: hand a watch endpoint to the page, then add to queue.
+        console.warn('[capture] playback test: watch endpoint');
+        await sendCommand({
+          type: 'endpoint',
+          endpoint: { watchEndpoint: { videoId: 'dQw4w9WgXcQ' } },
+          mode: 'navigate',
+        });
+        await new Promise((r) => setTimeout(r, 6000));
+        console.warn('[capture] playback test: queueAdd (play next)');
+        await sendCommand({
+          type: 'queueAdd',
+          target: { videoId: 'khnokW3Mw24' },
+          position: 'next',
+        });
+        await new Promise((r) => setTimeout(r, 2000));
+        await sendCommand({ type: 'setShuffle', enabled: true });
+        await sendCommand({ type: 'setRepeat', mode: 'one' });
+        await new Promise((r) => setTimeout(r, 1000));
+        await sendCommand({ type: 'pause' });
+        console.warn('[capture] playback test done');
+      }
+    })();
+  });
+}

@@ -32,7 +32,7 @@
         "font-src": "'self'",
         "connect-src": "'self' ipc: http://ipc.localhost"
       },
-      "freezePrototype": true
+      "freezePrototype": false
     }
   },
   "bundle": {

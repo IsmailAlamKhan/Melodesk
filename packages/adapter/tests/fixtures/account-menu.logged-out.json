@@ -1,0 +1,104 @@
+{
+  "actions": [
+    {
+      "clickTrackingParams": "CAAQpbsIIhMI-aOymuPIlwMVt8RMAh0kXANTygEEOblIqw==",
+      "openPopupAction": {
+        "popup": {
+          "multiPageMenuRenderer": {
+            "sections": [
+              {
+                "multiPageMenuSectionRenderer": {
+                  "items": [
+                    {
+                      "compactLinkRenderer": {
+                        "icon": { "iconType": "UNLIMITED" },
+                        "navigationEndpoint": {
+                          "browseEndpoint": {
+                            "browseId": "SPunlimited",
+                            "canonicalBaseUrl": "/music_premium",
+                            "params": "kgMXShUIBhIRdW5saW1pdGVkLUItbXVzaWM%3D"
+                          },
+                          "clickTrackingParams": "CAcQmbcBGAAiEwj5o7Ka48iXAxW3xEwCHSRcA1PKAQQ5uUir"
+                        },
+                        "title": { "runs": [{ "text": "Get Music Premium" }] },
+                        "trackingParams": "CAcQmbcBGAAiEwj5o7Ka48iXAxW3xEwCHSRcA1M="
+                      }
+                    },
+                    {
+                      "compactLinkRenderer": {
+                        "icon": { "iconType": "SETTINGS" },
+                        "navigationEndpoint": {
+                          "applicationSettingsEndpoint": { "hack": true },
+                          "clickTrackingParams": "CAYQ6qgHGAEiEwj5o7Ka48iXAxW3xEwCHSRcA1PKAQQ5uUir"
+                        },
+                        "title": { "runs": [{ "text": "Settings" }] },
+                        "trackingParams": "CAYQ6qgHGAEiEwj5o7Ka48iXAxW3xEwCHSRcA1M="
+                      }
+                    },
+                    {
+                      "compactLinkRenderer": {
+                        "icon": { "iconType": "PRIVACY_INFO" },
+                        "navigationEndpoint": {
+                          "clickTrackingParams": "CAUQp0wYAiITCPmjsprjyJcDFbfETAIdJFwDU8oBBDm5SKs=",
+                          "urlEndpoint": {
+                            "url": "https://www.youtube.com/t/terms?gl=BD&chromeless=1"
+                          }
+                        },
+                        "title": { "runs": [{ "text": "Terms & privacy policy" }] },
+                        "trackingParams": "CAUQp0wYAiITCPmjsprjyJcDFbfETAIdJFwDUw=="
+                      }
+                    },
+                    {
+                      "compactLinkRenderer": {
+                        "icon": { "iconType": "HELP" },
+                        "serviceEndpoint": {
+                          "clickTrackingParams": "CAQQ46gHGAMiEwj5o7Ka48iXAxW3xEwCHSRcA1PKAQQ5uUir",
+                          "signalServiceEndpoint": {
+                            "actions": [
+                              {
+                                "clickTrackingParams": "CAQQ46gHGAMiEwj5o7Ka48iXAxW3xEwCHSRcA1PKAQQ5uUir",
+                                "signalAction": { "signal": "HELP" }
+                              }
+                            ],
+                            "signal": "CLIENT_SIGNAL"
+                          }
+                        },
+                        "title": { "runs": [{ "text": "Help" }] },
+                        "trackingParams": "CAQQ46gHGAMiEwj5o7Ka48iXAxW3xEwCHSRcA1M="
+                      }
+                    },
+                    {
+                      "compactLinkRenderer": {
+                        "icon": { "iconType": "FEEDBACK" },
+                        "serviceEndpoint": {
+                          "clickTrackingParams": "CAMQ4agHGAQiEwj5o7Ka48iXAxW3xEwCHSRcA1PKAQQ5uUir",
+                          "signalServiceEndpoint": {
+                            "actions": [
+                              {
+                                "clickTrackingParams": "CAMQ4agHGAQiEwj5o7Ka48iXAxW3xEwCHSRcA1PKAQQ5uUir",
+                                "sendFeedbackAction": { "bucket": "Kevlar" }
+                              }
+                            ],
+                            "signal": "CLIENT_SIGNAL"
+                          }
+                        },
+                        "title": { "runs": [{ "text": "Send feedback" }] },
+                        "trackingParams": "CAMQ4agHGAQiEwj5o7Ka48iXAxW3xEwCHSRcA1M="
+                      }
+                    }
+                  ],
+                  "trackingParams": "CAIQ968BGAAiEwj5o7Ka48iXAxW3xEwCHSRcA1M="
+                }
+              }
+            ],
+            "style": "MULTI_PAGE_MENU_STYLE_TYPE_ACCOUNT",
+            "trackingParams": "CAEQ_6sBIhMI-aOymuPIlwMVt8RMAh0kXANT"
+          }
+        },
+        "popupType": "DROPDOWN",
+        "reusePopup": true
+      }
+    }
+  ],
+  "trackingParams": "CAAQpbsIIhMI-aOymuPIlwMVt8RMAh0kXANTygEEOblIqw=="
+}

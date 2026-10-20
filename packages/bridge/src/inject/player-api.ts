@@ -18,6 +18,8 @@ export interface YtPlayerElement extends HTMLElement {
   getCurrentTime?: () => number;
   getDuration?: () => number;
   getVideoData?: () => { video_id?: string; title?: string; author?: string } | undefined;
+  setPlaybackRate?: (rate: number) => void;
+  getPlaybackRate?: () => number;
 }
 
 export const REQUIRED_PLAYER_METHODS = [

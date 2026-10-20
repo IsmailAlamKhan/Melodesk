@@ -11,6 +11,12 @@ rust-version = "1.85"
 name = "melodesk_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[features]
+# The Tauri CLI passes --no-default-features for `tauri dev` (loads devUrl) and enables
+# custom-protocol for `tauri build` (embeds frontendDist).
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
 [build-dependencies]
 tauri-build = { version = "=2.7.3", features = [] }
 

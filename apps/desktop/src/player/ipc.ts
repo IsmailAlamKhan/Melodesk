@@ -5,6 +5,7 @@ import {
   BridgeEventSchema,
   type PlayerCommand,
 } from '@melodesk/bridge/protocol';
+import { rejectAllPending, resolveDataResponse } from './data';
 import { usePlayerStore } from './store';
 
 const REJECTED_EVENTS_BEFORE_DEGRADED = 10;
@@ -40,18 +41,36 @@ export function subscribeToPlayer(): void {
     }
     const ev = parsed.data;
     switch (ev.type) {
-      case 'ready':
+      case 'ready': {
+        const wasReady = usePlayerStore.getState().ready;
         usePlayerStore.setState({
           ready: true,
           bridgeVersion: ev.bridgeVersion,
           loggedIn: ev.loggedIn,
         });
+        // A second `ready` means the page reloaded; nothing in flight will ever answer.
+        if (wasReady) rejectAllPending('player reloaded');
+        break;
+      }
+      case 'dataResponse':
+        resolveDataResponse(ev.requestId, ev.ok, ev.response, ev.error);
+        break;
+      case 'capabilities':
+        usePlayerStore.setState({ capabilities: ev.found });
+        if (import.meta.env.DEV)
+          console.warn('[bridge] capabilities', JSON.stringify(ev.found), ev.notes?.join('\n'));
         break;
       case 'state':
         usePlayerStore.setState({ state: ev.state });
         break;
       case 'track':
         usePlayerStore.setState({ track: ev.track });
+        break;
+      case 'queue':
+        usePlayerStore.setState({ queue: ev.queue });
+        break;
+      case 'flags':
+        usePlayerStore.setState({ flags: ev.flags });
         break;
       case 'health':
         usePlayerStore.setState({ health: { status: ev.status, reason: ev.reason } });

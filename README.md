@@ -31,10 +31,14 @@ See [docs/architecture.md](docs/architecture.md) for the full picture and the tr
 Planned and in progress; ticked items work today.
 
 - [x] Google sign-in through Google's own page (never through our code)
-- [x] Play / pause / next / previous / seek / volume from our own UI
+- [x] Play / pause / next / previous / seek / volume / shuffle / repeat from our own UI
 - [x] Health check that shows "an update is needed" when YouTube changes something
-- [ ] Home, Explore, Charts, Moods & Genres, search with suggestions
-- [ ] Library, playlists, queue with drag-and-drop
+- [x] Your own Home feed (same shelves, same order, infinite scroll), Explore, Charts, Moods & Genres, New releases
+- [x] Search with live suggestions and YouTube's filter chips
+- [x] Artist, album and playlist pages; context menus with YouTube's own actions
+- [x] Library (playlists, songs, albums, artists, subscriptions, podcasts, uploads, history)
+- [x] Live queue panel with drag-and-drop reorder, play next, add to queue
+- [ ] Create / rename / delete playlists, add-to-playlist dialog, lyrics panel (parsers done, UI pending)
 - [ ] macOS Now Playing, Windows media controls, Linux MPRIS
 - [ ] Mini player, full-screen Now Playing with synced lyrics
 - [ ] Last.fm / ListenBrainz scrobbling, Discord Rich Presence (opt-in)

@@ -18,8 +18,9 @@ pub const MAIN_LABEL: &str = "main";
 const PLAYER_URL: &str = "https://music.youtube.com/";
 /// Tauri event name the UI listens on. Must match `BRIDGE_EVENT_CHANNEL` in the bridge protocol.
 const BRIDGE_EVENT_CHANNEL: &str = "player:event";
-/// Upper bound on a single bridge event payload; anything larger is dropped.
-const MAX_EVENT_BYTES: usize = 64 * 1024;
+/// Upper bound on a single bridge event payload; anything larger is dropped. InnerTube
+/// responses (home feed, long playlists) can run to a few MB.
+const MAX_EVENT_BYTES: usize = 16 * 1024 * 1024;
 
 /// Built by `pnpm build:bridge` (packages/bridge → dist/bridge.js) and embedded at compile time.
 const BRIDGE_SCRIPT: &str = include_str!("../../../../packages/bridge/dist/bridge.js");
@@ -44,11 +45,92 @@ pub enum PlayerCommand {
     Toggle,
     Next,
     Previous,
-    Seek { seconds: f64 },
-    SetVolume { volume: f64 },
-    SetMuted { muted: bool },
-    Navigate { path: String },
+    Seek {
+        seconds: f64,
+    },
+    SetVolume {
+        volume: f64,
+    },
+    SetMuted {
+        muted: bool,
+    },
+    Navigate {
+        path: String,
+    },
     RequestState,
+    #[serde(rename_all = "camelCase")]
+    Data {
+        request_id: String,
+        endpoint: String,
+        body: serde_json::Map<String, serde_json::Value>,
+    },
+    Probe,
+    Endpoint {
+        endpoint: serde_json::Map<String, serde_json::Value>,
+        mode: EndpointMode,
+    },
+    QueueAdd {
+        target: QueueTarget,
+        position: QueuePosition,
+    },
+    SetShuffle {
+        enabled: bool,
+    },
+    SetRepeat {
+        mode: RepeatMode,
+    },
+    QueueSelect {
+        index: u32,
+    },
+    QueueRemove {
+        index: u32,
+    },
+    QueueMove {
+        from: u32,
+        to: u32,
+    },
+    SetAutoplay {
+        enabled: bool,
+    },
+    SetPlaybackRate {
+        rate: f64,
+    },
+    SetVideoMode {
+        video: bool,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct QueueTarget {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub video_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub playlist_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub params: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum QueuePosition {
+    Next,
+    End,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum EndpointMode {
+    Navigate,
+    Service,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum RepeatMode {
+    Off,
+    All,
+    One,
 }
 
 impl PlayerCommand {
@@ -61,6 +143,35 @@ impl PlayerCommand {
                 if !(volume.is_finite() && (0.0..=1.0).contains(volume)) =>
             {
                 Err(PlayerError::InvalidCommand("volume must be within 0..=1"))
+            }
+            PlayerCommand::Data {
+                request_id,
+                endpoint,
+                ..
+            } if request_id.is_empty()
+                || request_id.len() > 64
+                || !endpoint.split('/').all(|seg| {
+                    !seg.is_empty() && seg.chars().all(|c| c.is_ascii_lowercase() || c == '_')
+                })
+                || endpoint.matches('/').count() > 1 =>
+            {
+                Err(PlayerError::InvalidCommand(
+                    "data endpoint must be like \"browse\" or \"music/get_search_suggestions\"",
+                ))
+            }
+            PlayerCommand::SetPlaybackRate { rate }
+                if !(rate.is_finite() && (0.25..=3.0).contains(rate)) =>
+            {
+                Err(PlayerError::InvalidCommand(
+                    "playback rate must be within 0.25..=3",
+                ))
+            }
+            PlayerCommand::Endpoint { endpoint, .. }
+                if endpoint.is_empty() || endpoint.len() > 8 =>
+            {
+                Err(PlayerError::InvalidCommand(
+                    "endpoint must be a single InnerTube endpoint object",
+                ))
             }
             PlayerCommand::Navigate { path }
                 if !path.starts_with('/')
@@ -100,11 +211,13 @@ impl Serialize for PlayerError {
 
 pub fn create_player_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
     let url = WebviewUrl::External(PLAYER_URL.parse().expect("static URL is valid"));
+    // Dev aid: start with the player window visible to see what the page is showing.
+    let visible = cfg!(debug_assertions) && std::env::var_os("MELODESK_DEV_SHOW_PLAYER").is_some();
     let window = WebviewWindowBuilder::new(app, PLAYER_LABEL, url)
         .title("Player")
         .inner_size(1100.0, 760.0)
         .min_inner_size(640.0, 480.0)
-        .visible(false)
+        .visible(visible)
         .user_agent(USER_AGENT)
         .initialization_script(BRIDGE_SCRIPT)
         .build()?;
@@ -164,14 +277,82 @@ pub fn bridge_emit<R: Runtime>(
     if window.label() != PLAYER_LABEL {
         return Err(PlayerError::WrongWindow(window.label().to_string()));
     }
-    let size = serde_json::to_vec(&event)?.len();
-    if size > MAX_EVENT_BYTES {
+    let bytes = serde_json::to_vec(&event)?;
+    if bytes.len() > MAX_EVENT_BYTES {
         return Err(PlayerError::PayloadTooLarge);
     }
+    #[cfg(debug_assertions)]
+    dev::observe(&event, &bytes);
     window
         .app_handle()
         .emit_to(MAIN_LABEL, BRIDGE_EVENT_CHANNEL, event)?;
     Ok(())
+}
+
+/// Debug-build aids: mirror bridge log/health/capability events to stderr, and when
+/// `MELODESK_FIXTURE_DIR` is set, save raw data responses there so they can be turned into
+/// adapter test fixtures (strip account data before committing one).
+#[cfg(debug_assertions)]
+mod dev {
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
+
+    pub fn observe(event: &serde_json::Value, bytes: &[u8]) {
+        let kind = event.get("type").and_then(|t| t.as_str()).unwrap_or("?");
+        match kind {
+            "log" | "health" | "ready" | "navigation" | "track" | "flags" => {
+                eprintln!("[bridge] {event}")
+            }
+            "queue" => {
+                let q = event.get("queue");
+                let n = q
+                    .and_then(|q| q.get("items"))
+                    .and_then(|i| i.as_array())
+                    .map(|a| a.len())
+                    .unwrap_or(0);
+                eprintln!(
+                    "[bridge] queue items={n} index={} shuffle={} repeat={} autoplay={} title={}",
+                    q.and_then(|q| q.get("index")).cloned().unwrap_or_default(),
+                    q.and_then(|q| q.get("shuffle"))
+                        .cloned()
+                        .unwrap_or_default(),
+                    q.and_then(|q| q.get("repeat")).cloned().unwrap_or_default(),
+                    q.and_then(|q| q.get("autoplay"))
+                        .cloned()
+                        .unwrap_or_default(),
+                    q.and_then(|q| q.get("title")).cloned().unwrap_or_default(),
+                );
+            }
+            "capabilities" => {
+                eprintln!(
+                    "[bridge] capabilities found={}",
+                    event.get("found").cloned().unwrap_or_default()
+                );
+                if let Some(notes) = event.get("notes").and_then(|n| n.as_array()) {
+                    for note in notes {
+                        eprintln!("[bridge]   {}", note.as_str().unwrap_or(""));
+                    }
+                }
+            }
+            "dataResponse" => {
+                let id = event
+                    .get("requestId")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("?");
+                let ok = event.get("ok").and_then(|v| v.as_bool()).unwrap_or(false);
+                eprintln!("[bridge] dataResponse {id} ok={ok} bytes={}", bytes.len());
+                if let Ok(dir) = std::env::var("MELODESK_FIXTURE_DIR") {
+                    let n = COUNTER.fetch_add(1, Ordering::Relaxed);
+                    let path = std::path::Path::new(&dir).join(format!("{n:03}-{id}.json"));
+                    if let Err(e) = std::fs::write(&path, bytes) {
+                        eprintln!("[bridge] fixture write failed: {e}");
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
 }
 
 #[cfg(test)]
@@ -218,6 +399,25 @@ mod tests {
         }
         .validate()
         .is_err());
+    }
+
+    #[test]
+    fn validates_data_endpoints() {
+        let ok = PlayerCommand::Data {
+            request_id: "r1".into(),
+            endpoint: "music/get_search_suggestions".into(),
+            body: Default::default(),
+        };
+        assert!(ok.validate().is_ok());
+        let bad = PlayerCommand::Data {
+            request_id: "r1".into(),
+            endpoint: "../evil".into(),
+            body: Default::default(),
+        };
+        assert!(bad.validate().is_err());
+        let json: PlayerCommand =
+            serde_json::from_str(r#"{"type":"data","requestId":"x","endpoint":"browse","body":{"browseId":"FEmusic_home"}}"#).unwrap();
+        assert!(matches!(json, PlayerCommand::Data { .. }));
     }
 
     #[test]
