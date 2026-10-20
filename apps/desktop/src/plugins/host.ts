@@ -17,7 +17,7 @@ import {
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { invoke } from '@tauri-apps/api/core';
 import { create } from 'zustand';
-import { db } from '../data/persister';
+import { kvDel, kvGet, kvSet } from '../data/kv';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { toast } from '../app/toast';
@@ -44,24 +44,6 @@ interface PluginHostState {
 const NATIVE_COMMANDS: Record<string, string[]> = {
   'native:discord': ['discord_set_activity', 'discord_clear'],
 };
-
-async function kvGet(key: string): Promise<string | null> {
-  const rows = await (
-    await db()
-  ).select<{ value: string }[]>('SELECT value FROM settings WHERE key = $1', [key]);
-  return rows[0]?.value ?? null;
-}
-async function kvSet(key: string, value: string): Promise<void> {
-  await (
-    await db()
-  ).execute(
-    'INSERT INTO settings (key, value, updated_at) VALUES ($1, $2, $3) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at',
-    [key, value, Date.now()],
-  );
-}
-async function kvDel(key: string): Promise<void> {
-  await (await db()).execute('DELETE FROM settings WHERE key = $1', [key]);
-}
 
 function currentTrack(): PluginTrack | null {
   const t = usePlayerStore.getState().track;
@@ -266,17 +248,28 @@ export async function startPluginHost(): Promise<void> {
   window.setInterval(() => usePluginHost.getState().refreshStatus(), 2000);
 }
 
-/** Lyrics providers from enabled plugins, in settings order. */
+/** Lyrics providers from enabled plugins, in settings order. Each gets a time limit. */
 export async function lyricsFromPlugins(track: PluginTrack): Promise<LyricsResult | null> {
   for (const p of usePluginHost.getState().plugins) {
     const provider = p.instance?.lyricsProvider;
     if (!p.enabled || !provider) continue;
     try {
-      const result = await provider(track);
+      const result = await Promise.race([
+        provider(track),
+        new Promise<null>((resolve) => window.setTimeout(() => resolve(null), 8000)),
+      ]);
       if (result) return result;
     } catch (err) {
       console.warn(`[plugin:${p.manifest.id}] lyrics failed`, err);
     }
   }
   return null;
+}
+
+export function isPluginEnabled(id: string): boolean {
+  return usePluginHost.getState().plugins.some((p) => p.manifest.id === id && p.enabled);
+}
+
+export async function enablePlugin(id: string): Promise<void> {
+  await usePluginHost.getState().setEnabled(id, true);
 }

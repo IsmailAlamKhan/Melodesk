@@ -7,6 +7,7 @@ import { queryClient } from './data/queryClient';
 import { shouldPersistQuery, sqlitePersister } from './data/persister';
 import { subscribeToPlayer } from './player/ipc';
 import { useSettings } from './settings/store';
+import { useLyricsPrefs } from './lyrics/prefs';
 import { startPluginHost } from './plugins/host';
 import { startHistoryRecorder } from './stats/recorder';
 import { handleIncomingUrl } from './app/openUrl';
@@ -28,6 +29,7 @@ function isMiniWindowEarly(): boolean {
 
 subscribeToPlayer();
 void useSettings.getState().load();
+void useLyricsPrefs.getState().load();
 if (!isMiniWindowEarly()) startHistoryRecorder();
 void startPluginHost().catch((err: unknown) => {
   console.error('plugin host failed', err);

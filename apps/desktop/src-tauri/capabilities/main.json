@@ -41,7 +41,10 @@
       "allow": [
         { "url": "https://lrclib.net/*" },
         { "url": "https://ws.audioscrobbler.com/*" },
-        { "url": "https://api.listenbrainz.org/*" }
+        { "url": "https://api.listenbrainz.org/*" },
+        { "url": "https://api.mymemory.translated.net/*" },
+        { "url": "http://localhost:*/*" },
+        { "url": "http://127.0.0.1:*/*" }
       ]
     }
   ]

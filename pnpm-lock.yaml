@@ -131,6 +131,9 @@ importers:
       '@tauri-apps/plugin-updater':
         specifier: 2.14.0
         version: 2.14.0
+      any-ascii:
+        specifier: 0.3.3
+        version: 0.3.3
       framer-motion:
         specifier: 14.4.0
         version: 14.4.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1337,6 +1340,10 @@ packages:
 
   ajv@6.15.0:
     resolution: {integrity: sha512-fgFx7Hfoq60ytK2c7DhnF8jIvzYgOMxfugjLOSMHjLIPgenqa7S7oaagATUq99mV6IYvN2tRmC0wnTYX6iPbMw==}
+
+  any-ascii@0.3.3:
+    resolution: {integrity: sha512-8hm+zPrc1VnlxD5eRgMo9F9k2wEMZhbZVLKwA/sPKIt6ywuz7bI9uV/yb27uvc8fv8q6Wl2piJT51q1saKX0Jw==}
+    engines: {node: '>=12.20'}
 
   aria-hidden@1.2.6:
     resolution: {integrity: sha512-ik3ZgC9dY/lYVVM++OISsaYDeg1tb0VtP5uL3ouh1koGOaUMDPpbFIei4JkFimWUFPn90sbMNMXQAIVOlnYKJA==}
@@ -3212,6 +3219,8 @@ snapshots:
       fast-json-stable-stringify: 2.1.0
       json-schema-traverse: 0.4.1
       uri-js: 4.4.1
+
+  any-ascii@0.3.3: {}
 
   aria-hidden@1.2.6:
     dependencies:
