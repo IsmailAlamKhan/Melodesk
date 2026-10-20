@@ -265,3 +265,32 @@ pub fn apply_autostart<R: Runtime>(app: &AppHandle<R>, enabled: bool) -> tauri::
     };
     result.map_err(|e| tauri::Error::Anyhow(anyhow::anyhow!(e.to_string())))
 }
+
+/// Floating always-on-top mini player: our own UI loaded on the `/mini` route in a small window.
+#[tauri::command]
+pub fn open_mini_player<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
+    use tauri::{WebviewUrl, WebviewWindowBuilder};
+    if let Some(w) = app.get_webview_window(crate::player::MINI_LABEL) {
+        w.show().map_err(|e| e.to_string())?;
+        w.set_focus().map_err(|e| e.to_string())?;
+        return Ok(());
+    }
+    let mut builder = WebviewWindowBuilder::new(
+        &app,
+        crate::player::MINI_LABEL,
+        WebviewUrl::App("index.html?window=mini".into()),
+    )
+    .title("Melodesk Mini")
+    .inner_size(360.0, 120.0)
+    .min_inner_size(240.0, 72.0)
+    .always_on_top(true)
+    .decorations(false)
+    .resizable(true)
+    .skip_taskbar(true);
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.transparent(true);
+    }
+    builder.build().map_err(|e| e.to_string())?;
+    Ok(())
+}

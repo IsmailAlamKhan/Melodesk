@@ -5,6 +5,7 @@
 //! runs in its own webview window (see [`player`]).
 
 mod deeplink;
+mod discord;
 #[cfg(target_os = "linux")]
 mod media;
 mod native;
@@ -24,6 +25,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
@@ -42,6 +44,9 @@ pub fn run() {
             player::bridge_emit,
             settings::get_settings,
             settings::set_settings,
+            discord::discord_set_activity,
+            discord::discord_clear,
+            native::open_mini_player,
         ])
         .setup(|app| {
             let handle = app.handle().clone();

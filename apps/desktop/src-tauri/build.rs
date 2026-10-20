@@ -9,6 +9,9 @@ fn main() {
             "bridge_emit",
             "get_settings",
             "set_settings",
+            "discord_set_activity",
+            "discord_clear",
+            "open_mini_player",
         ]),
     ))
     .expect("failed to run tauri-build");

@@ -15,6 +15,7 @@ use tauri::{
 
 pub const PLAYER_LABEL: &str = "player";
 pub const MAIN_LABEL: &str = "main";
+pub const MINI_LABEL: &str = "mini";
 const PLAYER_URL: &str = "https://music.youtube.com/";
 /// Tauri event name the UI listens on. Must match `BRIDGE_EVENT_CHANNEL` in the bridge protocol.
 const BRIDGE_EVENT_CHANNEL: &str = "player:event";
@@ -303,9 +304,11 @@ pub fn bridge_emit<R: Runtime>(
     #[cfg(debug_assertions)]
     dev::observe(&event, &bytes);
     crate::native::observe(window.app_handle(), &event);
-    window
-        .app_handle()
-        .emit_to(MAIN_LABEL, BRIDGE_EVENT_CHANNEL, event)?;
+    let app = window.app_handle();
+    if app.get_webview_window(MINI_LABEL).is_some() {
+        app.emit_to(MINI_LABEL, BRIDGE_EVENT_CHANNEL, event.clone())?;
+    }
+    app.emit_to(MAIN_LABEL, BRIDGE_EVENT_CHANNEL, event)?;
     Ok(())
 }
 

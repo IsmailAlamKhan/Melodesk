@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchLyrics, fetchNext } from '../data/innertube';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
+import { lyricsFromPlugins } from '../plugins/host';
 
 /** Smoothly interpolated playback position in ms, for highlighting the current lyric line. */
 function usePositionMs(): number {
@@ -39,8 +40,25 @@ export function LyricsPanel() {
     staleTime: 1000 * 60 * 60,
     queryFn: async () => {
       const next = await fetchNext({ videoId: videoId ?? '' });
-      if (!next.lyricsBrowseId) return { text: null, source: null, synced: null };
-      return fetchLyrics(next.lyricsBrowseId);
+      const own = next.lyricsBrowseId
+        ? await fetchLyrics(next.lyricsBrowseId)
+        : { text: null, source: null, synced: null };
+      if (own.text || own.synced) return own;
+      // YouTube has none: ask enabled lyrics plugins (e.g. LRCLIB).
+      const t = usePlayerStore.getState().track;
+      const st = usePlayerStore.getState().state;
+      if (!t?.videoId) return own;
+      const fallback = await lyricsFromPlugins({
+        videoId: t.videoId,
+        title: t.title,
+        artist: t.artist,
+        album: t.album,
+        artworkUrl: t.artworkUrl,
+        durationSeconds: st?.duration ?? null,
+      });
+      return fallback
+        ? { text: fallback.text, source: fallback.source, synced: fallback.synced }
+        : own;
     },
   });
 

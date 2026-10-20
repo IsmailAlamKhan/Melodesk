@@ -8,6 +8,7 @@ import { sendCommand, setPlayerVisible } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
 import { SHORTCUT_ACTIONS, useSettings } from '../../settings/store';
 import { ShortcutField } from '../components/ShortcutField';
+import { PluginsSection } from '../components/PluginsSection';
 import { toast } from '../toast';
 
 function Toggle({
@@ -185,6 +186,8 @@ export function SettingsPage() {
           </div>
         )}
       </section>
+
+      <PluginsSection />
 
       <section className="flex flex-col gap-3">
         <h2 className="font-semibold">Updates</h2>

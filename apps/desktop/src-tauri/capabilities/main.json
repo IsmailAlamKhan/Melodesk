@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
   "description": "Our own UI window: core window/event APIs, the player commands, and local SQLite.",
-  "windows": ["main"],
+  "windows": ["main", "mini"],
   "permissions": [
     "core:default",
     "core:window:allow-set-title",
@@ -17,6 +17,12 @@
     "allow-player-set-visible",
     "allow-get-settings",
     "allow-set-settings",
+    "allow-discord-set-activity",
+    "allow-discord-clear",
+    "allow-open-mini-player",
+    "core:window:allow-set-always-on-top",
+    "core:window:allow-set-size",
+    "core:window:allow-start-resize-dragging",
     "sql:default",
     "sql:allow-execute",
     "store:default",
@@ -27,6 +33,14 @@
     "autostart:default",
     "global-shortcut:default",
     "deep-link:default",
-    "updater:default"
+    "updater:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://lrclib.net/*" },
+        { "url": "https://ws.audioscrobbler.com/*" },
+        { "url": "https://api.listenbrainz.org/*" }
+      ]
+    }
   ]
 }

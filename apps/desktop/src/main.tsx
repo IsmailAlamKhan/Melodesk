@@ -6,6 +6,7 @@ import { queryClient } from './data/queryClient';
 import { shouldPersistQuery, sqlitePersister } from './data/persister';
 import { subscribeToPlayer } from './player/ipc';
 import { useSettings } from './settings/store';
+import { startPluginHost } from './plugins/host';
 import { handleIncomingUrl } from './app/openUrl';
 import { router } from './app/router';
 import { listen } from '@tauri-apps/api/event';
@@ -20,6 +21,9 @@ document.documentElement.dataset['platform'] = navigator.userAgent.includes('Mac
     : 'linux';
 subscribeToPlayer();
 void useSettings.getState().load();
+void startPluginHost().catch((err: unknown) => {
+  console.error('plugin host failed', err);
+});
 // Deep links: cold start (getCurrent) and while running (onOpenUrl / the Rust forwarder).
 void getCurrent()
   .then((urls) => urls?.forEach(handleIncomingUrl))
