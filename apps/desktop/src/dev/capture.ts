@@ -33,6 +33,10 @@ const CAPTURE_SET: [string, Record<string, unknown>][] = [
   ['browse', { browseId: 'FEmusic_history' }],
   ['browse', { browseId: 'VLLM' }],
   ['account/accounts_list', { requestType: 'ACCOUNTS_LIST_REQUEST_TYPE_CHANNEL_SWITCHER' }],
+  ['browse', { browseId: 'VLPLOYAXcXseMvMk9n2R72mp69whLmWaYcwB' }], // one of the account's own (editable) playlists
+  ['playlist/get_add_to_playlist', { videoIds: ['khnokW3Mw24'], excludeWatchLater: true }],
+  ['browse', { browseId: 'MPLYt_6AEOVn4k62q' }], // lyrics for dQw4w9WgXcQ
+  ['next', { videoId: 'khnokW3Mw24', enablePersistentPlaylistPanel: true, isAudioOnly: true }],
 ];
 
 export function startFixtureCapture(): void {
@@ -54,6 +58,45 @@ export function startFixtureCapture(): void {
         } catch (err) {
           console.warn('[capture] failed', endpoint, JSON.stringify(body), String(err));
         }
+      }
+      // Lyrics for the last  above: follow its Lyrics tab browse id.
+      try {
+        const nextRes = (await innertube('next', {
+          videoId: 'khnokW3Mw24',
+          enablePersistentPlaylistPanel: true,
+          isAudioOnly: true,
+        })) as {
+          contents?: {
+            singleColumnMusicWatchNextResultsRenderer?: {
+              tabbedRenderer?: {
+                watchNextTabbedResultsRenderer?: {
+                  tabs?: {
+                    tabRenderer?: {
+                      title?: string;
+                      endpoint?: { browseEndpoint?: { browseId?: string } };
+                    };
+                  }[];
+                };
+              };
+            };
+          };
+        };
+        const tabs =
+          nextRes.contents?.singleColumnMusicWatchNextResultsRenderer?.tabbedRenderer
+            ?.watchNextTabbedResultsRenderer?.tabs ?? [];
+        const lyricsId = tabs.find((t) => t.tabRenderer?.title === 'Lyrics')?.tabRenderer?.endpoint
+          ?.browseEndpoint?.browseId;
+        if (lyricsId) {
+          const res = await innertube('browse', { browseId: lyricsId });
+          console.warn(
+            '[capture] ok browse(lyrics)',
+            lyricsId,
+            JSON.stringify(res).length,
+            'chars',
+          );
+        }
+      } catch (err) {
+        console.warn('[capture] lyrics failed', String(err));
       }
       if (import.meta.env.VITE_CAPTURE_PLAYBACK === '1') {
         // End-to-end playback self-test: hand a watch endpoint to the page, then add to queue.

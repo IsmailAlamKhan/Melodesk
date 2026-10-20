@@ -88,6 +88,7 @@ const emptyHeader = (title: string): PageHeader => ({
   channelId: null,
   playlistId: null,
   isEditable: false,
+  privacy: null,
   subscribed: null,
   likeStatus: null,
 });
@@ -217,6 +218,22 @@ function parseHeader(response: unknown): PageHeader | null {
         : h.playEndpoint?.type === 'watchPlaylist'
           ? h.playEndpoint.playlistId
           : null);
+    const editHeader =
+      obj(nav(detailWrapper, ['editHeader', 'musicPlaylistEditHeaderRenderer'])) ??
+      obj(
+        arr(primaryTab)
+          .map((c) =>
+            nav(c, [
+              'musicEditablePlaylistDetailHeaderRenderer',
+              'editHeader',
+              'musicPlaylistEditHeaderRenderer',
+            ]),
+          )
+          .find(Boolean),
+      );
+    const privacy = str(editHeader?.['privacy']);
+    h.privacy =
+      privacy === 'PUBLIC' || privacy === 'PRIVATE' || privacy === 'UNLISTED' ? privacy : null;
     h.isEditable =
       !!detailWrapper ||
       !!nav(r, ['editHeader']) ||

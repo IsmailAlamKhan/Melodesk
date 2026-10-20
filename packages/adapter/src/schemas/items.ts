@@ -176,6 +176,8 @@ export const PageHeaderSchema = z.object({
   playlistId: z.string().nullable(),
   /** The owner can edit this playlist. */
   isEditable: z.boolean(),
+  /** Editable playlists only: current privacy as YouTube reports it. */
+  privacy: z.enum(['PUBLIC', 'PRIVATE', 'UNLISTED']).nullable(),
   subscribed: z.boolean().nullable(),
   likeStatus: LikeStatusSchema.nullable(),
 });

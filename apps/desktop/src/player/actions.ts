@@ -15,6 +15,7 @@ import { queryClient } from '../data/queryClient';
 import { run } from '../data/innertube';
 import { sendCommand } from './ipc';
 import { toast } from '../app/toast';
+import { openDialog } from '../app/dialogs/store';
 
 /** Raw InnerTube endpoint object the page understands, rebuilt from our typed endpoint. */
 export function rawEndpoint(ep: Endpoint): Record<string, unknown> | null {
@@ -54,6 +55,11 @@ export async function playEndpoint(ep: Endpoint | null): Promise<void> {
 }
 
 export async function playItem(item: Item): Promise<void> {
+  if (item.kind === 'action') {
+    if (/new playlist/iu.test(item.title)) openDialog({ type: 'createPlaylist' });
+    else if (item.endpoint) await playEndpoint(item.endpoint);
+    return;
+  }
   const ep =
     item.playEndpoint ??
     (item.endpoint?.type === 'watch' || item.endpoint?.type === 'watchPlaylist'

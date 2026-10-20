@@ -40,3 +40,9 @@ export type {
   MenuItem,
 } from './innertube/endpoints';
 export { pickThumb } from './innertube/nav';
+export {
+  parseAddToPlaylistOptions,
+  parseCreatePlaylist,
+  PlaylistOptionSchema,
+} from './parsers/v1/playlists';
+export type { PlaylistOption } from './parsers/v1/playlists';

@@ -151,3 +151,9 @@ export function requestForAction(action: Action): InnertubeRequest | null {
       return null;
   }
 }
+
+/** The account's playlists a video can be added to (the web app's "Save to playlist" sheet). */
+export const addToPlaylistOptions = (videoIds: string[]): InnertubeRequest => ({
+  endpoint: 'playlist/get_add_to_playlist',
+  body: { videoIds, excludeWatchLater: true },
+});

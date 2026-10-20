@@ -1,11 +1,13 @@
 import type { PageHeader } from '@melodesk/adapter';
 import { Button, IconButton, cn } from '@melodesk/ui';
-import { Heart, MoreHorizontal, Play, Radio, Shuffle } from 'lucide-react';
+import { Heart, MoreHorizontal, Pencil, Play, Radio, Shuffle, Trash2 } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { playEndpoint, runAction, runMenuItem } from '../../player/actions';
 import { Artwork } from './Artwork';
+import { openDialog } from '../dialogs/store';
+import { deletePlaylist } from '../dialogs/playlists';
 
 /** Hero header for artist / album / playlist pages. */
 export function PageHeaderView({ header, round }: { header: PageHeader; round?: boolean }) {
@@ -64,7 +66,8 @@ export function PageHeaderView({ header, round }: { header: PageHeader; round?: 
           )}
           {header.actions.map((a) => {
             const active = a.isToggled ? a.toggledAction : a.action;
-            if (!active) return null;
+            // Icon-only buttons we don't understand (e.g. YouTube's own edit button) are skipped.
+            if (!active || (!a.text && a.icon !== 'LIKE' && a.icon !== 'SUBSCRIBE')) return null;
             const label =
               a.icon === 'LIKE'
                 ? a.isToggled
@@ -89,6 +92,44 @@ export function PageHeaderView({ header, round }: { header: PageHeader; round?: 
               </Button>
             );
           })}
+          {header.isEditable && header.playlistId && (
+            <>
+              <Button
+                variant="ghost"
+                onClick={() =>
+                  openDialog({
+                    type: 'editPlaylist',
+                    playlistId: header.playlistId ?? '',
+                    title: header.title,
+                    description: header.description ?? '',
+                    privacy: header.privacy ?? 'PRIVATE',
+                  })
+                }
+              >
+                <Pencil className="size-4" />
+                Edit
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() =>
+                  openDialog({
+                    type: 'confirm',
+                    title: 'Delete playlist?',
+                    body: `“${header.title}” will be deleted from your YouTube Music library.`,
+                    confirmLabel: 'Delete',
+                    danger: true,
+                    onConfirm: async () => {
+                      await deletePlaylist(header.playlistId ?? '');
+                      void navigate('/library/playlists');
+                    },
+                  })
+                }
+              >
+                <Trash2 className="size-4" />
+                Delete
+              </Button>
+            </>
+          )}
           {header.menu.length > 0 && (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>

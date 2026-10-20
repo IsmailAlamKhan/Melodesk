@@ -6,6 +6,7 @@ import { ErrorState } from '../components/ErrorState';
 import { ItemRow } from '../components/ItemRow';
 import { ListSkeleton, PageSkeleton } from '../components/PageSkeleton';
 import { PageHeaderView } from '../components/PageHeaderView';
+import { EditableTrackList } from '../components/EditableTrackList';
 import { ShelfView } from '../components/ShelfView';
 
 /** Artist, album and playlist pages: hero header + shelves; long track lists continue on scroll. */
@@ -47,7 +48,10 @@ export function DetailPage({ kind }: { kind: 'artist' | 'album' | 'playlist' }) 
   return (
     <div className="flex flex-col gap-6 pb-8">
       {page?.header && <PageHeaderView header={page.header} round={kind === 'artist'} />}
-      {tracks.length > 0 && (
+      {tracks.length > 0 && page?.header?.isEditable && playlistId && (
+        <EditableTrackList playlistId={playlistId} tracks={tracks} />
+      )}
+      {tracks.length > 0 && !(page?.header?.isEditable && playlistId) && (
         <div role="table" className="flex flex-col px-4">
           {tracks.map((t, i) => (
             <ItemRow

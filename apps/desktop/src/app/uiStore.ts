@@ -6,7 +6,12 @@ interface UiState {
 }
 
 export const useUiStore = create<UiState>((set) => ({
-  rightPanel: null,
+  // Dev aid: VITE_DEV_PANEL=queue|lyrics opens that panel on launch.
+  rightPanel:
+    import.meta.env.DEV &&
+    (import.meta.env.VITE_DEV_PANEL === 'queue' || import.meta.env.VITE_DEV_PANEL === 'lyrics')
+      ? import.meta.env.VITE_DEV_PANEL
+      : null,
   toggleRightPanel: (panel) => {
     set((s) => ({ rightPanel: s.rightPanel === panel ? null : panel }));
   },

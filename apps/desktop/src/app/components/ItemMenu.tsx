@@ -7,6 +7,7 @@ import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { queueAdd, runAction, runMenuItem, shareUrl } from '../../player/actions';
 import { toast } from '../toast';
+import { openDialog } from '../dialogs/store';
 
 const menuClass =
   'z-50 min-w-56 rounded-lg border border-border bg-bg-elevated p-1 text-sm shadow-xl';
@@ -47,13 +48,31 @@ export function useItemEntries(item: Item): Entry[] {
       run: () => queueAdd(target, 'end'),
     });
   }
+  const videoId =
+    item.kind === 'song' || item.kind === 'video' || item.kind === 'episode' ? item.videoId : null;
   for (const m of item.menu) {
     if (m.action?.type === 'signInRequired' && !m.toggled) continue;
     const label = m.toggled?.isToggled ? m.toggled.text : m.text;
+    if ((m.action?.type === 'addToPlaylist' || m.icon === 'ADD_TO_PLAYLIST') && videoId) {
+      entries.push({
+        key: 'addToPlaylist',
+        label,
+        run: () => openDialog({ type: 'addToPlaylist', videoIds: [videoId], label: item.title }),
+      });
+      continue;
+    }
     entries.push({
       key: `${m.text}:${String(m.icon)}`,
       label,
       run: () => runMenuItem(m, item, (to) => void navigate(to)),
+    });
+  }
+  // Our own "Save to playlist" when YouTube's menu only offered it behind sign-in.
+  if (videoId && !entries.some((e) => e.key === 'addToPlaylist')) {
+    entries.push({
+      key: 'addToPlaylist',
+      label: 'Save to playlist',
+      run: () => openDialog({ type: 'addToPlaylist', videoIds: [videoId], label: item.title }),
     });
   }
   const url = shareUrl(item);

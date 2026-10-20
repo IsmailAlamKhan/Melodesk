@@ -6,6 +6,7 @@ import { useBrowse } from '../data/hooks';
 import { routeForEndpoint } from '../player/actions';
 import { usePlayerStore } from '../player/store';
 import { Artwork } from './components/Artwork';
+import { openDialog } from './dialogs/store';
 
 const nav = [
   { to: '/', label: 'Home', icon: Home, end: true },
@@ -48,13 +49,14 @@ export function Sidebar() {
       <div className="mt-4 flex items-center justify-between px-5 text-xs font-medium tracking-wide text-fg-subtle uppercase">
         <span>Playlists</span>
         {loggedIn && (
-          <NavLink
-            to="/library/playlists"
+          <button
+            type="button"
             aria-label="New playlist"
             className="text-fg-subtle hover:text-fg"
+            onClick={() => openDialog({ type: 'createPlaylist' })}
           >
             <Plus className="size-4" />
-          </NavLink>
+          </button>
         )}
       </div>
       <div className="mt-1 flex-1 overflow-y-auto px-3 pb-2">

@@ -1,10 +1,12 @@
 import { IconButton, cn } from '@melodesk/ui';
-import { ChevronLeft, ChevronRight, ListMusic } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ListMusic, MicVocal } from 'lucide-react';
 import { Outlet, useNavigate } from 'react-router';
 import { usePlayerStore } from '../player/store';
 import { HealthBanner } from './HealthBanner';
 import { PlayerBar } from './PlayerBar';
+import { LyricsPanel } from './LyricsPanel';
 import { QueuePanel } from './QueuePanel';
+import { DialogHost } from './dialogs/DialogHost';
 import { SearchBox } from './SearchBox';
 import { Sidebar } from './Sidebar';
 import { Toaster } from './components/Toaster';
@@ -35,6 +37,15 @@ export function Layout() {
             <SearchBox />
           </div>
           <IconButton
+            label="Lyrics"
+            size="sm"
+            aria-pressed={panel === 'lyrics'}
+            onClick={() => togglePanel('lyrics')}
+            className={cn(panel === 'lyrics' && 'text-accent')}
+          >
+            <MicVocal />
+          </IconButton>
+          <IconButton
             label="Queue"
             size="sm"
             aria-pressed={panel === 'queue'}
@@ -50,15 +61,21 @@ export function Layout() {
         </main>
       </div>
       {panel && (
-        <aside aria-label="Queue" className="min-h-0 border-l border-border bg-bg-elevated">
-          <div data-tauri-drag-region className="h-10" />
-          {panel === 'queue' && <QueuePanel />}
+        <aside
+          aria-label={panel === 'queue' ? 'Queue' : 'Lyrics'}
+          className="flex min-h-0 flex-col border-l border-border bg-bg-elevated"
+        >
+          <div data-tauri-drag-region className="h-10 shrink-0" />
+          <div className="min-h-0 flex-1">
+            {panel === 'queue' ? <QueuePanel /> : <LyricsPanel />}
+          </div>
         </aside>
       )}
       <div className={cn(panel ? 'col-span-3' : 'col-span-2')}>
         <PlayerBar />
       </div>
       <Toaster />
+      <DialogHost />
     </div>
   );
 }
