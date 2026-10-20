@@ -4,6 +4,7 @@ import { Play } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { playItem, routeForEndpoint } from '../../player/actions';
 import { useAppearance } from '../../appearance/store';
+import { useT } from '../../i18n';
 import { Artwork } from './Artwork';
 import { ItemContextMenu, ItemMenuButton } from './ItemMenu';
 
@@ -11,6 +12,7 @@ import { ItemContextMenu, ItemMenuButton } from './ItemMenu';
 const TILE_PX = { compact: 144, comfortable: 168, spacious: 192 } as const;
 
 export function ItemCard({ item, width }: { item: Item; width?: number }) {
+  const t = useT();
   const density = useAppearance((s) => s.density);
   const tile = width ?? TILE_PX[density];
   const navigate = useNavigate();
@@ -49,7 +51,7 @@ export function ItemCard({ item, width }: { item: Item; width?: number }) {
           {playable && (
             <button
               type="button"
-              aria-label={`Play ${item.title}`}
+              aria-label={t('media.playItem', { title: item.title })}
               onClick={(e) => {
                 e.stopPropagation();
                 void playItem(item);
@@ -70,7 +72,12 @@ export function ItemCard({ item, width }: { item: Item; width?: number }) {
           </div>
           <div className="truncate text-xs text-fg-muted" title={item.subtitle}>
             {item.isExplicit && (
-              <span className="me-1 rounded-sm border border-fg-subtle px-1 text-[10px]">E</span>
+              <span
+                title={t('common.explicit')}
+                className="me-1 rounded-sm border border-fg-subtle px-1 text-[10px]"
+              >
+                {t('common.explicitBadge')}
+              </span>
             )}
             {subtitleOf(item)}
           </div>

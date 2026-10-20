@@ -6,6 +6,7 @@ import { ListEnd, ListPlus, MoreHorizontal, Share2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { queueAdd, runAction, runMenuItem, shareUrl } from '../../player/actions';
+import { useT } from '../../i18n';
 import { toast } from '../toast';
 import { openDialog } from '../dialogs/store';
 
@@ -23,6 +24,7 @@ interface Entry {
 
 /** YouTube's own menu entries for the item, plus our extras (queue shortcuts, copy link). */
 export function useItemEntries(item: Item): Entry[] {
+  const t = useT();
   const navigate = useNavigate();
   const entries: Entry[] = [];
   const hasQueue = item.menu.some((m) => m.action?.type === 'queueAdd');
@@ -37,13 +39,13 @@ export function useItemEntries(item: Item): Entry[] {
   if (!hasQueue && target) {
     entries.push({
       key: 'next',
-      label: 'Play next',
+      label: t('menu.playNext'),
       icon: <ListPlus className="size-4" />,
       run: () => queueAdd(target, 'next'),
     });
     entries.push({
       key: 'end',
-      label: 'Add to queue',
+      label: t('menu.addToQueue'),
       icon: <ListEnd className="size-4" />,
       run: () => queueAdd(target, 'end'),
     });
@@ -71,7 +73,7 @@ export function useItemEntries(item: Item): Entry[] {
   if (videoId && !entries.some((e) => e.key === 'addToPlaylist')) {
     entries.push({
       key: 'addToPlaylist',
-      label: 'Save to playlist',
+      label: t('menu.saveToPlaylist'),
       run: () => openDialog({ type: 'addToPlaylist', videoIds: [videoId], label: item.title }),
     });
   }
@@ -79,11 +81,11 @@ export function useItemEntries(item: Item): Entry[] {
   if (url && !item.menu.some((m) => m.action?.type === 'share')) {
     entries.push({
       key: 'copy',
-      label: 'Copy link',
+      label: t('menu.copyLink'),
       icon: <Share2 className="size-4" />,
       run: async () => {
         await navigator.clipboard.writeText(url);
-        toast('Link copied');
+        toast(t('toast.linkCopied'));
       },
     });
   }
@@ -110,13 +112,14 @@ export function ItemContextMenu({ item, children }: { item: Item; children: Reac
 }
 
 export function ItemMenuButton({ item, className }: { item: Item; className?: string }) {
+  const t = useT();
   const entries = useItemEntries(item);
   if (!entries.length) return null;
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         <IconButton
-          label="More"
+          label={t('common.more')}
           size="sm"
           className={className}
           onClick={(e) => e.stopPropagation()}

@@ -20,6 +20,7 @@ import { useNavigate } from 'react-router';
 import { run } from '../data/innertube';
 import { queryClient } from '../data/queryClient';
 import { requests } from '@melodesk/adapter';
+import { useT } from '../i18n';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { toast } from './toast';
@@ -57,6 +58,7 @@ function useInterpolatedPosition(): number {
 }
 
 export function PlayerBar() {
+  const t = useT();
   const navigate = useNavigate();
   const ready = usePlayerStore((s) => s.ready);
   const state = usePlayerStore((s) => s.state);
@@ -78,7 +80,7 @@ export function PlayerBar() {
   const setLike = async (status: 'LIKE' | 'DISLIKE' | 'INDIFFERENT'): Promise<void> => {
     if (!track?.videoId) return;
     if (!loggedIn) {
-      toast('Sign in to like songs');
+      toast(t('player.signInToLike'));
       return;
     }
     const endpoint =
@@ -88,23 +90,23 @@ export function PlayerBar() {
     void queryClient.invalidateQueries({ queryKey: ['browse'] });
     toast(
       status === 'LIKE'
-        ? 'Saved to Liked Music'
+        ? t('player.savedToLiked')
         : status === 'DISLIKE'
-          ? 'Disliked'
-          : 'Removed from Liked Music',
+          ? t('player.disliked')
+          : t('player.removedFromLiked'),
     );
   };
 
   return (
     <footer
-      aria-label="Player"
+      aria-label={t('player.region')}
       className="grid h-20 grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] items-center gap-4 border-t border-border bg-bg-elevated px-4"
     >
       <div className="flex min-w-0 items-center gap-3">
         {track?.artworkUrl ? (
           <button
             type="button"
-            aria-label="Open now playing"
+            aria-label={t('player.openNowPlaying')}
             onClick={() => openNowPlaying(true)}
             className="shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-accent"
           >
@@ -118,7 +120,9 @@ export function PlayerBar() {
           <div className="size-12 shrink-0 rounded-sm bg-bg-overlay" />
         )}
         <div className="min-w-0">
-          <div className="truncate text-sm font-medium">{track?.title ?? 'Nothing playing'}</div>
+          <div className="truncate text-sm font-medium">
+            {track?.title ?? t('player.nothingPlaying')}
+          </div>
           <button
             type="button"
             className="max-w-full truncate text-xs text-fg-muted hover:underline"
@@ -133,14 +137,14 @@ export function PlayerBar() {
         {track && (
           <div className="ms-1 flex items-center">
             <IconButton
-              label={like === 'DISLIKE' ? 'Remove dislike' : 'Dislike'}
+              label={like === 'DISLIKE' ? t('player.removeDislike') : t('player.dislike')}
               size="sm"
               onClick={() => void setLike(like === 'DISLIKE' ? 'INDIFFERENT' : 'DISLIKE')}
             >
               <ThumbsDown className={cn(like === 'DISLIKE' && 'fill-current')} />
             </IconButton>
             <IconButton
-              label={like === 'LIKE' ? 'Remove from Liked Music' : 'Like'}
+              label={like === 'LIKE' ? t('player.removeLike') : t('player.like')}
               size="sm"
               onClick={() => void setLike(like === 'LIKE' ? 'INDIFFERENT' : 'LIKE')}
             >
@@ -153,7 +157,7 @@ export function PlayerBar() {
       <div className="flex flex-col items-center gap-1">
         <div dir="ltr" className="flex items-center gap-1">
           <IconButton
-            label={queue?.shuffle ? 'Shuffle on' : 'Shuffle'}
+            label={queue?.shuffle ? t('player.shuffleOn') : t('player.shuffle')}
             size="sm"
             disabled={disabled}
             aria-pressed={queue?.shuffle ?? false}
@@ -165,14 +169,14 @@ export function PlayerBar() {
             <Shuffle />
           </IconButton>
           <IconButton
-            label="Previous"
+            label={t('player.previous')}
             disabled={disabled}
             onClick={() => void sendCommand({ type: 'previous' })}
           >
             <SkipBack />
           </IconButton>
           <IconButton
-            label={playing ? 'Pause' : 'Play'}
+            label={playing ? t('player.pause') : t('player.play')}
             variant="solid"
             disabled={disabled}
             onClick={() => void sendCommand({ type: 'toggle' })}
@@ -180,7 +184,7 @@ export function PlayerBar() {
             {playing ? <Pause /> : <Play className="translate-x-px" />}
           </IconButton>
           <IconButton
-            label="Next"
+            label={t('player.next')}
             disabled={disabled}
             onClick={() => void sendCommand({ type: 'next' })}
           >
@@ -189,10 +193,10 @@ export function PlayerBar() {
           <IconButton
             label={
               queue?.repeat === 'one'
-                ? 'Repeat one'
+                ? t('player.repeatOne')
                 : queue?.repeat === 'all'
-                  ? 'Repeat all'
-                  : 'Repeat'
+                  ? t('player.repeatAll')
+                  : t('player.repeat')
             }
             size="sm"
             disabled={disabled}
@@ -219,7 +223,7 @@ export function PlayerBar() {
         >
           <span className="w-10 text-right">{fmt(scrub ?? position)}</span>
           <Slider
-            label="Seek"
+            label={t('player.seek')}
             value={scrub ?? position}
             max={duration}
             step={0.5}
@@ -235,11 +239,15 @@ export function PlayerBar() {
       </div>
 
       <div className="flex items-center justify-end gap-1">
-        <IconButton label="Mini player" size="sm" onClick={() => void invoke('open_mini_player')}>
+        <IconButton
+          label={t('player.miniPlayer')}
+          size="sm"
+          onClick={() => void invoke('open_mini_player')}
+        >
           <PictureInPicture2 />
         </IconButton>
         <IconButton
-          label="Now playing"
+          label={t('player.nowPlaying')}
           size="sm"
           disabled={!track}
           onClick={() => openNowPlaying(true)}
@@ -248,7 +256,7 @@ export function PlayerBar() {
         </IconButton>
         {track && (
           <IconButton
-            label={flags?.isVideo ? 'Switch to song' : 'Switch to video'}
+            label={flags?.isVideo ? t('player.switchToSong') : t('player.switchToVideo')}
             size="sm"
             aria-pressed={flags?.isVideo ?? false}
             className={cn(flags?.isVideo && 'text-accent')}
@@ -260,7 +268,7 @@ export function PlayerBar() {
           </IconButton>
         )}
         <IconButton
-          label={muted ? 'Unmute' : 'Mute'}
+          label={muted ? t('player.unmute') : t('player.mute')}
           size="sm"
           disabled={disabled}
           onClick={() => void sendCommand({ type: 'setMuted', muted: !muted })}
@@ -268,7 +276,7 @@ export function PlayerBar() {
           {muted || volume === 0 ? <VolumeX /> : <Volume2 />}
         </IconButton>
         <Slider
-          label="Volume"
+          label={t('player.volume')}
           className="w-28"
           value={muted ? 0 : volume}
           max={1}

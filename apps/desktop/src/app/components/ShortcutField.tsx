@@ -1,5 +1,6 @@
 import { cn } from '@melodesk/ui';
 import { useState } from 'react';
+import { useT } from '../../i18n';
 import { acceleratorFromEvent } from '../../settings/store';
 
 /** Click, then press a combination; Backspace clears. */
@@ -10,11 +11,12 @@ export function ShortcutField({
   value: string | null;
   onChange: (v: string | null) => void;
 }) {
+  const t = useT();
   const [recording, setRecording] = useState(false);
   return (
     <button
       type="button"
-      aria-label={value ? `Shortcut ${value}; press to change` : 'Set shortcut'}
+      aria-label={value ? t('shortcut.changeAria', { combo: value }) : t('shortcut.set')}
       onClick={() => setRecording(true)}
       onBlur={() => setRecording(false)}
       onKeyDown={(e) => {
@@ -43,11 +45,11 @@ export function ShortcutField({
       )}
     >
       {recording
-        ? 'Press keys…'
+        ? t('shortcut.pressKeys')
         : (value?.replace(
             'CommandOrControl',
             navigator.userAgent.includes('Macintosh') ? '⌘' : 'Ctrl',
-          ) ?? 'Not set')}
+          ) ?? t('shortcut.notSet'))}
     </button>
   );
 }

@@ -1,19 +1,28 @@
 import { cn } from '@melodesk/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { formatDuration, loadStats, type StatsRange, type TopEntry } from '../../stats/queries';
+import { formatDurationLocale, intlLocale, useI18n, useT, type MessageKey } from '../../i18n';
+import { loadStats, type StatsRange, type TopEntry } from '../../stats/queries';
 import { playEndpoint } from '../../player/actions';
 import { useNavigate } from 'react-router';
 
-const RANGES: { key: StatsRange; label: string }[] = [
-  { key: 'week', label: 'This week' },
-  { key: 'month', label: '30 days' },
-  { key: 'year', label: 'Year' },
-  { key: 'all', label: 'All time' },
+const RANGES: { key: StatsRange; labelKey: MessageKey }[] = [
+  { key: 'week', labelKey: 'stats.range.week' },
+  { key: 'month', labelKey: 'stats.range.month' },
+  { key: 'year', labelKey: 'stats.range.year' },
+  { key: 'all', labelKey: 'stats.range.all' },
 ];
+
+function useFormatDuration(): (seconds: number) => string {
+  const locale = useI18n((s) => s.locale);
+  return (seconds) => formatDurationLocale(seconds, locale);
+}
 
 /** Listening stats computed locally from the SQLite history. Nothing is uploaded. */
 export function StatsPage() {
+  const t = useT();
+  const fd = useFormatDuration();
+  const locale = useI18n((s) => s.locale);
   const [range, setRange] = useState<StatsRange>('week');
   const q = useQuery({
     queryKey: ['stats', range],
@@ -26,10 +35,8 @@ export function StatsPage() {
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 p-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Your listening</h1>
-          <p className="text-sm text-fg-muted">
-            Computed on this computer from what Melodesk played. Never uploaded.
-          </p>
+          <h1 className="font-display text-3xl font-bold tracking-tight">{t('stats.title')}</h1>
+          <p className="text-sm text-fg-muted">{t('stats.subtitle')}</p>
         </div>
         <div
           role="tablist"
@@ -47,7 +54,7 @@ export function StatsPage() {
                 range === r.key ? 'bg-fg text-bg' : 'text-fg-muted hover:text-fg',
               )}
             >
-              {r.label}
+              {t(r.labelKey)}
             </button>
           ))}
         </div>
@@ -56,59 +63,59 @@ export function StatsPage() {
       {s && (
         <>
           <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Stat label="Listening time" value={formatDuration(s.totalSeconds)} />
-            <Stat label="Plays" value={String(s.plays)} />
-            <Stat label="Different songs" value={String(s.uniqueTracks)} />
-            <Stat label="Different artists" value={String(s.uniqueArtists)} />
+            <Stat label={t('stats.listeningTime')} value={fd(s.totalSeconds)} />
+            <Stat label={t('stats.playsLabel')} value={String(s.plays)} />
+            <Stat label={t('stats.differentSongs')} value={String(s.uniqueTracks)} />
+            <Stat label={t('stats.differentArtists')} value={String(s.uniqueArtists)} />
           </section>
 
           {range === 'week' && s.totalSeconds > 0 && (
             <section className="rounded-xl border border-border bg-gradient-to-br from-accent/20 to-bg-elevated p-6">
               <div className="text-xs font-medium tracking-wide text-fg-subtle uppercase">
-                Your week
+                {t('stats.yourWeek')}
               </div>
               <p className="mt-2 font-display text-2xl font-semibold">
-                You listened for {formatDuration(s.totalSeconds)}
-                {s.topArtists[0] ? `, mostly to ${s.topArtists[0].label}` : ''}
+                {s.topArtists[0]
+                  ? t('stats.recap.artist', {
+                      time: fd(s.totalSeconds),
+                      artist: s.topArtists[0].label,
+                    })
+                  : t('stats.recap', { time: fd(s.totalSeconds) })}
                 {s.topTracks[0]
-                  ? `. “${s.topTracks[0].label}” was on repeat (${String(s.topTracks[0].plays)} plays).`
-                  : '.'}
+                  ? ` ${t('stats.recap.track', { track: s.topTracks[0].label, count: s.topTracks[0].plays })}`
+                  : ''}
               </p>
             </section>
           )}
 
           <section className="grid gap-8 md:grid-cols-2">
             <TopList
-              title="Top songs"
+              title={t('stats.topSongs')}
               entries={s.topTracks}
               onOpen={(e) => void playEndpoint({ type: 'watch', videoId: e.key })}
             />
             <TopList
-              title="Top artists"
+              title={t('stats.topArtists')}
               entries={s.topArtists}
               onOpen={(e) => void navigate(`/search?q=${encodeURIComponent(e.label)}`)}
             />
           </section>
 
           <section className="flex flex-col gap-3">
-            <h2 className="font-semibold">By day</h2>
+            <h2 className="font-semibold">{t('stats.byDay')}</h2>
             <BarChart
               values={s.days.map((d) => d.seconds)}
-              labels={s.days.map((d) => d.day.slice(5))}
+              labels={s.days.map((d) => dayLabel(d.day, locale))}
             />
           </section>
           <section className="flex flex-col gap-3">
-            <h2 className="font-semibold">By hour of day</h2>
+            <h2 className="font-semibold">{t('stats.byHour')}</h2>
             <BarChart
               values={s.hours}
-              labels={s.hours.map((_, i) => (i % 6 === 0 ? `${String(i)}h` : ''))}
+              labels={s.hours.map((_, i) => (i % 6 === 0 ? hourLabel(i, locale) : ''))}
             />
           </section>
-          {s.plays === 0 && (
-            <p className="text-sm text-fg-muted">
-              Nothing recorded in this range yet. Play something and come back.
-            </p>
-          )}
+          {s.plays === 0 && <p className="text-sm text-fg-muted">{t('stats.empty')}</p>}
         </>
       )}
     </div>
@@ -133,10 +140,12 @@ function TopList({
   entries: TopEntry[];
   onOpen: (e: TopEntry) => void;
 }) {
+  const t = useT();
+  const fd = useFormatDuration();
   return (
     <div className="flex flex-col gap-2">
       <h2 className="font-semibold">{title}</h2>
-      {!entries.length && <div className="text-sm text-fg-subtle">Nothing yet</div>}
+      {!entries.length && <div className="text-sm text-fg-subtle">{t('stats.nothingYet')}</div>}
       <ol className="flex flex-col">
         {entries.map((e, i) => (
           <li key={e.key}>
@@ -158,7 +167,10 @@ function TopList({
                 )}
               </span>
               <span className="text-xs tabular-nums text-fg-subtle">
-                {String(e.plays)} plays · {formatDuration(e.seconds)}
+                {t('stats.entryMeta', {
+                  plays: t('stats.plays', { count: e.plays }),
+                  duration: fd(e.seconds),
+                })}
               </span>
             </button>
           </li>
@@ -170,6 +182,8 @@ function TopList({
 
 /** Dependency-free bar chart; values in seconds. */
 function BarChart({ values, labels }: { values: number[]; labels: string[] }) {
+  const t = useT();
+  const fd = useFormatDuration();
   const max = Math.max(1, ...values);
   const w = 600;
   const h = 120;
@@ -179,7 +193,7 @@ function BarChart({ values, labels }: { values: number[]; labels: string[] }) {
     <svg
       viewBox={`0 0 ${String(w)} ${String(h + 18)}`}
       role="img"
-      aria-label="Listening time chart"
+      aria-label={t('stats.chart')}
       className="w-full text-accent"
     >
       {values.map((v, i) => {
@@ -195,7 +209,7 @@ function BarChart({ values, labels }: { values: number[]; labels: string[] }) {
               fill="currentColor"
               opacity={0.85}
             >
-              <title>{`${labels[i] ?? ''}: ${formatDuration(v)}`}</title>
+              <title>{`${labels[i] ?? ''}: ${fd(v)}`}</title>
             </rect>
             {labels[i] && n <= 31 && (
               <text
@@ -212,5 +226,18 @@ function BarChart({ values, labels }: { values: number[]; labels: string[] }) {
         );
       })}
     </svg>
+  );
+}
+
+function dayLabel(day: string, locale: string): string {
+  const d = new Date(`${day}T00:00:00`);
+  return Number.isNaN(d.getTime())
+    ? day
+    : new Intl.DateTimeFormat(intlLocale(locale), { month: 'short', day: 'numeric' }).format(d);
+}
+
+function hourLabel(hour: number, locale: string): string {
+  return new Intl.DateTimeFormat(intlLocale(locale), { hour: 'numeric' }).format(
+    new Date(2000, 0, 1, hour),
   );
 }

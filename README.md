@@ -44,7 +44,9 @@ Planned and in progress; ticked items work today.
 - [x] `melodesk://` deep links and music.youtube.com link handling, signed auto-updates
 - [ ] Mini player, full-screen Now Playing with synced lyrics
 - [ ] Last.fm / ListenBrainz scrobbling, Discord Rich Presence (opt-in)
-- [ ] Listening stats, command palette, themes, plugins
+- [x] Light / dark / AMOLED themes, accent colors (including from album art), density, right-to-left layout
+- [x] Translation framework with English strings; see [docs/translating.md](docs/translating.md)
+- [x] Listening stats, command palette, plugins, lyrics romanization and translation
 
 ## Install
 

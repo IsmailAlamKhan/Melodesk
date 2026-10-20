@@ -49,6 +49,7 @@ pub fn run() {
             discord::discord_set_activity,
             discord::discord_clear,
             native::open_mini_player,
+            native::set_native_labels,
         ])
         .setup(|app| {
             let handle = app.handle().clone();

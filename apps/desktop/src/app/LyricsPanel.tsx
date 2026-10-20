@@ -10,8 +10,10 @@ import {
   type LyricsData,
   type LyricsRow,
 } from '../lyrics/rows';
+import { describeTranslateError } from '../lyrics/describeError';
 import { transliterationCaveat } from '../lyrics/transliterate';
 import { useRomanized, useTranslated } from '../lyrics/useExtras';
+import { useT } from '../i18n';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { enablePlugin, isPluginEnabled, lyricsFromPlugins, usePluginHost } from '../plugins/host';
@@ -78,6 +80,7 @@ function KaraokeText({
 
 /** Lyrics for the current track: timed when available, click a line to seek, optional romanization and translation. */
 export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
+  const t = useT();
   const videoId = usePlayerStore((s) => s.track?.videoId ?? null);
   const title = usePlayerStore((s) => s.track?.title ?? null);
   const ready = usePlayerStore((s) => s.ready);
@@ -162,14 +165,15 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
     });
   }, [active]);
 
-  if (!videoId)
-    return <div className="p-4 text-sm text-fg-muted">Play something to see its lyrics.</div>;
-  if (lyrics.isPending) return <div className="p-4 text-sm text-fg-muted">Loading lyrics…</div>;
-  if (lyrics.isError) return <div className="p-4 text-sm text-danger">Couldn’t load lyrics.</div>;
+  if (!videoId) return <div className="p-4 text-sm text-fg-muted">{t('lyrics.playToSee')}</div>;
+  if (lyrics.isPending)
+    return <div className="p-4 text-sm text-fg-muted">{t('lyrics.loading')}</div>;
+  if (lyrics.isError)
+    return <div className="p-4 text-sm text-danger">{t('lyrics.loadFailed')}</div>;
   if (!data?.text && !data?.synced)
     return (
       <div className="flex flex-col gap-3 p-4 text-sm text-fg-muted">
-        <div>{data?.source ?? 'No lyrics available for this song.'}</div>
+        <div>{data?.source ?? t('lyrics.none')}</div>
         {!lrclibOn && <TimedBanner />}
       </div>
     );
@@ -190,7 +194,7 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
         )}
       >
         {!large && <div className="min-w-0 truncate text-xs text-fg-subtle">{title}</div>}
-        <div className={cn(large && 'ml-auto')}>
+        <div className={cn(large && 'ms-auto')}>
           <LyricsToolbar
             hasTimedLines={hasTimed}
             offsetMs={offsetMs}
@@ -202,15 +206,15 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
       {!hasTimed && !lrclibOn && <TimedBanner />}
       {!hasTimed && lrclibOn && (
         <div className="mb-2 rounded-md bg-bg-overlay px-3 py-2 text-xs text-fg-muted">
-          No timed lyrics found for this song, so lines can’t follow the music.
+          {t('lyrics.noTimed')}
         </div>
       )}
       {prefs.translate && translated.isPending && translated.fetchStatus !== 'idle' && (
-        <div className="mb-2 text-xs text-fg-subtle">Translating…</div>
+        <div className="mb-2 text-xs text-fg-subtle">{t('lyrics.translating')}</div>
       )}
       {prefs.translate && translated.isError && (
         <div role="alert" className="mb-2 rounded-md bg-danger/10 px-3 py-2 text-xs text-danger">
-          {translated.error.message}
+          {describeTranslateError(translated.error, t)}
         </div>
       )}
       <ol className="flex flex-col gap-1 py-4">
@@ -275,18 +279,16 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
 
 /** Offer timed lyrics from LRCLIB (opt-in: it receives the title, artist and length). */
 function TimedBanner() {
+  const t = useT();
   return (
     <div className="mb-3 flex flex-col gap-2 rounded-md bg-bg-overlay px-3 py-2 text-xs text-fg-muted">
-      <span>
-        These lyrics aren’t timed. LRCLIB can provide lyrics that follow the music; it receives the
-        song title, artist and length.
-      </span>
+      <span>{t('lyrics.timedBanner')}</span>
       <button
         type="button"
         onClick={() => void enablePlugin('lrclib')}
         className="h-8 self-start rounded-md bg-fg px-3 text-xs font-medium text-bg hover:opacity-90"
       >
-        Get timed lyrics from LRCLIB
+        {t('lyrics.getTimed')}
       </button>
     </div>
   );

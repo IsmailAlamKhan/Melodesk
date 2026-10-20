@@ -24,15 +24,21 @@ export const router = createMemoryRouter(
       element: <Layout />,
       children: [
         { index: true, element: <HomePage /> },
-        { path: 'explore', element: <BrowsePage browseId={BROWSE_IDS.explore} title="Explore" /> },
-        { path: 'charts', element: <BrowsePage browseId={BROWSE_IDS.charts} title="Charts" /> },
+        {
+          path: 'explore',
+          element: <BrowsePage browseId={BROWSE_IDS.explore} titleKey="nav.explore" />,
+        },
+        {
+          path: 'charts',
+          element: <BrowsePage browseId={BROWSE_IDS.charts} titleKey="browse.charts" />,
+        },
         {
           path: 'moods',
-          element: <BrowsePage browseId={BROWSE_IDS.moods} title="Moods & genres" />,
+          element: <BrowsePage browseId={BROWSE_IDS.moods} titleKey="browse.moods" />,
         },
         {
           path: 'new-releases',
-          element: <BrowsePage browseId={BROWSE_IDS.newReleases} title="New releases" />,
+          element: <BrowsePage browseId={BROWSE_IDS.newReleases} titleKey="browse.newReleases" />,
         },
         { path: 'browse/:browseId', element: <BrowsePage /> },
         { path: 'search', element: <SearchPage /> },

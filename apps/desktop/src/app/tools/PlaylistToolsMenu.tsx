@@ -3,6 +3,7 @@ import { Button } from '@melodesk/ui';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowDownAZ, Copy, Download, GitMerge, Wrench } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
+import { useT, type MessageKey } from '../../i18n';
 import { fetchAddToPlaylistOptions, removeFromPlaylist } from '../dialogs/playlists';
 import { openDialog } from '../dialogs/store';
 import { toast } from '../toast';
@@ -40,6 +41,7 @@ export function PlaylistToolsMenu({
   viewSort,
   onViewSort,
 }: PlaylistToolsProps) {
+  const t = useT();
   const [busy, setBusy] = useState<string | null>(null);
   const options = useQuery({
     queryKey: ['addToPlaylist', 'merge'],
@@ -48,7 +50,7 @@ export function PlaylistToolsMenu({
   });
   const dupes = findDuplicates(tracks);
   const extra = dupes.flatMap((g) => g.slice(1));
-  const sortItem = (key: SortKey, label: string): ReactNode => (
+  const sortItem = (key: SortKey, labelKey: MessageKey): ReactNode => (
     <DropdownMenu.Item
       key={key}
       className={itemClass}
@@ -63,7 +65,7 @@ export function PlaylistToolsMenu({
       }
     >
       <ArrowDownAZ className="size-4" />
-      {label}
+      {t(labelKey)}
       {viewSort?.key === key && (
         <span className="ms-auto text-xs text-fg-subtle">{viewSort.dir === 'asc' ? '↑' : '↓'}</span>
       )}
@@ -74,25 +76,25 @@ export function PlaylistToolsMenu({
       <DropdownMenu.Trigger asChild>
         <Button variant="ghost" disabled={!tracks.length}>
           <Wrench className="size-4" />
-          Tools
+          {t('tools.menu')}
           {busy && <span className="text-xs text-fg-subtle">{busy}</span>}
         </Button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content align="start" className={menuClass}>
           <DropdownMenu.Label className="px-3 py-1 text-xs text-fg-subtle">
-            Sort view
+            {t('tools.sortView')}
           </DropdownMenu.Label>
-          {sortItem('title', 'Title')}
-          {sortItem('artist', 'Artist')}
-          {sortItem('album', 'Album')}
-          {sortItem('duration', 'Duration')}
+          {sortItem('title', 'tools.sort.title')}
+          {sortItem('artist', 'tools.sort.artist')}
+          {sortItem('album', 'tools.sort.album')}
+          {sortItem('duration', 'tools.sort.duration')}
           {editable && playlistId && viewSort && (
             <DropdownMenu.Item
               className={itemClass}
               onSelect={() => {
                 const desired = sortTracks(tracks, viewSort.key, viewSort.dir);
-                setBusy('Reordering…');
+                setBusy(t('tools.reordering'));
                 applyOrder(playlistId, tracks, desired, (done, total) =>
                   setBusy(`${String(done)}/${String(total)}`),
                 )
@@ -104,7 +106,7 @@ export function PlaylistToolsMenu({
               }}
             >
               <ArrowDownAZ className="size-4" />
-              Apply this order to the playlist
+              {t('tools.applyOrder')}
             </DropdownMenu.Item>
           )}
           <DropdownMenu.Separator className="my-1 h-px bg-border" />
@@ -114,36 +116,41 @@ export function PlaylistToolsMenu({
             onSelect={() => {
               if (!editable || !playlistId) {
                 toast(
-                  `${String(extra.length)} duplicate${extra.length === 1 ? '' : 's'}: ${extra
-                    .map((t) => t.title)
-                    .slice(0, 3)
-                    .join(', ')}${extra.length > 3 ? '…' : ''}`,
+                  t('tools.dupesToast', {
+                    count: extra.length,
+                    titles: `${extra
+                      .map((tr) => tr.title)
+                      .slice(0, 3)
+                      .join(', ')}${extra.length > 3 ? '…' : ''}`,
+                  }),
                 );
                 return;
               }
               openDialog({
                 type: 'confirm',
-                title: 'Remove duplicates?',
-                body: `${String(extra.length)} duplicate${extra.length === 1 ? '' : 's'} will be removed from this playlist, keeping the first of each.`,
-                confirmLabel: 'Remove',
+                title: t('tools.removeDupesTitle'),
+                body: t('tools.removeDupesBody', { count: extra.length }),
+                confirmLabel: t('tools.remove'),
                 danger: true,
                 onConfirm: () =>
                   removeFromPlaylist(
                     playlistId,
                     extra
-                      .filter((t) => t.setVideoId)
-                      .map((t) => ({ videoId: t.videoId, setVideoId: t.setVideoId ?? '' })),
+                      .filter((tr) => tr.setVideoId)
+                      .map((tr) => ({ videoId: tr.videoId, setVideoId: tr.setVideoId ?? '' })),
                   ),
               });
             }}
           >
             <Copy className="size-4" />
-            {extra.length ? `Duplicates (${String(extra.length)})` : 'No duplicates'}
+            {extra.length
+              ? t('tools.duplicates', { count: extra.length })
+              : t('tools.noDuplicates')}
           </DropdownMenu.Item>
           <DropdownMenu.Sub>
             <DropdownMenu.SubTrigger className={itemClass}>
               <GitMerge className="size-4" />
-              Merge into…
+              {t('tools.mergeInto')}
             </DropdownMenu.SubTrigger>
             <DropdownMenu.Portal>
               <DropdownMenu.SubContent className={menuClass}>
@@ -154,7 +161,7 @@ export function PlaylistToolsMenu({
                       key={o.playlistId}
                       className={itemClass}
                       onSelect={() => {
-                        setBusy('Merging…');
+                        setBusy(t('tools.merging'));
                         mergeInto(o.playlistId, o.title, tracks)
                           .catch((e: unknown) => toast(String(e)))
                           .finally(() => setBusy(null));
@@ -165,7 +172,7 @@ export function PlaylistToolsMenu({
                   ))}
                 {!options.data?.length && (
                   <div className="px-3 py-2 text-xs text-fg-subtle">
-                    {options.isPending ? 'Loading…' : 'No playlists'}
+                    {options.isPending ? t('common.loading') : t('tools.noPlaylists')}
                   </div>
                 )}
               </DropdownMenu.SubContent>
@@ -179,7 +186,7 @@ export function PlaylistToolsMenu({
             }
           >
             <Download className="size-4" />
-            Export as CSV
+            {t('tools.exportCsv')}
           </DropdownMenu.Item>
           <DropdownMenu.Item
             className={itemClass}
@@ -188,7 +195,7 @@ export function PlaylistToolsMenu({
             }
           >
             <Download className="size-4" />
-            Export as JSON
+            {t('tools.exportJson')}
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

@@ -42,6 +42,11 @@ Selectors live in `packages/bridge/src/inject/selectors.vN.ts` and parsers in
 when the change is incompatible, save a fixture under `packages/adapter/tests/fixtures/`, and
 make sure the health check reports the breakage you are fixing.
 
+## Translations
+
+See [docs/translating.md](docs/translating.md). New UI text goes into `apps/desktop/src/i18n/locales/en.json`
+and is used through `t('key')`; `pnpm i18n:check` runs in CI.
+
 ## Commits
 
 Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:` …). Releases are cut by release-please

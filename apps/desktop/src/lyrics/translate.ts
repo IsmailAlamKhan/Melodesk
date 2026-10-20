@@ -25,11 +25,17 @@ export type Fetcher = (
   init?: { method?: 'GET' | 'POST'; headers?: Record<string, string>; body?: string },
 ) => Promise<{ ok: boolean; status: number; json(): Promise<unknown> }>;
 
+export type TranslateErrorCode =
+  'quota' | 'network' | 'libreAddress' | 'libreLocalOnly' | 'sameLanguage' | 'provider';
+
+/** `kind` groups errors for callers; `code` + `detail` let the UI show a localized message. */
 export class TranslateError extends Error {
   override readonly name = 'TranslateError';
   constructor(
     readonly kind: 'quota' | 'network' | 'config' | 'provider',
     message: string,
+    readonly code: TranslateErrorCode = 'provider',
+    readonly detail = '',
   ) {
     super(message);
   }
@@ -70,17 +76,23 @@ export function validateConfig(c: TranslateConfig): void {
       throw new TranslateError(
         'config',
         'Enter your LibreTranslate address, e.g. http://localhost:5000',
+        'libreAddress',
       );
     }
     if (u.hostname !== 'localhost' && u.hostname !== '127.0.0.1') {
       throw new TranslateError(
         'config',
         'Only a LibreTranslate server on this computer (localhost) is allowed.',
+        'libreLocalOnly',
       );
     }
   }
   if (c.source !== 'auto' && c.source === c.target)
-    throw new TranslateError('config', 'The song language and the target language are the same.');
+    throw new TranslateError(
+      'config',
+      'The song language and the target language are the same.',
+      'sameLanguage',
+    );
 }
 
 async function myMemory(lines: string[], c: TranslateConfig, f: Fetcher): Promise<string[]> {
@@ -91,7 +103,12 @@ async function myMemory(lines: string[], c: TranslateConfig, f: Fetcher): Promis
     try {
       res = await f(url);
     } catch (e) {
-      throw new TranslateError('network', `Could not reach the translation service (${String(e)})`);
+      throw new TranslateError(
+        'network',
+        `Could not reach the translation service (${String(e)})`,
+        'network',
+        String(e),
+      );
     }
     const body = (await res.json()) as {
       responseStatus?: number | string;
@@ -104,6 +121,7 @@ async function myMemory(lines: string[], c: TranslateConfig, f: Fetcher): Promis
       throw new TranslateError(
         'quota',
         'Today’s free translation quota is used up. Try again tomorrow or use a local LibreTranslate.',
+        'quota',
       );
     return { status, text: body.responseData?.translatedText ?? '' };
   };
@@ -122,7 +140,12 @@ async function myMemory(lines: string[], c: TranslateConfig, f: Fetcher): Promis
       // 403 "distinct languages": already in the target language, leave the lines as they are.
       if (r.status === 403) continue;
       if (r.status !== 200)
-        throw new TranslateError('provider', `Translation failed (${String(r.status)})`);
+        throw new TranslateError(
+          'provider',
+          `Translation failed (${String(r.status)})`,
+          'provider',
+          String(r.status),
+        );
       const parts = r.text.split('\n');
       if (parts.length === ch.lines.length) {
         parts.forEach((p, i) => {
@@ -158,6 +181,8 @@ async function libre(lines: string[], c: TranslateConfig, f: Fetcher): Promise<s
     throw new TranslateError(
       'network',
       `Could not reach LibreTranslate at ${c.libreUrl} (${String(e)})`,
+      'network',
+      String(e),
     );
   });
   const body = (await res.json()) as { translatedText?: string[] | string; error?: string };
@@ -165,6 +190,8 @@ async function libre(lines: string[], c: TranslateConfig, f: Fetcher): Promise<s
     throw new TranslateError(
       'provider',
       body.error ?? `LibreTranslate error ${String(res.status)}`,
+      'provider',
+      body.error ?? String(res.status),
     );
   const list = Array.isArray(body.translatedText) ? body.translatedText : [body.translatedText];
   const out = [...lines];

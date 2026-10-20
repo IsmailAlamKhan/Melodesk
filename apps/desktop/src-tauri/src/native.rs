@@ -6,6 +6,7 @@
 
 use std::sync::Mutex;
 
+use serde::Deserialize;
 use tauri::{
     image::Image,
     menu::{Menu, MenuItem, PredefinedMenuItem, Submenu},
@@ -25,12 +26,58 @@ pub struct NowPlaying {
     pub video_id: Option<String>,
 }
 
-/// Menu items whose text follows playback, kept so they can be updated in place.
+/// Text for every native menu item, supplied by the UI in the current language. Defaults are
+/// English so the tray is usable before the UI has loaded.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Labels {
+    pub play: String,
+    pub pause: String,
+    pub next: String,
+    pub previous: String,
+    pub show: String,
+    pub quit: String,
+    pub nothing_playing: String,
+    pub playback: String,
+    pub about: String,
+}
+
+impl Default for Labels {
+    fn default() -> Self {
+        Self {
+            play: "Play".into(),
+            pause: "Pause".into(),
+            next: "Next".into(),
+            previous: "Previous".into(),
+            show: "Show Melodesk".into(),
+            quit: "Quit Melodesk".into(),
+            nothing_playing: "Nothing playing".into(),
+            playback: "Playback".into(),
+            about: "About Melodesk".into(),
+        }
+    }
+}
+
+/// The macOS app-menu "Playback" submenu and its items.
+struct MacMenu<R: Runtime> {
+    playback: Submenu<R>,
+    play_pause: MenuItem<R>,
+    next: MenuItem<R>,
+    previous: MenuItem<R>,
+    about: MenuItem<R>,
+}
+
+/// Menu items whose text follows playback or language, kept so they can be updated in place.
 pub struct NativeState<R: Runtime> {
     pub now_playing: Mutex<NowPlaying>,
+    labels: Mutex<Labels>,
     tray_title: MenuItem<R>,
     tray_play_pause: MenuItem<R>,
-    app_play_pause: Option<MenuItem<R>>,
+    tray_next: MenuItem<R>,
+    tray_previous: MenuItem<R>,
+    tray_show: MenuItem<R>,
+    tray_quit: MenuItem<R>,
+    mac: Option<MacMenu<R>>,
 }
 
 const ID_TITLE: &str = "np.title";
@@ -75,26 +122,36 @@ pub fn setup<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
 
     // --- macOS app menu with a Playback submenu -----------------------------
     #[cfg(not(target_os = "macos"))]
-    let app_play_pause: Option<MenuItem<R>> = None;
+    let mac: Option<MacMenu<R>> = None;
     #[cfg(target_os = "macos")]
-    let app_play_pause = {
+    let mac = {
         let menu = Menu::default(app)?;
-        let pp = MenuItem::with_id(app, ID_PLAY_PAUSE, "Play", true, Some("Space"))?;
+        let play_pause = MenuItem::with_id(app, ID_PLAY_PAUSE, "Play", true, Some("Space"))?;
+        let next_item = MenuItem::with_id(app, ID_NEXT, "Next", true, Some("Cmd+Right"))?;
+        let previous_item =
+            MenuItem::with_id(app, ID_PREVIOUS, "Previous", true, Some("Cmd+Left"))?;
+        let about = MenuItem::with_id(app, ID_ABOUT, "About Melodesk", true, None::<&str>)?;
         let playback = Submenu::with_items(
             app,
             "Playback",
             true,
             &[
-                &pp,
-                &MenuItem::with_id(app, ID_NEXT, "Next", true, Some("Cmd+Right"))?,
-                &MenuItem::with_id(app, ID_PREVIOUS, "Previous", true, Some("Cmd+Left"))?,
+                &play_pause,
+                &next_item,
+                &previous_item,
                 &PredefinedMenuItem::separator(app)?,
-                &MenuItem::with_id(app, ID_ABOUT, "About Melodesk", true, None::<&str>)?,
+                &about,
             ],
         )?;
         menu.append(&playback)?;
         app.set_menu(menu)?;
-        Some(pp)
+        Some(MacMenu {
+            playback,
+            play_pause,
+            next: next_item,
+            previous: previous_item,
+            about,
+        })
     };
     #[cfg(not(target_os = "macos"))]
     {
@@ -103,9 +160,14 @@ pub fn setup<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
 
     app.manage(NativeState {
         now_playing: Mutex::new(NowPlaying::default()),
+        labels: Mutex::new(Labels::default()),
         tray_title,
         tray_play_pause,
-        app_play_pause,
+        tray_next: next,
+        tray_previous: previous,
+        tray_show: show,
+        tray_quit: quit,
+        mac,
     });
 
     app.on_menu_event(|app, event| match event.id().as_ref() {
@@ -170,6 +232,56 @@ pub fn toggle_main<R: Runtime>(app: &AppHandle<R>) {
     }
 }
 
+/// Re-apply every piece of native menu text from the current labels and now-playing state.
+fn refresh_texts<R: Runtime>(app: &AppHandle<R>, state: &NativeState<R>) {
+    let (Ok(labels), Ok(np)) = (state.labels.lock(), state.now_playing.lock()) else {
+        return;
+    };
+    let title = if np.title.is_empty() {
+        labels.nothing_playing.clone()
+    } else if np.artist.is_empty() {
+        np.title.clone()
+    } else {
+        format!("{} — {}", np.title, np.artist)
+    };
+    let play_pause = if np.playing {
+        &labels.pause
+    } else {
+        &labels.play
+    };
+    let _ = state.tray_title.set_text(&title);
+    let _ = state.tray_play_pause.set_text(play_pause);
+    let _ = state.tray_next.set_text(&labels.next);
+    let _ = state.tray_previous.set_text(&labels.previous);
+    let _ = state.tray_show.set_text(&labels.show);
+    let _ = state.tray_quit.set_text(&labels.quit);
+    if let Some(mac) = &state.mac {
+        let _ = mac.playback.set_text(&labels.playback);
+        let _ = mac.play_pause.set_text(play_pause);
+        let _ = mac.next.set_text(&labels.next);
+        let _ = mac.previous.set_text(&labels.previous);
+        let _ = mac.about.set_text(&labels.about);
+    }
+    if let Some(tray) = app.tray_by_id("main") {
+        let _ = tray.set_tooltip(Some(if np.title.is_empty() {
+            "Melodesk".to_string()
+        } else {
+            title
+        }));
+    }
+}
+
+/// The UI sends the menu text in the current language whenever it changes.
+#[tauri::command]
+pub fn set_native_labels<R: Runtime>(app: AppHandle<R>, labels: Labels) -> Result<(), String> {
+    let state = app
+        .try_state::<NativeState<R>>()
+        .ok_or("native menus are not ready")?;
+    *state.labels.lock().map_err(|_| "labels lock poisoned")? = labels;
+    refresh_texts(&app, &state);
+    Ok(())
+}
+
 /// Fold a bridge event into native state. The payload is untrusted: only a few string
 /// fields are read, truncated, and used for display.
 pub fn observe<R: Runtime>(app: &AppHandle<R>, event: &serde_json::Value) {
@@ -212,26 +324,7 @@ pub fn observe<R: Runtime>(app: &AppHandle<R>, event: &serde_json::Value) {
     let snapshot = np.clone();
     drop(np);
 
-    let title = if snapshot.title.is_empty() {
-        "Nothing playing".to_string()
-    } else if snapshot.artist.is_empty() {
-        snapshot.title.clone()
-    } else {
-        format!("{} — {}", snapshot.title, snapshot.artist)
-    };
-    let _ = state.tray_title.set_text(&title);
-    let pp = if snapshot.playing { "Pause" } else { "Play" };
-    let _ = state.tray_play_pause.set_text(pp);
-    if let Some(item) = &state.app_play_pause {
-        let _ = item.set_text(pp);
-    }
-    if let Some(tray) = app.tray_by_id("main") {
-        let _ = tray.set_tooltip(Some(if snapshot.title.is_empty() {
-            "Melodesk".to_string()
-        } else {
-            title.clone()
-        }));
-    }
+    refresh_texts(app, &state);
 
     #[cfg(target_os = "linux")]
     crate::media::update(app, &snapshot);

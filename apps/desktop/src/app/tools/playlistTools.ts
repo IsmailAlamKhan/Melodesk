@@ -3,6 +3,7 @@ import type { Item } from '@melodesk/adapter';
 import { save } from '@tauri-apps/plugin-dialog';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
 import { addToPlaylist, movePlaylistItem } from '../dialogs/playlists';
+import { t } from '../../i18n';
 import { toast } from '../toast';
 
 export type Track = Extract<Item, { kind: 'song' | 'video' }>;
@@ -54,8 +55,7 @@ export async function applyOrder(
   onProgress?: (done: number, total: number) => void,
 ): Promise<void> {
   const MAX = 200;
-  if (desired.length > MAX)
-    throw new Error(`Reordering is limited to ${String(MAX)} tracks at a time`);
+  if (desired.length > MAX) throw new Error(t('tools.reorderLimit', { max: MAX }));
   const order = [...current];
   let moves = 0;
   for (let i = 0; i < desired.length; i += 1) {
@@ -71,9 +71,7 @@ export async function applyOrder(
     moves += 1;
     onProgress?.(i + 1, desired.length);
   }
-  toast(
-    moves ? `Reordered ${String(moves)} track${moves === 1 ? '' : 's'}` : 'Already in that order',
-  );
+  toast(moves ? t('toast.reordered', { count: moves }) : t('toast.alreadyOrdered'));
 }
 
 export async function mergeInto(
@@ -136,5 +134,5 @@ export async function exportPlaylist(
   });
   if (!path) return;
   await writeTextFile(path, format === 'csv' ? toCsv(title, tracks) : toJson(title, tracks));
-  toast(`Exported ${String(tracks.length)} tracks`);
+  toast(t('toast.exported', { count: tracks.length }));
 }

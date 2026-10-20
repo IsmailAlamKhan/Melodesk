@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useT } from '../i18n';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 
@@ -43,6 +44,7 @@ function usePosition(): number {
 
 /** Always-on-top floating player: compact bar or artwork tile, resizable, in its own window. */
 export function MiniPlayer() {
+  const t = useT();
   const track = usePlayerStore((s) => s.track);
   const state = usePlayerStore((s) => s.state);
   const ready = usePlayerStore((s) => s.ready);
@@ -84,7 +86,7 @@ export function MiniPlayer() {
   const controls = (
     <div dir="ltr" className="flex items-center gap-1">
       <IconButton
-        label="Previous"
+        label={t('player.previous')}
         size="sm"
         disabled={!ready}
         onClick={() => void sendCommand({ type: 'previous' })}
@@ -92,7 +94,7 @@ export function MiniPlayer() {
         <SkipBack />
       </IconButton>
       <IconButton
-        label={playing ? 'Pause' : 'Play'}
+        label={playing ? t('player.pause') : t('player.play')}
         variant="solid"
         size="md"
         disabled={!ready}
@@ -101,7 +103,7 @@ export function MiniPlayer() {
         {playing ? <Pause /> : <Play className="translate-x-px" />}
       </IconButton>
       <IconButton
-        label="Next"
+        label={t('player.next')}
         size="sm"
         disabled={!ready}
         onClick={() => void sendCommand({ type: 'next' })}
@@ -113,14 +115,14 @@ export function MiniPlayer() {
   const windowButtons = (
     <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
       <IconButton
-        label={mode === 'artwork' ? 'Compact mode' : 'Artwork mode'}
+        label={mode === 'artwork' ? t('mini.compactMode') : t('mini.artworkMode')}
         size="sm"
         onClick={() => setMode(mode === 'artwork' ? 'compact' : 'artwork')}
       >
         <ImageIcon />
       </IconButton>
       <IconButton
-        label={pinned ? 'Unpin from top' : 'Pin on top'}
+        label={pinned ? t('mini.unpin') : t('mini.pin')}
         size="sm"
         onClick={() => {
           const next = !pinned;
@@ -131,7 +133,7 @@ export function MiniPlayer() {
         {pinned ? <PinOff /> : <Pin />}
       </IconButton>
       <IconButton
-        label="Open Melodesk"
+        label={t('mini.openApp')}
         size="sm"
         onClick={() =>
           void invoke('player_set_visible', { visible: false }).then(() => emitShowMain())
@@ -139,7 +141,7 @@ export function MiniPlayer() {
       >
         <Maximize2 />
       </IconButton>
-      <IconButton label="Close mini player" size="sm" onClick={() => void win.hide()}>
+      <IconButton label={t('mini.close')} size="sm" onClick={() => void win.hide()}>
         <X />
       </IconButton>
     </div>
@@ -163,7 +165,7 @@ export function MiniPlayer() {
         <div className="absolute inset-x-3 bottom-3 flex flex-col gap-2 text-white">
           <div className="min-w-0">
             <div className="truncate text-sm font-semibold">
-              {track?.title ?? 'Nothing playing'}
+              {track?.title ?? t('player.nothingPlaying')}
             </div>
             <div className="truncate text-xs text-white/70">{track?.artist ?? ''}</div>
           </div>
@@ -187,7 +189,9 @@ export function MiniPlayer() {
           <div className="size-14 shrink-0 rounded-md bg-bg-overlay" />
         )}
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-medium">{track?.title ?? 'Nothing playing'}</div>
+          <div className="truncate text-sm font-medium">
+            {track?.title ?? t('player.nothingPlaying')}
+          </div>
           <div className="truncate text-xs text-fg-muted">{track?.artist ?? ''}</div>
         </div>
         {controls}
@@ -196,7 +200,7 @@ export function MiniPlayer() {
       <div className={cn('flex items-center gap-2 px-1 text-[11px] tabular-nums text-fg-subtle')}>
         <span>{fmt(position)}</span>
         <Slider
-          label="Seek"
+          label={t('player.seek')}
           value={position}
           max={state?.duration ?? 0}
           step={0.5}

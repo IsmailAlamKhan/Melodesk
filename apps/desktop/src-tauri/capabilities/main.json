@@ -20,6 +20,7 @@
     "allow-discord-set-activity",
     "allow-discord-clear",
     "allow-open-mini-player",
+    "allow-set-native-labels",
     "core:window:allow-set-always-on-top",
     "core:window:allow-set-size",
     "core:window:allow-start-resize-dragging",

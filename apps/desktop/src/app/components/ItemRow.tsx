@@ -2,6 +2,7 @@ import type { Item } from '@melodesk/adapter';
 import { cn } from '@melodesk/ui';
 import { Play } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
+import { useT } from '../../i18n';
 import { playItem, routeForEndpoint } from '../../player/actions';
 import { usePlayerStore } from '../../player/store';
 import { Artwork } from './Artwork';
@@ -27,6 +28,7 @@ export interface ItemRowProps {
 
 /** List row for tracks, library entries, search results. */
 export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dense }: ItemRowProps) {
+  const t = useT();
   const navigate = useNavigate();
   const currentId = usePlayerStore((s) => s.track?.videoId ?? null);
   const playing = usePlayerStore((s) => s.state?.playing ?? false);
@@ -86,7 +88,7 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
               </span>
               <button
                 type="button"
-                aria-label={`Play ${item.title}`}
+                aria-label={t('media.playItem', { title: item.title })}
                 onClick={activate}
                 className={cn(
                   'hidden size-8 items-center justify-center rounded-full text-fg group-hover:flex',
@@ -117,7 +119,12 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
           </div>
           <div className="truncate text-xs text-fg-muted">
             {item.isExplicit && (
-              <span className="me-1 rounded-sm border border-fg-subtle px-1 text-[10px]">E</span>
+              <span
+                title={t('common.explicit')}
+                className="me-1 rounded-sm border border-fg-subtle px-1 text-[10px]"
+              >
+                {t('common.explicitBadge')}
+              </span>
             )}
             {artists.length
               ? artists.map((a, i) => (

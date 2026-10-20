@@ -12,6 +12,7 @@ export default tseslint.config(
       '**/target/**',
       'apps/desktop/src-tauri/gen/**',
       'apps/desktop/public/**',
+      'scripts/**',
     ],
   },
   js.configs.recommended,

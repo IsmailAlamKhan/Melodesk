@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { create } from 'zustand';
 import { z } from 'zod';
+import type { MessageKey } from '../i18n';
 
 /** Mirrors `Settings` in src-tauri/src/settings.rs. */
 export const ShortcutsSchema = z.object({
@@ -52,14 +53,14 @@ export const useSettings = create<SettingsState>((set, get) => ({
   },
 }));
 
-export const SHORTCUT_ACTIONS: { key: keyof Shortcuts; label: string }[] = [
-  { key: 'playPause', label: 'Play / pause' },
-  { key: 'next', label: 'Next track' },
-  { key: 'previous', label: 'Previous track' },
-  { key: 'volumeUp', label: 'Volume up' },
-  { key: 'volumeDown', label: 'Volume down' },
-  { key: 'mute', label: 'Mute' },
-  { key: 'showHide', label: 'Show / hide Melodesk' },
+export const SHORTCUT_ACTIONS: { key: keyof Shortcuts; labelKey: MessageKey }[] = [
+  { key: 'playPause', labelKey: 'shortcut.playPause' },
+  { key: 'next', labelKey: 'shortcut.next' },
+  { key: 'previous', labelKey: 'shortcut.previous' },
+  { key: 'volumeUp', labelKey: 'shortcut.volumeUp' },
+  { key: 'volumeDown', labelKey: 'shortcut.volumeDown' },
+  { key: 'mute', labelKey: 'shortcut.mute' },
+  { key: 'showHide', labelKey: 'shortcut.showHide' },
 ];
 
 /** Turn a keydown into Tauri's accelerator syntax, or null for a bare modifier. */

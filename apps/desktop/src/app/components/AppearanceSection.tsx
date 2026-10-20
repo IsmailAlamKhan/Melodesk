@@ -1,5 +1,11 @@
 import { cn } from '@melodesk/ui';
-import { ACCENT_PRESETS, oklchToRgb, toHex, presetRgb } from '../../appearance/color';
+import {
+  ACCENT_PRESETS,
+  oklchToRgb,
+  toHex,
+  presetRgb,
+  type AccentPresetId,
+} from '../../appearance/color';
 import {
   useAppearance,
   type Density,
@@ -7,6 +13,15 @@ import {
   type ThemeMode,
 } from '../../appearance/store';
 import { availableLocales, localeName, useT, type MessageKey } from '../../i18n';
+
+const ACCENT_KEYS: Record<AccentPresetId, MessageKey> = {
+  coral: 'settings.accent.coral',
+  amber: 'settings.accent.amber',
+  green: 'settings.accent.green',
+  blue: 'settings.accent.blue',
+  purple: 'settings.accent.purple',
+  pink: 'settings.accent.pink',
+};
 
 const THEMES: { id: ThemeMode; key: MessageKey }[] = [
   { id: 'system', key: 'settings.theme.system' },
@@ -94,8 +109,8 @@ export function AppearanceSection() {
                 type="button"
                 role="radio"
                 aria-checked={selected}
-                aria-label={p.label}
-                title={p.label}
+                aria-label={t(ACCENT_KEYS[p.id])}
+                title={t(ACCENT_KEYS[p.id])}
                 onClick={() => a.update({ accent: { kind: 'preset', id: p.id } })}
                 className={cn(
                   'size-8 rounded-full border-2 transition-transform hover:scale-110',

@@ -10,10 +10,12 @@ import { EditableTrackList } from '../components/EditableTrackList';
 import { PlaylistToolsMenu } from '../tools/PlaylistToolsMenu';
 import { sortTracks, type SortKey, type Track } from '../tools/playlistTools';
 import { useState } from 'react';
+import { useT } from '../../i18n';
 import { ShelfView } from '../components/ShelfView';
 
 /** Artist, album and playlist pages: hero header + shelves; long track lists continue on scroll. */
 export function DetailPage({ kind }: { kind: 'artist' | 'album' | 'playlist' }) {
+  const t = useT();
   const params = useParams();
   const [search] = useSearchParams();
   const id = params['id'] ?? '';
@@ -58,7 +60,7 @@ export function DetailPage({ kind }: { kind: 'artist' | 'album' | 'playlist' }) 
       {kind !== 'artist' && songTracks.length > 0 && (
         <div className="px-6">
           <PlaylistToolsMenu
-            title={page?.header?.title ?? 'Playlist'}
+            title={page?.header?.title ?? t('kind.playlist')}
             playlistId={playlistId}
             tracks={songTracks}
             editable={!!page?.header?.isEditable && !!playlistId}

@@ -1,21 +1,24 @@
 import { BROWSE_IDS } from '@melodesk/adapter';
 import { cn } from '@melodesk/ui';
 import { BarChart3, Compass, Home, Library, ListMusic, Plus, Settings } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { NavLink } from 'react-router';
 import { useBrowse } from '../data/hooks';
+import { useT, type MessageKey } from '../i18n';
 import { routeForEndpoint } from '../player/actions';
 import { usePlayerStore } from '../player/store';
 import { Artwork } from './components/Artwork';
 import { openDialog } from './dialogs/store';
 
-const nav = [
-  { to: '/', label: 'Home', icon: Home, end: true },
-  { to: '/explore', label: 'Explore', icon: Compass },
-  { to: '/library', label: 'Library', icon: Library },
-  { to: '/stats', label: 'Stats', icon: BarChart3 },
+const nav: { to: string; labelKey: MessageKey; icon: LucideIcon; end?: boolean }[] = [
+  { to: '/', labelKey: 'nav.home', icon: Home, end: true },
+  { to: '/explore', labelKey: 'nav.explore', icon: Compass },
+  { to: '/library', labelKey: 'nav.library', icon: Library },
+  { to: '/stats', labelKey: 'nav.stats', icon: BarChart3 },
 ];
 
 export function Sidebar() {
+  const t = useT();
   const loggedIn = usePlayerStore((s) => s.loggedIn);
   const playlists = useBrowse(BROWSE_IDS.libraryPlaylists, undefined);
   const items = loggedIn
@@ -23,7 +26,7 @@ export function Sidebar() {
     : [];
   return (
     <nav
-      aria-label="Primary"
+      aria-label={t('nav.primary')}
       className="flex h-full min-h-0 flex-col border-e border-border bg-bg-elevated"
     >
       <div data-tauri-drag-region className="h-10 shrink-0" />
@@ -43,16 +46,16 @@ export function Sidebar() {
             }
           >
             <n.icon className="size-5" />
-            {n.label}
+            {t(n.labelKey)}
           </NavLink>
         ))}
       </div>
       <div className="mt-4 flex items-center justify-between px-5 text-xs font-medium tracking-wide text-fg-subtle uppercase">
-        <span>Playlists</span>
+        <span>{t('nav.playlists')}</span>
         {loggedIn && (
           <button
             type="button"
-            aria-label="New playlist"
+            aria-label={t('nav.newPlaylist')}
             className="text-fg-subtle hover:text-fg"
             onClick={() => openDialog({ type: 'createPlaylist' })}
           >
@@ -79,12 +82,12 @@ export function Sidebar() {
           </NavLink>
         ))}
         {loggedIn && !items.length && !playlists.isPending && (
-          <div className="px-2 text-xs text-fg-subtle">No playlists yet</div>
+          <div className="px-2 text-xs text-fg-subtle">{t('nav.noPlaylists')}</div>
         )}
         {!loggedIn && (
           <div className="px-2 text-xs text-fg-subtle">
             <ListMusic className="mb-1 size-4" />
-            Sign in to see your playlists
+            {t('nav.signInForPlaylists')}
           </div>
         )}
       </div>
@@ -101,7 +104,7 @@ export function Sidebar() {
           }
         >
           <Settings className="size-5" />
-          Settings
+          {t('nav.settings')}
         </NavLink>
       </div>
     </nav>

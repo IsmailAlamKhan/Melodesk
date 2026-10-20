@@ -8,19 +8,20 @@ import { ChipBar } from '../components/ChipBar';
 import { ListSkeleton } from '../components/PageSkeleton';
 import { ShelfView } from '../components/ShelfView';
 import { useSearchParams } from 'react-router';
+import { useT, type MessageKey } from '../../i18n';
 import { routeForEndpoint } from '../../player/actions';
 import { useNavigate } from 'react-router';
 
-const TABS = [
-  { to: '/library', label: 'Recent', end: true },
-  { to: '/library/playlists', label: 'Playlists' },
-  { to: '/library/songs', label: 'Songs' },
-  { to: '/library/albums', label: 'Albums' },
-  { to: '/library/artists', label: 'Artists' },
-  { to: '/library/subscriptions', label: 'Subscriptions' },
-  { to: '/library/podcasts', label: 'Podcasts' },
-  { to: '/library/uploads', label: 'Uploads' },
-  { to: '/library/history', label: 'History' },
+const TABS: { to: string; labelKey: MessageKey; end?: boolean }[] = [
+  { to: '/library', labelKey: 'library.tab.recent', end: true },
+  { to: '/library/playlists', labelKey: 'library.tab.playlists' },
+  { to: '/library/songs', labelKey: 'library.tab.songs' },
+  { to: '/library/albums', labelKey: 'library.tab.albums' },
+  { to: '/library/artists', labelKey: 'library.tab.artists' },
+  { to: '/library/subscriptions', labelKey: 'library.tab.subscriptions' },
+  { to: '/library/podcasts', labelKey: 'library.tab.podcasts' },
+  { to: '/library/uploads', labelKey: 'library.tab.uploads' },
+  { to: '/library/history', labelKey: 'library.tab.history' },
 ];
 
 /** Known sort params (from the web client) for library lists. */
@@ -32,18 +33,21 @@ export const LIBRARY_SORT = {
 } as const;
 
 export function LibraryLayout() {
+  const t = useT();
   return (
     <div className="flex flex-col gap-4 pb-8">
-      <h1 className="px-4 pt-6 font-display text-3xl font-bold tracking-tight">Library</h1>
+      <h1 className="px-4 pt-6 font-display text-3xl font-bold tracking-tight">
+        {t('nav.library')}
+      </h1>
       <nav
-        aria-label="Library sections"
+        aria-label={t('library.sections')}
         className="flex gap-1 overflow-x-auto border-b border-border px-4 [scrollbar-width:none]"
       >
-        {TABS.map((t) => (
+        {TABS.map((tab) => (
           <NavLink
-            key={t.to}
-            to={t.to}
-            end={t.end ?? false}
+            key={tab.to}
+            to={tab.to}
+            end={tab.end ?? false}
             className={({ isActive }) =>
               cn(
                 '-mb-px shrink-0 border-b-2 px-3 py-2 text-sm',
@@ -51,7 +55,7 @@ export function LibraryLayout() {
               )
             }
           >
-            {t.label}
+            {t(tab.labelKey)}
           </NavLink>
         ))}
       </nav>
@@ -70,6 +74,7 @@ const SORTABLE = new Set<string>([
 
 /** One library list (playlists, songs…): a grid/list that continues on scroll, with YouTube's sort options. */
 export function LibrarySection({ browseId }: { browseId: string }) {
+  const t = useT();
   const [sp, setSp] = useSearchParams();
   const navigate = useNavigate();
   const sort = (sp.get('sort') ?? 'recent') as keyof typeof LIBRARY_SORT;
@@ -113,7 +118,7 @@ export function LibrarySection({ browseId }: { browseId: string }) {
         />
         {SORTABLE.has(browseId) && (
           <label className="ms-auto flex items-center gap-2 text-xs text-fg-muted">
-            Sort
+            {t('library.sort')}
             <select
               value={sort}
               onChange={(e) => {
@@ -123,10 +128,10 @@ export function LibrarySection({ browseId }: { browseId: string }) {
               }}
               className="rounded-md border border-border bg-bg-elevated px-2 py-1 text-sm text-fg"
             >
-              <option value="recent">Recent activity</option>
-              <option value="recentlyAdded">Recently added</option>
-              <option value="aToZ">A to Z</option>
-              <option value="zToA">Z to A</option>
+              <option value="recent">{t('library.sort.recent')}</option>
+              <option value="recentlyAdded">{t('library.sort.recentlyAdded')}</option>
+              <option value="aToZ">{t('library.sort.aToZ')}</option>
+              <option value="zToA">{t('library.sort.zToA')}</option>
             </select>
           </label>
         )}
@@ -134,7 +139,7 @@ export function LibrarySection({ browseId }: { browseId: string }) {
       {merged.map((s) => (
         <ShelfView key={s.id} shelf={s} />
       ))}
-      {!merged.length && <div className="p-8 text-fg-muted">Nothing here yet.</div>}
+      {!merged.length && <div className="p-8 text-fg-muted">{t('library.empty')}</div>}
       <div ref={sentinel} className="h-px" />
     </div>
   );

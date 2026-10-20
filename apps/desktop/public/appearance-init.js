@@ -7,7 +7,8 @@
     var p = JSON.parse(localStorage.getItem('melodesk.appearance') || '{}');
     var root = document.documentElement;
     var theme = p.theme || 'system';
-    if (theme === 'system') theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    if (theme === 'system')
+      theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
     root.dataset.theme = theme;
     root.dataset.density = p.density || 'comfortable';
     var lang = p.language && p.language !== 'system' ? p.language : navigator.language || 'en';

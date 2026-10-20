@@ -4,6 +4,7 @@ import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { useEffect, useState } from 'react';
 import { useAccount } from '../../data/hooks';
+import { useT } from '../../i18n';
 import { sendCommand, setPlayerVisible } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
 import { SHORTCUT_ACTIONS, useSettings } from '../../settings/store';
@@ -42,6 +43,7 @@ function Toggle({
 }
 
 export function SettingsPage() {
+  const t = useT();
   const account = useAccount();
   const playerVisible = usePlayerStore((s) => s.playerVisible);
   const bridgeVersion = usePlayerStore((s) => s.bridgeVersion);
@@ -82,26 +84,27 @@ export function SettingsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 p-6">
-      <h1 className="font-display text-3xl font-bold tracking-tight">Settings</h1>
+      <h1 className="font-display text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">Account</h2>
+        <h2 className="font-semibold">{t('settings.account')}</h2>
         <div className="flex items-center gap-3 rounded-lg border border-border bg-bg-elevated p-4">
           {account.data?.avatarUrl && (
             <img src={account.data.avatarUrl} alt="" className="size-10 rounded-full" />
           )}
           <div className="min-w-0 flex-1">
             <div className="font-medium">
-              {account.data?.signedIn ? account.data.name : 'Not signed in'}
+              {account.data?.signedIn ? account.data.name : t('settings.notSignedIn')}
             </div>
             <div className="truncate text-xs text-fg-muted">
-              {account.data?.handle ??
-                'Sign in happens on Google’s own page inside the player window.'}
+              {account.data?.handle ?? t('settings.signInHint')}
             </div>
           </div>
           {account.data?.signedIn ? (
             <>
-              <Button onClick={() => void setPlayerVisible(true)}>Switch account</Button>
+              <Button onClick={() => void setPlayerVisible(true)}>
+                {t('settings.switchAccount')}
+              </Button>
               <Button
                 variant="ghost"
                 onClick={() =>
@@ -112,12 +115,12 @@ export function SettingsPage() {
                   })
                 }
               >
-                Sign out
+                {t('settings.signOut')}
               </Button>
             </>
           ) : (
             <Button variant="primary" onClick={() => void setPlayerVisible(true)}>
-              Sign in
+              {t('settings.signIn')}
             </Button>
           )}
         </div>
@@ -126,27 +129,23 @@ export function SettingsPage() {
       <AppearanceSection />
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">Desktop</h2>
+        <h2 className="font-semibold">{t('settings.desktop')}</h2>
         {settings && (
           <>
             <Toggle
-              label="Keep playing when the window is closed"
-              hint={
-                isMac
-                  ? 'Closing the window hides it; Melodesk stays in the menu bar and Dock.'
-                  : 'Closing the window hides it to the system tray.'
-              }
+              label={t('settings.closeToTray')}
+              hint={isMac ? t('settings.closeToTrayHintMac') : t('settings.closeToTrayHint')}
               checked={settings.closeToTray}
               onChange={(v) => void update({ closeToTray: v })}
             />
             <Toggle
-              label="Launch at login"
+              label={t('settings.launchAtLogin')}
               checked={settings.launchAtLogin}
               onChange={(v) => void update({ launchAtLogin: v })}
             />
             <Toggle
-              label="Notify when the track changes"
-              hint="Only while Melodesk is not the focused window."
+              label={t('settings.notify')}
+              hint={t('settings.notifyHint')}
               checked={settings.notifyOnTrackChange}
               onChange={(v) => void update({ notifyOnTrackChange: v })}
             />
@@ -159,17 +158,14 @@ export function SettingsPage() {
         )}
         <div>
           <Button onClick={() => void setPlayerVisible(!playerVisible)}>
-            {playerVisible ? 'Hide player window' : 'Show player window'}
+            {playerVisible ? t('settings.hidePlayer') : t('settings.showPlayer')}
           </Button>
         </div>
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">Global shortcuts</h2>
-        <p className="text-sm text-fg-muted">
-          Work even when Melodesk is in the background. Media keys are handled by the system and
-          need no setup.
-        </p>
+        <h2 className="font-semibold">{t('settings.shortcuts')}</h2>
+        <p className="text-sm text-fg-muted">{t('settings.shortcutsHint')}</p>
         {settings && (
           <div className="flex flex-col divide-y divide-border rounded-lg border border-border bg-bg-elevated">
             {SHORTCUT_ACTIONS.map((a) => (
@@ -177,7 +173,7 @@ export function SettingsPage() {
                 key={a.key}
                 className="flex items-center justify-between gap-4 px-4 py-2 text-sm"
               >
-                <span>{a.label}</span>
+                <span>{t(a.labelKey)}</span>
                 <ShortcutField
                   value={settings.shortcuts[a.key]}
                   onChange={(v) =>
@@ -193,46 +189,45 @@ export function SettingsPage() {
       <PluginsSection />
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">Updates</h2>
+        <h2 className="font-semibold">{t('settings.updates')}</h2>
         <div className="flex items-center gap-3 rounded-lg border border-border bg-bg-elevated p-4 text-sm">
           <div className="flex-1">
-            <div>Melodesk {version || '—'}</div>
+            <div>{t('settings.version', { version: version || '—' })}</div>
             <div className="text-xs text-fg-muted">
-              {updateState === 'none' && 'You’re up to date.'}
-              {updateState === 'checking' && 'Checking…'}
-              {updateState === 'downloading' && `Downloading ${updateInfo ?? ''}`}
-              {updateState === 'ready' && 'Update installed. Restart to apply.'}
-              {updateState === 'error' && (updateInfo ?? 'Update check failed.')}
-              {updateState === 'idle' &&
-                'Updates are signed and downloaded from the project’s GitHub releases. Nothing is sent about you.'}
+              {updateState === 'none' && t('update.upToDate')}
+              {updateState === 'checking' && t('update.checking')}
+              {updateState === 'downloading' && t('update.downloading', { info: updateInfo ?? '' })}
+              {updateState === 'ready' && t('update.ready')}
+              {updateState === 'error' && (updateInfo ?? t('update.failed'))}
+              {updateState === 'idle' && t('update.idle')}
             </div>
           </div>
           {updateState === 'ready' ? (
             <Button variant="primary" onClick={() => void relaunch()}>
-              Restart
+              {t('update.restart')}
             </Button>
           ) : (
             <Button
               disabled={updateState === 'checking' || updateState === 'downloading'}
               onClick={() => void checkForUpdates()}
             >
-              Check for updates
+              {t('update.check')}
             </Button>
           )}
         </div>
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-semibold">Diagnostics</h2>
+        <h2 className="font-semibold">{t('settings.diagnostics')}</h2>
         <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 rounded-lg border border-border bg-bg-elevated p-4 text-sm">
-          <dt className="text-fg-subtle">Bridge</dt>
+          <dt className="text-fg-subtle">{t('diag.bridge')}</dt>
           <dd>{bridgeVersion ?? '—'}</dd>
-          <dt className="text-fg-subtle">Health</dt>
+          <dt className="text-fg-subtle">{t('diag.health')}</dt>
           <dd>
             {health.status}
             {health.reason ? ` (${health.reason})` : ''}
           </dd>
-          <dt className="text-fg-subtle">Page APIs</dt>
+          <dt className="text-fg-subtle">{t('diag.pageApis')}</dt>
           <dd className="text-xs text-fg-muted">
             {Object.entries(capabilities)
               .map(([k, v]) => `${k}:${v ? '✓' : '✗'}`)
@@ -245,23 +240,17 @@ export function SettingsPage() {
             void navigator.clipboard.writeText(
               JSON.stringify({ version, bridgeVersion, health, capabilities }, null, 2),
             );
-            toast('Copied diagnostics');
+            toast(t('diag.copied'));
           }}
         >
-          Copy diagnostics
+          {t('diag.copy')}
         </Button>
       </section>
 
       <section className="flex flex-col gap-2 text-sm text-fg-muted">
-        <h2 className="font-semibold text-fg">About</h2>
-        <p>
-          Melodesk is an open-source desktop client that drives the official YouTube Music web
-          player. MIT licensed.
-        </p>
-        <p className="text-xs text-fg-subtle">
-          Melodesk is not affiliated with, endorsed by, or sponsored by Google LLC or YouTube.
-          YouTube and YouTube Music are trademarks of Google LLC.
-        </p>
+        <h2 className="font-semibold text-fg">{t('settings.about')}</h2>
+        <p>{t('about.text')}</p>
+        <p className="text-xs text-fg-subtle">{t('about.disclaimer')}</p>
       </section>
     </div>
   );

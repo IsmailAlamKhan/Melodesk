@@ -5,7 +5,8 @@ import { usePlayerStore } from '../player/store';
 import { accentVars, applyToDocument, resolveDirection, resolveTheme } from './apply';
 import { useArtworkColor } from './artworkAccent';
 import { MIRROR_KEY, useAppearance } from './store';
-import { useResolvedLocale } from '../i18n';
+import { invoke } from '@tauri-apps/api/core';
+import { t, useResolvedLocale } from '../i18n';
 
 /** Applies the appearance preferences to <html> and keeps them in step across windows. */
 export function AppearanceEffects({ children }: { children: ReactNode }) {
@@ -32,6 +33,24 @@ export function AppearanceEffects({ children }: { children: ReactNode }) {
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
   }, []);
+
+  // The tray and the macOS Playback menu are native, so they get their text from here.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('window') === 'mini') return;
+    void invoke('set_native_labels', {
+      labels: {
+        play: t('native.play'),
+        pause: t('native.pause'),
+        next: t('native.next'),
+        previous: t('native.previous'),
+        show: t('native.show'),
+        quit: t('native.quit'),
+        nothingPlaying: t('native.nothingPlaying'),
+        playback: t('native.playback'),
+        about: t('native.about'),
+      },
+    }).catch(() => undefined);
+  }, [locale]);
 
   useEffect(() => {
     const theme = resolveTheme(prefs.theme, light);

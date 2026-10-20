@@ -1,6 +1,7 @@
 import * as Popover from '@radix-ui/react-popover';
 import { IconButton, cn } from '@melodesk/ui';
 import { Languages, SlidersHorizontal, Timer, Type } from 'lucide-react';
+import { languageName, useI18n, useT } from '../i18n';
 import { useLyricsPrefs } from '../lyrics/prefs';
 import { LANGUAGES, type Provider } from '../lyrics/translate';
 import type { Caveat } from '../lyrics/transliterate';
@@ -18,6 +19,8 @@ export interface LyricsToolbarProps {
 
 /** Romanize / translate toggles, translation settings, and per-song sync offset. */
 export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: LyricsToolbarProps) {
+  const t = useT();
+  const locale = useI18n((s) => s.locale);
   const p = useLyricsPrefs();
   const toggleTranslate = (): void => {
     if (p.translate) {
@@ -27,9 +30,9 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
     if (p.provider === 'mymemory' && !p.translationConsent) {
       openDialog({
         type: 'confirm',
-        title: 'Translate lyrics?',
-        body: 'The lyric text is sent to MyMemory (api.mymemory.translated.net) to be translated. Nothing else is sent, and each song is requested once, then kept on this computer. For full privacy, use a LibreTranslate server running on this computer instead (see translation settings).',
-        confirmLabel: 'Translate',
+        title: t('lyrics.consent.title'),
+        body: t('lyrics.consent.body'),
+        confirmLabel: t('lyrics.consent.confirm'),
         onConfirm: () => {
           p.update({ translationConsent: true, translate: true });
         },
@@ -41,9 +44,9 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
   const step = (delta: number): void =>
     onOffset(Math.max(-10_000, Math.min(10_000, offsetMs + delta)));
   return (
-    <div className="flex items-center gap-1" role="toolbar" aria-label="Lyrics options">
+    <div className="flex items-center gap-1" role="toolbar" aria-label={t('lyrics.opt.label')}>
       <IconButton
-        label={p.romanize ? 'Hide romanization' : 'Show romanization'}
+        label={p.romanize ? t('lyrics.opt.hideRoman') : t('lyrics.opt.showRoman')}
         size="sm"
         aria-pressed={p.romanize}
         className={cn(p.romanize && 'text-accent')}
@@ -52,7 +55,7 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
         <Type />
       </IconButton>
       <IconButton
-        label={p.translate ? 'Hide translation' : 'Translate lyrics'}
+        label={p.translate ? t('lyrics.opt.hideTrans') : t('lyrics.opt.translate')}
         size="sm"
         aria-pressed={p.translate}
         className={cn(p.translate && 'text-accent')}
@@ -63,7 +66,7 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
 
       <Popover.Root>
         <Popover.Trigger asChild>
-          <IconButton label="Translation settings" size="sm">
+          <IconButton label={t('lyrics.opt.settings')} size="sm">
             <SlidersHorizontal />
           </IconButton>
         </Popover.Trigger>
@@ -71,7 +74,7 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
           <Popover.Content align="end" className={panel}>
             <div className="flex flex-col gap-3">
               <label className="flex flex-col gap-1">
-                Translate into
+                {t('lyrics.translateInto')}
                 <select
                   className={select}
                   value={p.target}
@@ -79,45 +82,42 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
                 >
                   {LANGUAGES.map((l) => (
                     <option key={l.code} value={l.code}>
-                      {l.label}
+                      {languageName(l.code, locale)}
                     </option>
                   ))}
                 </select>
               </label>
               <label className="flex flex-col gap-1">
-                Song language
+                {t('lyrics.songLanguage')}
                 <select
                   className={select}
                   value={p.source}
                   onChange={(e) => p.update({ source: e.target.value })}
                 >
-                  <option value="auto">Detect automatically</option>
+                  <option value="auto">{t('lyrics.detectAuto')}</option>
                   {LANGUAGES.map((l) => (
                     <option key={l.code} value={l.code}>
-                      {l.label}
+                      {languageName(l.code, locale)}
                     </option>
                   ))}
                 </select>
-                <span className="text-xs text-fg-subtle">
-                  Romanized lyrics (like Hindi written in English letters) can’t be detected; pick
-                  the language here.
-                </span>
+                <span className="text-xs text-fg-subtle">{t('lyrics.songLanguageHint')}</span>
               </label>
               <label className="flex flex-col gap-1">
-                Translation service
+                {t('lyrics.service')}
                 <select
                   className={select}
                   value={p.provider}
                   onChange={(e) => p.update({ provider: e.target.value as Provider })}
                 >
-                  <option value="mymemory">MyMemory (free, online)</option>
-                  <option value="libretranslate">LibreTranslate on this computer</option>
+                  <option value="mymemory">{t('lyrics.service.mymemory')}</option>
+                  <option value="libretranslate">{t('lyrics.service.libre')}</option>
                 </select>
               </label>
               {p.provider === 'libretranslate' && (
                 <>
                   <label className="flex flex-col gap-1">
-                    Server address
+                    {t('lyrics.serverAddress')}
                     <input
                       className={select}
                       value={p.libreUrl}
@@ -126,7 +126,7 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
                     />
                   </label>
                   <label className="flex flex-col gap-1">
-                    API key (optional)
+                    {t('lyrics.apiKeyOptional')}
                     <input
                       className={select}
                       type="password"
@@ -139,8 +139,8 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
               )}
               <p className="text-xs text-fg-subtle">
                 {p.provider === 'mymemory'
-                  ? 'Sends lyric text to api.mymemory.translated.net. Free daily limit applies.'
-                  : 'Nothing leaves this computer. Only localhost addresses are allowed.'}
+                  ? t('lyrics.serviceHint.mymemory')
+                  : t('lyrics.serviceHint.libre')}
               </p>
             </div>
           </Popover.Content>
@@ -150,7 +150,7 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
       <Popover.Root>
         <Popover.Trigger asChild>
           <IconButton
-            label="Lyrics timing"
+            label={t('lyrics.timing')}
             size="sm"
             disabled={!hasTimedLines}
             className={cn(offsetMs !== 0 && 'text-accent')}
@@ -162,8 +162,13 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
           <Popover.Content align="end" className={panel}>
             <div className="flex flex-col gap-3">
               <div className="flex items-baseline justify-between">
-                <span className="font-medium">Sync offset</span>
-                <span className="tabular-nums text-fg-muted">{`${offsetMs > 0 ? '+' : ''}${(offsetMs / 1000).toFixed(1)} s`}</span>
+                <span className="font-medium">{t('lyrics.syncOffset')}</span>
+                <span className="tabular-nums text-fg-muted">
+                  {t('lyrics.offsetValue', {
+                    sign: offsetMs > 0 ? '+' : '',
+                    seconds: (offsetMs / 1000).toFixed(1),
+                  })}
+                </span>
               </div>
               <div className="flex gap-2">
                 <button
@@ -171,14 +176,14 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
                   className="h-8 flex-1 rounded-md bg-bg-overlay hover:bg-border"
                   onClick={() => step(-500)}
                 >
-                  Earlier −0.5 s
+                  {t('lyrics.earlier')}
                 </button>
                 <button
                   type="button"
                   className="h-8 flex-1 rounded-md bg-bg-overlay hover:bg-border"
                   onClick={() => step(500)}
                 >
-                  Later +0.5 s
+                  {t('lyrics.later')}
                 </button>
               </div>
               <button
@@ -187,12 +192,9 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
                 disabled={offsetMs === 0}
                 onClick={() => onOffset(0)}
               >
-                Reset
+                {t('lyrics.reset')}
               </button>
-              <p className="text-xs text-fg-subtle">
-                If lines appear too soon, press Later; if they lag, press Earlier. Remembered for
-                this song.
-              </p>
+              <p className="text-xs text-fg-subtle">{t('lyrics.timingHint')}</p>
             </div>
           </Popover.Content>
         </Popover.Portal>
@@ -200,13 +202,9 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
       {caveat && (
         <span
           className="ms-1 text-[11px] text-fg-subtle"
-          title={
-            caveat === 'kanji'
-              ? 'Chinese characters and Japanese kanji are read as Mandarin offline, so romanization may be wrong.'
-              : 'Arabic and Hebrew are written without vowels, so romanization is approximate.'
-          }
+          title={caveat === 'kanji' ? t('lyrics.caveat.kanji') : t('lyrics.caveat.abjad')}
         >
-          approximate
+          {t('lyrics.approximate')}
         </span>
       )}
     </div>

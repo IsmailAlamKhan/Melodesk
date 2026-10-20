@@ -23,10 +23,12 @@ import {
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { useSuggestions } from '../data/hooks';
+import { useI18n, useT } from '../i18n';
 import { playItem, routeForEndpoint } from '../player/actions';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { Artwork } from './components/Artwork';
+import { KIND_KEY } from './components/kinds';
 import { openDialog } from './dialogs/store';
 import { useUiStore } from './uiStore';
 
@@ -41,6 +43,8 @@ interface Command {
 
 /** Cmd/Ctrl+K: navigate, control playback, and search from the keyboard. */
 export function CommandPalette() {
+  const t = useT();
+  const locale = useI18n((s) => s.locale);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
@@ -69,74 +73,85 @@ export function CommandPalette() {
   };
   const commands = useMemo<Command[]>(
     () => [
-      { id: 'home', label: 'Go to Home', icon: <Home className="size-4" />, run: () => go('/') },
+      {
+        id: 'home',
+        label: t('palette.cmd.home'),
+        icon: <Home className="size-4" />,
+        run: () => go('/'),
+      },
       {
         id: 'explore',
-        label: 'Go to Explore',
+        label: t('palette.cmd.explore'),
         icon: <Compass className="size-4" />,
         run: () => go('/explore'),
       },
       {
         id: 'library',
-        label: 'Go to Library',
+        label: t('palette.cmd.library'),
         icon: <Library className="size-4" />,
-        keywords: 'playlists songs albums artists',
+        keywords: t('palette.keywords.library'),
         run: () => go('/library'),
       },
       {
         id: 'history',
-        label: 'Go to History',
+        label: t('palette.cmd.history'),
         icon: <Library className="size-4" />,
         run: () => go('/library/history'),
       },
       {
         id: 'liked',
-        label: 'Open Liked Music',
+        label: t('palette.cmd.liked'),
         icon: <Library className="size-4" />,
         run: () => go('/playlist/LM'),
       },
       {
         id: 'stats',
-        label: 'Your listening stats',
+        label: t('palette.cmd.stats'),
         icon: <BarChart3 className="size-4" />,
         run: () => go('/stats'),
       },
       {
         id: 'settings',
-        label: 'Settings',
+        label: t('nav.settings'),
         icon: <Settings className="size-4" />,
-        keywords: 'plugins shortcuts account',
+        keywords: t('palette.keywords.settings'),
         run: () => go('/settings'),
       },
       {
         id: 'toggle',
-        label: playing ? 'Pause' : 'Play',
-        hint: 'Space',
+        label: playing ? t('player.pause') : t('player.play'),
+        hint: t('palette.hint.space'),
         icon: playing ? <Pause className="size-4" /> : <Play className="size-4" />,
         run: () => void sendCommand({ type: 'toggle' }),
       },
       {
         id: 'next',
-        label: 'Next track',
+        label: t('palette.cmd.next'),
         icon: <SkipForward className="size-4" />,
         run: () => void sendCommand({ type: 'next' }),
       },
       {
         id: 'previous',
-        label: 'Previous track',
+        label: t('palette.cmd.previous'),
         icon: <SkipBack className="size-4" />,
         run: () => void sendCommand({ type: 'previous' }),
       },
       {
         id: 'shuffle',
-        label: queue?.shuffle ? 'Shuffle off' : 'Shuffle on',
+        label: queue?.shuffle ? t('palette.cmd.shuffleOff') : t('palette.cmd.shuffleOn'),
         icon: <Shuffle className="size-4" />,
         run: () => void sendCommand({ type: 'setShuffle', enabled: !(queue?.shuffle ?? false) }),
       },
       {
         id: 'repeat',
-        label: 'Cycle repeat',
-        hint: queue?.repeat ?? 'off',
+        label: t('palette.cmd.repeat'),
+        hint: t(
+          queue?.repeat === 'one'
+            ? 'palette.repeat.one'
+            : queue?.repeat === 'all'
+              ? 'palette.repeat.all'
+              : 'palette.repeat.off',
+        ),
         icon: <Repeat className="size-4" />,
         run: () =>
           void sendCommand({
@@ -146,37 +161,37 @@ export function CommandPalette() {
       },
       {
         id: 'queue',
-        label: 'Toggle queue panel',
+        label: t('palette.cmd.queue'),
         icon: <ListMusic className="size-4" />,
         run: () => toggleRightPanel('queue'),
       },
       {
         id: 'lyrics',
-        label: 'Toggle lyrics panel',
+        label: t('palette.cmd.lyrics'),
         icon: <MicVocal className="size-4" />,
         run: () => toggleRightPanel('lyrics'),
       },
       {
         id: 'nowplaying',
-        label: 'Open Now Playing',
+        label: t('palette.cmd.nowPlaying'),
         icon: <Maximize2 className="size-4" />,
         run: () => setNowPlayingOpen(true),
       },
       {
         id: 'mini',
-        label: 'Open mini player',
+        label: t('palette.cmd.mini'),
         icon: <PictureInPicture2 className="size-4" />,
         run: () => void invoke('open_mini_player'),
       },
       {
         id: 'newplaylist',
-        label: 'New playlist',
+        label: t('playlist.new'),
         icon: <Plus className="size-4" />,
         run: () => openDialog({ type: 'createPlaylist' }),
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `go` is stable enough; commands depend on playback flags
-    [playing, queue?.shuffle, queue?.repeat],
+    [playing, queue?.shuffle, queue?.repeat, locale],
   );
 
   const q = query.trim().toLowerCase();
@@ -217,17 +232,17 @@ export function CommandPalette() {
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40" />
         <Dialog.Content
-          aria-label="Command palette"
+          aria-label={t('palette.title')}
           className="fixed top-[12vh] left-1/2 z-50 w-[min(40rem,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-xl border border-border bg-bg-elevated shadow-2xl focus:outline-none"
         >
-          <Dialog.Title className="sr-only">Command palette</Dialog.Title>
+          <Dialog.Title className="sr-only">{t('palette.title')}</Dialog.Title>
           <div className="flex items-center gap-2 border-b border-border px-3">
             <Search className="size-4 text-fg-subtle" />
             <input
               ref={input}
               autoFocus
               value={query}
-              placeholder="Type a command or search…"
+              placeholder={t('palette.placeholder')}
               onChange={(e) => {
                 setQuery(e.target.value);
                 setActive(0);
@@ -244,7 +259,7 @@ export function CommandPalette() {
               className="h-12 flex-1 bg-transparent text-sm outline-none placeholder:text-fg-subtle"
             />
             <kbd className="rounded border border-border px-1.5 text-[10px] text-fg-subtle">
-              esc
+              {t('palette.esc')}
             </kbd>
           </div>
           <ul role="listbox" className="max-h-[50vh] overflow-y-auto p-1">
@@ -275,7 +290,9 @@ export function CommandPalette() {
                   />
                 )}
                 <span className="flex-1 truncate">{e.text}</span>
-                <span className="text-xs text-fg-subtle">{e.item?.kind}</span>
+                <span className="text-xs text-fg-subtle">
+                  {e.item ? t(KIND_KEY[e.item.kind]) : ''}
+                </span>
               </Row>
             ))}
             {q && (
@@ -285,7 +302,7 @@ export function CommandPalette() {
                 onHover={() => setActive(total - 1)}
               >
                 <Search className="size-4 text-fg-muted" />
-                <span className="flex-1 truncate">Search for “{q}”</span>
+                <span className="flex-1 truncate">{t('palette.searchFor', { query: q })}</span>
               </Row>
             )}
           </ul>

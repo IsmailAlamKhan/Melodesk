@@ -1,6 +1,7 @@
 import { IconButton, cn } from '@melodesk/ui';
 import { ChevronLeft, ChevronRight, ListMusic, MicVocal } from 'lucide-react';
 import { Outlet, useNavigate } from 'react-router';
+import { useT } from '../i18n';
 import { usePlayerStore } from '../player/store';
 import { HealthBanner } from './HealthBanner';
 import { PlayerBar } from './PlayerBar';
@@ -15,6 +16,7 @@ import { Toaster } from './components/Toaster';
 import { useUiStore } from './uiStore';
 
 export function Layout() {
+  const t = useT();
   const navigate = useNavigate();
   const panel = useUiStore((s) => s.rightPanel);
   const togglePanel = useUiStore((s) => s.toggleRightPanel);
@@ -29,17 +31,17 @@ export function Layout() {
       <Sidebar />
       <div data-content className="flex min-h-0 min-w-0 flex-col">
         <div data-tauri-drag-region className="flex h-14 shrink-0 items-center gap-2 px-3 pt-2">
-          <IconButton label="Back" size="sm" onClick={() => navigate(-1)}>
+          <IconButton label={t('nav.back')} size="sm" onClick={() => navigate(-1)}>
             <ChevronLeft className="rtl:-scale-x-100" />
           </IconButton>
-          <IconButton label="Forward" size="sm" onClick={() => navigate(1)}>
+          <IconButton label={t('nav.forward')} size="sm" onClick={() => navigate(1)}>
             <ChevronRight className="rtl:-scale-x-100" />
           </IconButton>
           <div className="flex flex-1 justify-center">
             <SearchBox />
           </div>
           <IconButton
-            label="Lyrics"
+            label={t('nav.lyrics')}
             size="sm"
             aria-pressed={panel === 'lyrics'}
             onClick={() => togglePanel('lyrics')}
@@ -48,7 +50,7 @@ export function Layout() {
             <MicVocal />
           </IconButton>
           <IconButton
-            label="Queue"
+            label={t('nav.queue')}
             size="sm"
             aria-pressed={panel === 'queue'}
             onClick={() => togglePanel('queue')}
@@ -64,7 +66,7 @@ export function Layout() {
       </div>
       {panel && (
         <aside
-          aria-label={panel === 'queue' ? 'Queue' : 'Lyrics'}
+          aria-label={panel === 'queue' ? t('nav.queue') : t('nav.lyrics')}
           className="flex min-h-0 flex-col border-s border-border bg-bg-elevated"
         >
           <div data-tauri-drag-region className="h-10 shrink-0" />

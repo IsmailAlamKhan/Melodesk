@@ -3,10 +3,12 @@ import { ExternalLink, Link } from 'lucide-react';
 import { useState } from 'react';
 import { sendCommand, setPlayerVisible } from '../player/ipc';
 import { toPlayerPath } from '../player/links';
+import { useT } from '../i18n';
 import { usePlayerStore } from '../player/store';
 
 /** Shown on Home while signed out: Melodesk shows only your own account's data once you sign in. */
 export function Welcome() {
+  const t = useT();
   const ready = usePlayerStore((s) => s.ready);
   const bridgeVersion = usePlayerStore((s) => s.bridgeVersion);
   const [link, setLink] = useState('');
@@ -14,7 +16,7 @@ export function Welcome() {
   const openLink = (): void => {
     const path = toPlayerPath(link);
     if (!path) {
-      setLinkError('Paste a music.youtube.com or youtube.com link.');
+      setLinkError(t('welcome.linkError'));
       return;
     }
     setLinkError(null);
@@ -24,20 +26,18 @@ export function Welcome() {
   return (
     <section className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-8">
       <header>
-        <h1 className="font-display text-3xl font-semibold tracking-tight">Welcome to Melodesk</h1>
-        <p className="mt-2 text-fg-muted">
-          Melodesk shows your own YouTube Music: your home feed, mixes, library and history, exactly
-          as on the website. Sign in with Google in the player window; nothing about your account
-          passes through Melodesk.
-        </p>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">{t('welcome.title')}</h1>
+        <p className="mt-2 text-fg-muted">{t('welcome.intro')}</p>
       </header>
       <div className="flex items-center gap-3">
         <Button variant="primary" disabled={!ready} onClick={() => void setPlayerVisible(true)}>
           <ExternalLink className="size-4" />
-          Open player to sign in
+          {t('welcome.openPlayer')}
         </Button>
         <span className="text-xs text-fg-subtle">
-          {ready ? `Bridge connected (v${bridgeVersion ?? '?'})` : 'Connecting to the player…'}
+          {ready
+            ? t('welcome.bridgeConnected', { version: bridgeVersion ?? '?' })
+            : t('welcome.connecting')}
         </span>
       </div>
       <form
@@ -48,7 +48,7 @@ export function Welcome() {
         }}
       >
         <label htmlFor="open-link" className="text-sm text-fg-muted">
-          Or open a YouTube Music link
+          {t('welcome.orOpenLink')}
         </label>
         <div className="flex gap-2">
           <input
@@ -64,7 +64,7 @@ export function Welcome() {
           />
           <Button type="submit" disabled={!ready}>
             <Link className="size-4" />
-            Open
+            {t('common.open')}
           </Button>
         </div>
         {linkError && (
@@ -73,9 +73,7 @@ export function Welcome() {
           </p>
         )}
       </form>
-      <p className="text-xs text-fg-subtle">
-        Not affiliated with Google or YouTube. YouTube Music is a trademark of Google LLC.
-      </p>
+      <p className="text-xs text-fg-subtle">{t('welcome.disclaimer')}</p>
     </section>
   );
 }

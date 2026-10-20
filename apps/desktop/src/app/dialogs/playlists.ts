@@ -8,6 +8,7 @@ import {
 } from '@melodesk/adapter';
 import { run } from '../../data/innertube';
 import { queryClient } from '../../data/queryClient';
+import { t } from '../../i18n';
 import { toast } from '../toast';
 
 export type Privacy = 'PUBLIC' | 'PRIVATE' | 'UNLISTED';
@@ -29,7 +30,7 @@ export async function createPlaylist(
     await run(requests.createPlaylist(title, description, privacy, videoIds)),
   );
   refresh(id);
-  toast(`Created “${title}”`);
+  toast(t('toast.playlistCreated', { title }));
   return id;
 }
 
@@ -45,13 +46,13 @@ export async function editPlaylistDetails(
   if (!actions.length) return;
   await run(requests.editPlaylist(playlistId, actions));
   refresh(playlistId);
-  toast('Playlist updated');
+  toast(t('toast.playlistUpdated'));
 }
 
 export async function deletePlaylist(playlistId: string): Promise<void> {
   await run(requests.deletePlaylist(playlistId));
   refresh(playlistId);
-  toast('Playlist deleted');
+  toast(t('toast.playlistDeleted'));
 }
 
 export async function addToPlaylist(
@@ -61,7 +62,7 @@ export async function addToPlaylist(
 ): Promise<void> {
   await run(requests.editPlaylist(playlistId, playlistActions.addVideos(videoIds)));
   refresh(playlistId);
-  toast(title ? `Saved to ${title}` : 'Saved to playlist');
+  toast(title ? t('toast.savedTo', { title }) : t('toast.savedToPlaylist'));
 }
 
 export async function removeFromPlaylist(
@@ -70,7 +71,7 @@ export async function removeFromPlaylist(
 ): Promise<void> {
   await run(requests.editPlaylist(playlistId, playlistActions.removeVideos(items)));
   refresh(playlistId);
-  toast('Removed from playlist');
+  toast(t('toast.removedFromPlaylist'));
 }
 
 /** Move `setVideoId` before `beforeSetVideoId` (null = to the end). */

@@ -12,6 +12,7 @@ fn main() {
             "discord_set_activity",
             "discord_clear",
             "open_mini_player",
+            "set_native_labels",
         ]),
     ))
     .expect("failed to run tauri-build");

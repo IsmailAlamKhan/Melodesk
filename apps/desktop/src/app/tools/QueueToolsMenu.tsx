@@ -2,6 +2,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { IconButton } from '@melodesk/ui';
 import { Copy, Gauge, ListPlus, Moon, MoreHorizontal } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useT } from '../../i18n';
 import { usePlayerStore } from '../../player/store';
 import { useUiStore } from '../uiStore';
 import {
@@ -18,6 +19,7 @@ const itemClass =
   'flex cursor-default select-none items-center gap-3 rounded-md px-3 py-2 outline-none data-[highlighted]:bg-bg-overlay data-[disabled]:opacity-50';
 
 export function QueueToolsMenu() {
+  const t = useT();
   const sleepUntil = useUiStore((s) => s.sleepUntil);
   const rate = usePlayerStore((s) => s.flags?.playbackRate ?? 1);
   const [now, setNow] = useState(() => Date.now());
@@ -30,7 +32,7 @@ export function QueueToolsMenu() {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <IconButton label="Queue tools" size="sm">
+        <IconButton label={t('queueTools.label')} size="sm">
           <MoreHorizontal />
         </IconButton>
       </DropdownMenu.Trigger>
@@ -38,19 +40,21 @@ export function QueueToolsMenu() {
         <DropdownMenu.Content align="end" className={menuClass}>
           <DropdownMenu.Item className={itemClass} onSelect={() => void dedupeQueue()}>
             <Copy className="size-4" />
-            Remove duplicates
+            {t('queueTools.dedupe')}
           </DropdownMenu.Item>
           <DropdownMenu.Item className={itemClass} onSelect={saveQueueAsPlaylist}>
             <ListPlus className="size-4" />
-            Save queue as playlist
+            {t('queueTools.saveAsPlaylist')}
           </DropdownMenu.Item>
           <DropdownMenu.Separator className="my-1 h-px bg-border" />
           <DropdownMenu.Sub>
             <DropdownMenu.SubTrigger className={itemClass}>
               <Moon className="size-4" />
-              Sleep timer
+              {t('queueTools.sleepTimer')}
               {remaining !== null && (
-                <span className="ms-auto text-xs text-fg-subtle">{String(remaining)} min</span>
+                <span className="ms-auto text-xs text-fg-subtle">
+                  {t('queueTools.minutesLeft', { minutes: remaining })}
+                </span>
               )}
             </DropdownMenu.SubTrigger>
             <DropdownMenu.Portal>
@@ -61,7 +65,7 @@ export function QueueToolsMenu() {
                     className={itemClass}
                     onSelect={() => setSleepTimer(m)}
                   >
-                    {String(m)} minutes
+                    {t('queueTools.minutes', { minutes: m })}
                   </DropdownMenu.Item>
                 ))}
                 <DropdownMenu.Item
@@ -69,7 +73,7 @@ export function QueueToolsMenu() {
                   disabled={!sleepUntil}
                   onSelect={() => setSleepTimer(0)}
                 >
-                  Off
+                  {t('queueTools.off')}
                 </DropdownMenu.Item>
               </DropdownMenu.SubContent>
             </DropdownMenu.Portal>
@@ -77,8 +81,10 @@ export function QueueToolsMenu() {
           <DropdownMenu.Sub>
             <DropdownMenu.SubTrigger className={itemClass}>
               <Gauge className="size-4" />
-              Speed
-              <span className="ms-auto text-xs text-fg-subtle">{String(rate)}×</span>
+              {t('queueTools.speed')}
+              <span className="ms-auto text-xs text-fg-subtle">
+                {t('queueTools.rate', { rate })}
+              </span>
             </DropdownMenu.SubTrigger>
             <DropdownMenu.Portal>
               <DropdownMenu.SubContent className={menuClass}>
@@ -88,7 +94,9 @@ export function QueueToolsMenu() {
                     className={itemClass}
                     onSelect={() => void setPlaybackRate(r)}
                   >
-                    {String(r)}×{r === 1 ? ' (normal)' : ''}
+                    {r === 1
+                      ? t('queueTools.rateNormal', { rate: r })
+                      : t('queueTools.rate', { rate: r })}
                   </DropdownMenu.Item>
                 ))}
               </DropdownMenu.SubContent>

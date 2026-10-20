@@ -20,12 +20,14 @@ import type { QueueItem } from '@melodesk/bridge/protocol';
 import { IconButton, cn } from '@melodesk/ui';
 import { GripVertical, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { useT } from '../i18n';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { QueueToolsMenu } from './tools/QueueToolsMenu';
 
 /** The page's live queue, mirrored from YouTube's own store; drag to reorder, click to jump. */
 export function QueuePanel() {
+  const t = useT();
   const queue = usePlayerStore((s) => s.queue);
   // Items mirror the page's queue; a local override shows the reorder immediately until the page confirms.
   const fromPage = useMemo(
@@ -44,7 +46,7 @@ export function QueuePanel() {
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-  if (!queue) return <div className="p-4 text-sm text-fg-muted">Nothing in the queue.</div>;
+  if (!queue) return <div className="p-4 text-sm text-fg-muted">{t('queue.empty')}</div>;
   const onDragEnd = (e: DragEndEvent): void => {
     const { active, over } = e;
     if (!over || active.id === over.id) return;
@@ -59,12 +61,12 @@ export function QueuePanel() {
     <div className="flex h-full flex-col">
       <header className="flex items-center justify-between px-4 py-3">
         <div>
-          <div className="text-xs text-fg-subtle">Playing from</div>
+          <div className="text-xs text-fg-subtle">{t('queue.playingFrom')}</div>
           <div className="truncate text-sm font-medium">{queue.title ?? 'Queue'}</div>
         </div>
         <div className="flex items-center gap-2">
           <label className="flex items-center gap-2 text-xs text-fg-muted">
-            Autoplay
+            {t('queue.autoplay')}
             <input
               type="checkbox"
               checked={queue.autoplay}
@@ -93,7 +95,7 @@ export function QueuePanel() {
         {automix.length > 0 && (
           <>
             <div className="px-2 pt-4 pb-1 text-xs font-medium tracking-wide text-fg-subtle uppercase">
-              Autoplay
+              {t('queue.autoplay')}
             </div>
             {automix.map((it, i) => (
               <QueueRow key={it.id} item={it} index={userItems.length + i} current={false} />
@@ -114,6 +116,7 @@ function QueueRow({
   index: number;
   current: boolean;
 }) {
+  const t = useT();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
     disabled: item.isAutomix,
@@ -132,7 +135,7 @@ function QueueRow({
       {!item.isAutomix ? (
         <button
           type="button"
-          aria-label="Drag to reorder"
+          aria-label={t('queue.dragToReorder')}
           className="cursor-grab text-fg-subtle opacity-0 group-hover:opacity-100 active:cursor-grabbing"
           {...attributes}
           {...listeners}
@@ -157,7 +160,7 @@ function QueueRow({
       </button>
       {!item.isAutomix && (
         <IconButton
-          label="Remove from queue"
+          label={t('queue.remove')}
           size="sm"
           className="opacity-0 group-hover:opacity-100"
           onClick={() => void sendCommand({ type: 'queueRemove', index })}

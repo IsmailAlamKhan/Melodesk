@@ -1,24 +1,23 @@
 import { Button, inputClass } from '@melodesk/ui';
+import { useT, useTDynamic, type MessageKey } from '../../i18n';
 import { usePluginHost, type PluginRecord } from '../../plugins/host';
 
-const PERMISSION_LABELS: Record<string, string> = {
-  'playback:read': 'reads what is playing',
-  'playback:control': 'controls playback',
-  'network:fetch': 'network',
-  'storage:plugin': 'stores its own data',
-  notifications: 'notifications',
-  'native:discord': 'Discord',
+const PERMISSION_KEYS: Record<string, MessageKey> = {
+  'playback:read': 'plugin.perm.playbackRead',
+  'playback:control': 'plugin.perm.playbackControl',
+  'network:fetch': 'plugin.perm.network',
+  'storage:plugin': 'plugin.perm.storage',
+  notifications: 'plugin.perm.notifications',
+  'native:discord': 'plugin.perm.discord',
 };
 
 export function PluginsSection() {
+  const t = useT();
   const plugins = usePluginHost((s) => s.plugins);
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-semibold">Plugins</h2>
-      <p className="text-sm text-fg-muted">
-        All plugins are off by default. Each one lists exactly what it can reach; integrations that
-        send data say what they send.
-      </p>
+      <h2 className="font-semibold">{t('plugins.title')}</h2>
+      <p className="text-sm text-fg-muted">{t('plugins.intro')}</p>
       {plugins.map((p) => (
         <PluginCard key={p.manifest.id} plugin={p} />
       ))}
@@ -29,20 +28,25 @@ export function PluginsSection() {
 function PluginCard({ plugin: p }: { plugin: PluginRecord }) {
   const setEnabled = usePluginHost((s) => s.setEnabled);
   const setSettings = usePluginHost((s) => s.setSettings);
+  const t = useT();
+  const td = useTDynamic();
+  const id = p.manifest.id;
   const fields = p.def.settingsFields ?? [];
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-border bg-bg-elevated p-4">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <div className="font-medium">{p.manifest.name}</div>
-          <div className="text-xs text-fg-muted">{p.manifest.description}</div>
+          <div className="font-medium">{td(`plugin.${id}.name`, p.manifest.name)}</div>
+          <div className="text-xs text-fg-muted">
+            {td(`plugin.${id}.description`, p.manifest.description)}
+          </div>
           <div className="mt-1 flex flex-wrap gap-1">
             {p.manifest.permissions.map((perm) => (
               <span
                 key={perm}
                 className="rounded-full border border-border px-2 py-0.5 text-[11px] text-fg-subtle"
               >
-                {PERMISSION_LABELS[perm] ?? perm}
+                {PERMISSION_KEYS[perm] ? t(PERMISSION_KEYS[perm]) : perm}
                 {perm === 'network:fetch' ? `: ${p.manifest.hosts.join(', ')}` : ''}
               </span>
             ))}
@@ -51,7 +55,7 @@ function PluginCard({ plugin: p }: { plugin: PluginRecord }) {
         <input
           type="checkbox"
           role="switch"
-          aria-label={`Enable ${p.manifest.name}`}
+          aria-label={t('plugins.enable', { name: td(`plugin.${id}.name`, p.manifest.name) })}
           aria-checked={p.enabled}
           checked={p.enabled}
           onChange={(e) => void setEnabled(p.manifest.id, e.target.checked)}
@@ -63,8 +67,12 @@ function PluginCard({ plugin: p }: { plugin: PluginRecord }) {
           {fields.map((f) => (
             <label key={f.key} className="flex items-center justify-between gap-3 text-sm">
               <span>
-                {f.label}
-                {f.hint && <span className="block text-xs text-fg-subtle">{f.hint}</span>}
+                {td(`plugin.${id}.field.${f.key}.label`, f.label)}
+                {f.hint && (
+                  <span className="block text-xs text-fg-subtle">
+                    {td(`plugin.${id}.field.${f.key}.hint`, f.hint)}
+                  </span>
+                )}
               </span>
               {f.type === 'boolean' ? (
                 <input

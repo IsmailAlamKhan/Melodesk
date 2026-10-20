@@ -3,11 +3,14 @@ import { Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useSuggestions } from '../data/hooks';
+import { useT } from '../i18n';
 import { playItem, routeForEndpoint } from '../player/actions';
 import { Artwork } from './components/Artwork';
+import { KIND_KEY } from './components/kinds';
 
 /** Search field with live suggestions (queries and entities) from the account's own suggestions. */
 export function SearchBox() {
+  const t = useT();
   const navigate = useNavigate();
   const [sp] = useSearchParams();
   const [value, setValue] = useState(sp.get('q') ?? '');
@@ -19,11 +22,11 @@ export function SearchBox() {
   const list = open && debounced ? (suggestions.data ?? []) : [];
 
   useEffect(() => {
-    const t = window.setTimeout(() => {
+    const timer = window.setTimeout(() => {
       setDebounced(value.trim());
     }, 150);
     return () => {
-      window.clearTimeout(t);
+      window.clearTimeout(timer);
     };
   }, [value]);
 
@@ -74,7 +77,7 @@ export function SearchBox() {
           aria-controls="search-suggestions"
           aria-autocomplete="list"
           value={value}
-          placeholder="Search songs, albums, artists, podcasts"
+          placeholder={t('search.placeholder')}
           onChange={(e) => {
             setValue(e.target.value);
             setOpen(true);
@@ -93,7 +96,7 @@ export function SearchBox() {
         {value && (
           <button
             type="button"
-            aria-label="Clear"
+            aria-label={t('common.clear')}
             onClick={() => setValue('')}
             className="text-fg-subtle hover:text-fg"
           >
@@ -131,7 +134,7 @@ export function SearchBox() {
                   />
                   <span className="min-w-0 flex-1 truncate">
                     {s.item.title}
-                    <span className="ms-2 text-xs text-fg-subtle">{s.item.kind}</span>
+                    <span className="ms-2 text-xs text-fg-subtle">{t(KIND_KEY[s.item.kind])}</span>
                   </span>
                 </>
               ) : (

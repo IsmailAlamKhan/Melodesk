@@ -11,7 +11,9 @@ import {
   SkipForward,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { toHex } from '../appearance/color';
+import { useArtworkColor } from '../appearance/artworkAccent';
+import { useT } from '../i18n';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { LyricsPanel } from './LyricsPanel';
@@ -47,6 +49,7 @@ function usePosition(): number {
  * from the art, big controls, and the synced lyrics column. Escape or the chevron closes it.
  */
 export function NowPlayingView() {
+  const t = useT();
   const open = useUiStore((s) => s.nowPlayingOpen);
   const close = useUiStore((s) => s.setNowPlayingOpen);
   const track = usePlayerStore((s) => s.track);
@@ -54,8 +57,8 @@ export function NowPlayingView() {
   const queue = usePlayerStore((s) => s.queue);
   const position = usePosition();
   const [scrub, setScrub] = useState<number | null>(null);
-  const accent = useArtworkAccent(track?.artworkUrl ?? null);
-  useNavigate();
+  const artRgb = useArtworkColor(track?.artworkUrl ?? null);
+  const accent = artRgb ? toHex(artRgb) : null;
 
   useEffect(() => {
     if (!open) return;
@@ -76,7 +79,7 @@ export function NowPlayingView() {
     <AnimatePresence>
       {open && (
         <motion.section
-          aria-label="Now playing"
+          aria-label={t('nowPlaying.region')}
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 24 }}
@@ -97,7 +100,7 @@ export function NowPlayingView() {
             data-tauri-drag-region
             className="absolute inset-x-0 top-0 flex h-14 items-center justify-end px-3 pt-2"
           >
-            <IconButton label="Close now playing" onClick={() => close(false)}>
+            <IconButton label={t('nowPlaying.close')} onClick={() => close(false)}>
               <ChevronDown />
             </IconButton>
           </div>
@@ -116,7 +119,7 @@ export function NowPlayingView() {
               </motion.div>
               <div className="w-full max-w-md">
                 <h1 className="truncate font-display text-3xl font-bold tracking-tight">
-                  {track?.title ?? 'Nothing playing'}
+                  {track?.title ?? t('player.nothingPlaying')}
                 </h1>
                 <p className="truncate text-lg text-fg-muted">{track?.artist ?? ''}</p>
                 <div
@@ -125,7 +128,7 @@ export function NowPlayingView() {
                 >
                   <span className="w-12 text-right">{fmt(scrub ?? position)}</span>
                   <Slider
-                    label="Seek"
+                    label={t('player.seek')}
                     value={scrub ?? position}
                     max={duration}
                     step={0.5}
@@ -140,7 +143,7 @@ export function NowPlayingView() {
                 </div>
                 <div dir="ltr" className="mt-4 flex items-center justify-center gap-3">
                   <IconButton
-                    label="Shuffle"
+                    label={t('player.shuffle')}
                     aria-pressed={queue?.shuffle ?? false}
                     className={cn(queue?.shuffle && 'text-[var(--np-accent)]')}
                     onClick={() =>
@@ -150,7 +153,7 @@ export function NowPlayingView() {
                     <Shuffle />
                   </IconButton>
                   <IconButton
-                    label="Previous"
+                    label={t('player.previous')}
                     size="lg"
                     onClick={() => void sendCommand({ type: 'previous' })}
                   >
@@ -158,7 +161,7 @@ export function NowPlayingView() {
                   </IconButton>
                   <button
                     type="button"
-                    aria-label={playing ? 'Pause' : 'Play'}
+                    aria-label={playing ? t('player.pause') : t('player.play')}
                     onClick={() => void sendCommand({ type: 'toggle' })}
                     className="flex size-16 items-center justify-center rounded-full bg-fg text-bg shadow-lg transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
                   >
@@ -169,14 +172,14 @@ export function NowPlayingView() {
                     )}
                   </button>
                   <IconButton
-                    label="Next"
+                    label={t('player.next')}
                     size="lg"
                     onClick={() => void sendCommand({ type: 'next' })}
                   >
                     <SkipForward />
                   </IconButton>
                   <IconButton
-                    label="Repeat"
+                    label={t('player.repeat')}
                     aria-pressed={(queue?.repeat ?? 'off') !== 'off'}
                     className={cn(
                       queue?.repeat && queue.repeat !== 'off' && 'text-[var(--np-accent)]',
@@ -207,60 +210,3 @@ export function NowPlayingView() {
     </AnimatePresence>
   );
 }
-
-/** Average color of the artwork (when the image host allows canvas reads), as an oklch-friendly rgb string. */
-function useArtworkAccent(url: string | null): string | null {
-  const [sampled, setSampled] = useState<{ url: string; accent: string | null } | null>(null);
-  const setAccent = (accent: string | null): void => {
-    if (url) setSampled({ url, accent });
-  };
-  useEffect(() => {
-    if (!url) return;
-    let cancelled = false;
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = 16;
-        canvas.height = 16;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        ctx.drawImage(img, 0, 0, 16, 16);
-        const data = ctx.getImageData(0, 0, 16, 16).data;
-        let r = 0;
-        let g = 0;
-        let b = 0;
-        let n = 0;
-        for (let i = 0; i < data.length; i += 4) {
-          const [cr, cg, cb] = [data[i] ?? 0, data[i + 1] ?? 0, data[i + 2] ?? 0];
-          const max = Math.max(cr, cg, cb);
-          const min = Math.min(cr, cg, cb);
-          if (max - min < 24) continue; // skip greys so the accent stays colorful
-          r += cr;
-          g += cg;
-          b += cb;
-          n += 1;
-        }
-        if (!cancelled)
-          setAccent(
-            n
-              ? `rgb(${String(Math.round(r / n))} ${String(Math.round(g / n))} ${String(Math.round(b / n))})`
-              : null,
-          );
-      } catch {
-        if (!cancelled) setAccent(null); // tainted canvas: host without CORS
-      }
-    };
-    img.onerror = () => {
-      if (!cancelled) setAccent(null);
-    };
-    img.src = url;
-    return () => {
-      cancelled = true;
-    };
-  }, [url]);
-  return url && sampled?.url === url ? sampled.accent : null;
-}
-
-export { useArtworkAccent };

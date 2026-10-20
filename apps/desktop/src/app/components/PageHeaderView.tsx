@@ -4,6 +4,7 @@ import { Heart, MoreHorizontal, Pencil, Play, Radio, Shuffle, Trash2 } from 'luc
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useT } from '../../i18n';
 import { playEndpoint, runAction, runMenuItem } from '../../player/actions';
 import { Artwork } from './Artwork';
 import { openDialog } from '../dialogs/store';
@@ -11,6 +12,7 @@ import { deletePlaylist } from '../dialogs/playlists';
 
 /** Hero header for artist / album / playlist pages. */
 export function PageHeaderView({ header, round }: { header: PageHeader; round?: boolean }) {
+  const t = useT();
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const description = header.description ?? '';
@@ -49,19 +51,21 @@ export function PageHeaderView({ header, round }: { header: PageHeader; round?: 
               ) : (
                 <Play className="size-4" />
               )}
-              {header.playEndpoint === header.shuffleEndpoint ? 'Shuffle' : 'Play'}
+              {header.playEndpoint === header.shuffleEndpoint
+                ? t('media.shuffle')
+                : t('media.play')}
             </Button>
           )}
           {header.shuffleEndpoint && header.shuffleEndpoint !== header.playEndpoint && (
             <Button onClick={() => void playEndpoint(header.shuffleEndpoint)}>
               <Shuffle className="size-4" />
-              Shuffle
+              {t('media.shuffle')}
             </Button>
           )}
           {header.radioEndpoint && (
             <Button onClick={() => void playEndpoint(header.radioEndpoint)}>
               <Radio className="size-4" />
-              Radio
+              {t('media.radio')}
             </Button>
           )}
           {header.actions.map((a) => {
@@ -71,19 +75,21 @@ export function PageHeaderView({ header, round }: { header: PageHeader; round?: 
             const label =
               a.icon === 'LIKE'
                 ? a.isToggled
-                  ? 'Liked'
-                  : 'Like'
+                  ? t('header.liked')
+                  : t('header.like')
                 : a.icon === 'SUBSCRIBE'
                   ? a.isToggled
-                    ? 'Subscribed'
-                    : 'Subscribe'
-                  : a.text || (a.isToggled ? 'Saved' : 'Save');
+                    ? t('header.subscribed')
+                    : t('header.subscribe')
+                  : a.text || (a.isToggled ? t('header.saved') : t('header.save'));
             return (
               <Button
                 key={`${String(a.icon)}-${a.text}`}
                 variant={a.isToggled ? 'secondary' : 'ghost'}
                 aria-pressed={a.isToggled}
-                onClick={() => void runAction(active, { label: a.isToggled ? 'Removed' : label })}
+                onClick={() =>
+                  void runAction(active, { label: a.isToggled ? t('header.removed') : label })
+                }
               >
                 {a.icon === 'LIKE' && (
                   <Heart className={cn('size-4', a.isToggled && 'fill-current')} />
@@ -107,16 +113,16 @@ export function PageHeaderView({ header, round }: { header: PageHeader; round?: 
                 }
               >
                 <Pencil className="size-4" />
-                Edit
+                {t('common.edit')}
               </Button>
               <Button
                 variant="ghost"
                 onClick={() =>
                   openDialog({
                     type: 'confirm',
-                    title: 'Delete playlist?',
-                    body: `“${header.title}” will be deleted from your YouTube Music library.`,
-                    confirmLabel: 'Delete',
+                    title: t('playlist.deleteTitle'),
+                    body: t('playlist.deleteBody', { title: header.title }),
+                    confirmLabel: t('common.delete'),
                     danger: true,
                     onConfirm: async () => {
                       await deletePlaylist(header.playlistId ?? '');
@@ -126,14 +132,14 @@ export function PageHeaderView({ header, round }: { header: PageHeader; round?: 
                 }
               >
                 <Trash2 className="size-4" />
-                Delete
+                {t('common.delete')}
               </Button>
             </>
           )}
           {header.menu.length > 0 && (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <IconButton label="More">
+                <IconButton label={t('common.more')}>
                   <MoreHorizontal />
                 </IconButton>
               </DropdownMenu.Trigger>

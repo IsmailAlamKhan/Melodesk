@@ -19,7 +19,9 @@
     "format": "prettier --write .",
     "clippy": "cargo clippy --manifest-path apps/desktop/src-tauri/Cargo.toml --no-default-features --all-targets -- -D warnings",
     "test:rust": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --no-default-features",
-    "fmt:rust": "rustfmt --edition 2021 --check apps/desktop/src-tauri/src/*.rs apps/desktop/src-tauri/build.rs"
+    "fmt:rust": "rustfmt --edition 2021 --check apps/desktop/src-tauri/src/*.rs apps/desktop/src-tauri/build.rs",
+    "i18n:check": "node scripts/i18n-check.mjs",
+    "i18n:new": "node scripts/i18n-check.mjs --new"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

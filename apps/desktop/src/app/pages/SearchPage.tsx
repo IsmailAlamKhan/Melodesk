@@ -1,22 +1,19 @@
 import { useSearchParams } from 'react-router';
 import { useSearch } from '../../data/hooks';
 import { Button } from '@melodesk/ui';
+import { useT } from '../../i18n';
 import { ChipBar } from '../components/ChipBar';
 import { ErrorState } from '../components/ErrorState';
 import { ListSkeleton } from '../components/PageSkeleton';
 import { ShelfView } from '../components/ShelfView';
 
 export function SearchPage() {
+  const t = useT();
   const [sp, setSp] = useSearchParams();
   const query = sp.get('q') ?? '';
   const params = sp.get('params') ?? undefined;
   const q = useSearch(query, params);
-  if (!query)
-    return (
-      <div className="p-8 text-fg-muted">
-        Type to search songs, albums, artists, playlists and podcasts.
-      </div>
-    );
+  if (!query) return <div className="p-8 text-fg-muted">{t('search.prompt')}</div>;
   if (q.isPending) return <ListSkeleton rows={10} />;
   if (q.isError) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
   const first = q.data.pages[0]?.page;
@@ -42,11 +39,13 @@ export function SearchPage() {
       {shelves.map((s) => (
         <ShelfView key={s.id} shelf={s} />
       ))}
-      {!shelves.length && <div className="p-8 text-fg-muted">No results for “{query}”.</div>}
+      {!shelves.length && (
+        <div className="p-8 text-fg-muted">{t('search.noResults', { query })}</div>
+      )}
       {q.hasNextPage && (
         <div className="px-2">
           <Button disabled={q.isFetchingNextPage} onClick={() => void q.fetchNextPage()}>
-            {q.isFetchingNextPage ? 'Loading…' : 'Show more'}
+            {q.isFetchingNextPage ? t('common.loading') : t('common.showMore')}
           </Button>
         </div>
       )}

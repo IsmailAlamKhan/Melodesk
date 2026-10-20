@@ -6,10 +6,18 @@ import { PageHeaderView } from '../components/PageHeaderView';
 import { PageSkeleton } from '../components/PageSkeleton';
 import { ShelfView } from '../components/ShelfView';
 import { useNavigate } from 'react-router';
+import { useT, type MessageKey } from '../../i18n';
 import { routeForEndpoint } from '../../player/actions';
 
 /** Generic page for any browse id: explore, charts, moods, categories, podcasts, "show all" lists… */
-export function BrowsePage({ browseId: fixedId, title }: { browseId?: string; title?: string }) {
+export function BrowsePage({
+  browseId: fixedId,
+  titleKey,
+}: {
+  browseId?: string;
+  titleKey?: MessageKey;
+}) {
+  const t = useT();
   const params = useParams();
   const [search] = useSearchParams();
   const navigate = useNavigate();
@@ -18,7 +26,7 @@ export function BrowsePage({ browseId: fixedId, title }: { browseId?: string; ti
   if (q.isPending) return <PageSkeleton />;
   if (q.isError) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
   const page = q.data;
-  const heading = page.header?.title ?? title;
+  const heading = page.header?.title ?? (titleKey ? t(titleKey) : undefined);
   return (
     <div className="flex flex-col gap-8 pb-8">
       {page.header && page.header.thumbnails.length > 0 ? (

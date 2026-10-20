@@ -20,6 +20,7 @@ import type { Item } from '@melodesk/adapter';
 import { IconButton, cn } from '@melodesk/ui';
 import { GripVertical, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { useT } from '../../i18n';
 import { playEndpoint } from '../../player/actions';
 import { movePlaylistItem, removeFromPlaylist } from '../dialogs/playlists';
 import { ItemRow } from './ItemRow';
@@ -84,6 +85,7 @@ function SortableRow({
   index: number;
   playlistId: string;
 }) {
+  const t = useT();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: track.setVideoId ?? '',
   });
@@ -98,7 +100,7 @@ function SortableRow({
     >
       <button
         type="button"
-        aria-label="Drag to reorder"
+        aria-label={t('queue.dragToReorder')}
         className="w-6 cursor-grab text-fg-subtle opacity-0 group-hover/row:opacity-100 active:cursor-grabbing"
         {...attributes}
         {...listeners}
@@ -122,7 +124,7 @@ function SortableRow({
         />
       </div>
       <IconButton
-        label="Remove from playlist"
+        label={t('playlist.removeTrack')}
         size="sm"
         className="opacity-0 group-hover/row:opacity-100"
         onClick={() => {

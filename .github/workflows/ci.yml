@@ -24,6 +24,7 @@ jobs:
       - run: pnpm build:bridge
       - run: pnpm typecheck
       - run: pnpm lint
+      - run: pnpm i18n:check
       - run: pnpm test
 
   rust:

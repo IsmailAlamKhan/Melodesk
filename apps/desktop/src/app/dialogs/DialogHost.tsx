@@ -1,8 +1,10 @@
-import { Button, Dialog, inputClass, cn } from '@melodesk/ui';
+import { Button, inputClass, cn } from '@melodesk/ui';
 import { useQuery } from '@tanstack/react-query';
 import { Check, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useT, type MessageKey } from '../../i18n';
+import { AppDialog as Dialog } from '../components/AppDialog';
 import {
   addToPlaylist,
   createPlaylist,
@@ -29,10 +31,10 @@ export function DialogHost() {
   }
 }
 
-const privacyOptions: { value: Privacy; label: string; hint: string }[] = [
-  { value: 'PRIVATE', label: 'Private', hint: 'Only you can see it' },
-  { value: 'UNLISTED', label: 'Unlisted', hint: 'Anyone with the link' },
-  { value: 'PUBLIC', label: 'Public', hint: 'Anyone can search for it' },
+const privacyOptions: { value: Privacy; labelKey: MessageKey; hintKey: MessageKey }[] = [
+  { value: 'PRIVATE', labelKey: 'privacy.private', hintKey: 'privacy.privateHint' },
+  { value: 'UNLISTED', labelKey: 'privacy.unlisted', hintKey: 'privacy.unlistedHint' },
+  { value: 'PUBLIC', labelKey: 'privacy.public', hintKey: 'privacy.publicHint' },
 ];
 
 function PlaylistForm({
@@ -44,6 +46,7 @@ function PlaylistForm({
   submitLabel: string;
   onSubmit: (v: { title: string; description: string; privacy: Privacy }) => Promise<void>;
 }) {
+  const t = useT();
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(initial.description);
   const [privacy, setPrivacy] = useState<Privacy>(initial.privacy);
@@ -67,29 +70,29 @@ function PlaylistForm({
       }}
     >
       <label className="flex flex-col gap-1 text-sm">
-        Title
+        {t('playlist.form.title')}
         <input
           autoFocus
           value={title}
           maxLength={150}
           onChange={(e) => setTitle(e.target.value)}
           className={inputClass}
-          placeholder="My playlist"
+          placeholder={t('playlist.form.titlePlaceholder')}
         />
       </label>
       <label className="flex flex-col gap-1 text-sm">
-        Description
+        {t('playlist.form.description')}
         <textarea
           value={description}
           maxLength={5000}
           rows={3}
           onChange={(e) => setDescription(e.target.value)}
           className={cn(inputClass, 'h-auto py-2')}
-          placeholder="Optional"
+          placeholder={t('playlist.form.optional')}
         />
       </label>
       <fieldset className="flex flex-col gap-1 text-sm">
-        <legend className="mb-1">Privacy</legend>
+        <legend className="mb-1">{t('playlist.form.privacy')}</legend>
         {privacyOptions.map((o) => (
           <label
             key={o.value}
@@ -102,8 +105,8 @@ function PlaylistForm({
               checked={privacy === o.value}
               onChange={() => setPrivacy(o.value)}
             />
-            <span>{o.label}</span>
-            <span className="text-xs text-fg-subtle">{o.hint}</span>
+            <span>{t(o.labelKey)}</span>
+            <span className="text-xs text-fg-subtle">{t(o.hintKey)}</span>
           </label>
         ))}
       </fieldset>
@@ -114,7 +117,7 @@ function PlaylistForm({
       )}
       <div className="flex justify-end gap-2">
         <Button type="submit" variant="primary" disabled={busy || !title.trim()}>
-          {busy ? 'Saving…' : submitLabel}
+          {busy ? t('common.saving') : submitLabel}
         </Button>
       </div>
     </form>
@@ -128,21 +131,20 @@ function CreatePlaylistDialog({
   req: Extract<DialogRequest, { type: 'createPlaylist' }>;
   onClose: () => void;
 }) {
+  const t = useT();
   const navigate = useNavigate();
   return (
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
-      title="New playlist"
+      title={t('playlist.new')}
       description={
-        req.videoIds?.length
-          ? `${String(req.videoIds.length)} song${req.videoIds.length === 1 ? '' : 's'} will be added.`
-          : undefined
+        req.videoIds?.length ? t('playlist.willAdd', { count: req.videoIds.length }) : undefined
       }
     >
       <PlaylistForm
         initial={{ title: '', description: '', privacy: 'PRIVATE' }}
-        submitLabel="Create"
+        submitLabel={t('playlist.create')}
         onSubmit={async (v) => {
           const id = await createPlaylist(v.title, v.description, v.privacy, req.videoIds ?? []);
           onClose();
@@ -160,11 +162,12 @@ function EditPlaylistDialog({
   req: Extract<DialogRequest, { type: 'editPlaylist' }>;
   onClose: () => void;
 }) {
+  const t = useT();
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()} title="Edit playlist">
+    <Dialog open onOpenChange={(o) => !o && onClose()} title={t('playlist.edit')}>
       <PlaylistForm
         initial={{ title: req.title, description: req.description, privacy: req.privacy }}
-        submitLabel="Save"
+        submitLabel={t('common.save')}
         onSubmit={async (v) => {
           await editPlaylistDetails(req.playlistId, {
             ...(v.title !== req.title ? { title: v.title } : {}),
@@ -185,6 +188,7 @@ function AddToPlaylistDialog({
   req: Extract<DialogRequest, { type: 'addToPlaylist' }>;
   onClose: () => void;
 }) {
+  const t = useT();
   const options = useQuery({
     queryKey: ['addToPlaylist', req.videoIds],
     queryFn: () => fetchAddToPlaylistOptions(req.videoIds),
@@ -195,7 +199,7 @@ function AddToPlaylistDialog({
     <Dialog
       open
       onOpenChange={(o) => !o && onClose()}
-      title="Save to playlist"
+      title={t('menu.saveToPlaylist')}
       description={req.label}
     >
       <div className="-mx-2 flex max-h-96 flex-col overflow-y-auto">
@@ -209,13 +213,13 @@ function AddToPlaylistDialog({
           <span className="flex size-10 items-center justify-center rounded-md border border-dashed border-border">
             <Plus className="size-4" />
           </span>
-          New playlist
+          {t('playlist.new')}
         </button>
         {options.isPending && (
-          <div className="px-3 py-2 text-sm text-fg-muted">Loading your playlists…</div>
+          <div className="px-3 py-2 text-sm text-fg-muted">{t('playlist.loadingList')}</div>
         )}
         {options.isError && (
-          <div className="px-3 py-2 text-sm text-danger">Couldn’t load playlists.</div>
+          <div className="px-3 py-2 text-sm text-danger">{t('playlist.loadFailed')}</div>
         )}
         {options.data?.map((p) => (
           <button
@@ -260,11 +264,12 @@ function ConfirmDialog({
   req: Extract<DialogRequest, { type: 'confirm' }>;
   onClose: () => void;
 }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()} title={req.title} description={req.body}>
       <div className="flex justify-end gap-2">
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         <Button
           variant="primary"
           className={cn(req.danger && 'bg-danger text-white')}

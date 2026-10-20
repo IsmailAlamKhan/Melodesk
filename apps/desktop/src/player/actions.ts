@@ -15,6 +15,7 @@ import { queryClient } from '../data/queryClient';
 import { run } from '../data/innertube';
 import { sendCommand } from './ipc';
 import { toast } from '../app/toast';
+import { t } from '../i18n';
 import { openDialog } from '../app/dialogs/store';
 import { openUrl } from '@tauri-apps/plugin-opener';
 
@@ -79,7 +80,7 @@ export async function queueAdd(
   label?: string,
 ): Promise<void> {
   await sendCommand({ type: 'queueAdd', target, position });
-  toast(label ?? (position === 'next' ? 'Will play next' : 'Added to queue'));
+  toast(label ?? (position === 'next' ? t('toast.willPlayNext') : t('toast.addedToQueue')));
 }
 
 /** Route in our UI for a navigation endpoint, or null when it is not a page (playback, url…). */
@@ -130,7 +131,7 @@ export async function runAction(
       const url = shareUrl(ctx.item);
       if (url) {
         await navigator.clipboard.writeText(url);
-        toast('Link copied');
+        toast(t('toast.linkCopied'));
       }
       return;
     }
@@ -138,7 +139,7 @@ export async function runAction(
       // handled by the AddToPlaylist dialog (needs UI)
       return;
     case 'signInRequired':
-      toast('Sign in to YouTube Music to do that');
+      toast(t('toast.signInRequired'));
       return;
     default: {
       const req = requestForAction(action);

@@ -2,6 +2,7 @@
 import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
 import { openDialog } from '../dialogs/store';
+import { t } from '../../i18n';
 import { toast } from '../toast';
 import { useUiStore } from '../uiStore';
 
@@ -18,18 +19,14 @@ export async function dedupeQueue(): Promise<void> {
   });
   // Remove from the end so earlier indices stay valid.
   for (const i of remove.reverse()) await sendCommand({ type: 'queueRemove', index: i });
-  toast(
-    remove.length
-      ? `Removed ${String(remove.length)} duplicate${remove.length === 1 ? '' : 's'}`
-      : 'No duplicates in the queue',
-  );
+  toast(remove.length ? t('toast.dupesRemoved', { count: remove.length }) : t('toast.noDupes'));
 }
 
 export function saveQueueAsPlaylist(): void {
   const queue = usePlayerStore.getState().queue;
   const ids = (queue?.items ?? []).filter((i) => !i.isAutomix).map((i) => i.videoId);
   if (!ids.length) {
-    toast('The queue is empty');
+    toast(t('toast.queueEmpty'));
     return;
   }
   openDialog({ type: 'createPlaylist', videoIds: ids });
@@ -43,7 +40,7 @@ export function setSleepTimer(minutes: number): void {
   sleepTimer = null;
   if (minutes <= 0) {
     useUiStore.getState().setSleepUntil(null);
-    toast('Sleep timer off');
+    toast(t('toast.sleepOff'));
     return;
   }
   const until = Date.now() + minutes * 60_000;
@@ -51,14 +48,14 @@ export function setSleepTimer(minutes: number): void {
   sleepTimer = window.setTimeout(() => {
     void sendCommand({ type: 'pause' });
     useUiStore.getState().setSleepUntil(null);
-    toast('Sleep timer: paused');
+    toast(t('toast.sleepPaused'));
   }, minutes * 60_000);
-  toast(`Pausing in ${String(minutes)} min`);
+  toast(t('toast.sleepIn', { minutes }));
 }
 
 export const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5, 1.75, 2] as const;
 
 export async function setPlaybackRate(rate: number): Promise<void> {
   await sendCommand({ type: 'setPlaybackRate', rate });
-  toast(`Speed ${String(rate)}×`);
+  toast(t('toast.speed', { rate }));
 }

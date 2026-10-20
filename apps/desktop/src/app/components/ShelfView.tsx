@@ -3,6 +3,7 @@ import { IconButton } from '@melodesk/ui';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef } from 'react';
 import { Link } from 'react-router';
+import { useT } from '../../i18n';
 import { routeForEndpoint } from '../../player/actions';
 import { ItemCard } from './ItemCard';
 import { ItemRow } from './ItemRow';
@@ -10,6 +11,7 @@ import { ItemRow } from './ItemRow';
 /** Renders one YouTube shelf in its own layout (carousel / list / grid). */
 export function ShelfView({ shelf }: { shelf: Shelf }) {
   const more = routeForEndpoint(shelf.moreEndpoint);
+  const t = useT();
   const scroller = useRef<HTMLDivElement>(null);
   if (!shelf.items.length) return null;
   const scrollBy = (dir: 1 | -1): void => {
@@ -45,15 +47,15 @@ export function ShelfView({ shelf }: { shelf: Shelf }) {
                 to={more}
                 className="me-2 rounded-full border border-border px-3 py-1 text-xs font-medium text-fg-muted hover:bg-bg-overlay hover:text-fg"
               >
-                More
+                {t('common.more')}
               </Link>
             )}
             {shelf.layout === 'carousel' && (
               <>
-                <IconButton label="Scroll left" size="sm" onClick={() => scrollBy(-1)}>
+                <IconButton label={t('shelf.previous')} size="sm" onClick={() => scrollBy(-1)}>
                   <ChevronLeft className="rtl:-scale-x-100" />
                 </IconButton>
-                <IconButton label="Scroll right" size="sm" onClick={() => scrollBy(1)}>
+                <IconButton label={t('shelf.next')} size="sm" onClick={() => scrollBy(1)}>
                   <ChevronRight className="rtl:-scale-x-100" />
                 </IconButton>
               </>

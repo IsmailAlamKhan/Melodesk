@@ -8,12 +8,16 @@
  *   (any CLDR category) selected with Intl.PluralRules from the `count` parameter.
  * - Run `pnpm i18n:check` to compare locale files against English.
  */
+import { useEffect } from 'react';
 import { create } from 'zustand';
 import { useAppearance } from '../appearance/store';
 import en from './locales/en.json';
 import { isPseudo, pseudoize, PSEUDO_LOCALES } from './pseudo';
 
-export type MessageKey = keyof typeof en;
+type PluralSuffix = 'zero' | 'one' | 'two' | 'few' | 'many' | 'other';
+type StripPlural<K> = K extends `${infer Base}_${PluralSuffix}` ? Base : K;
+/** A translation key. Plural groups (`x_one`, `x_other`, …) are addressed by their base name `x`. */
+export type MessageKey = StripPlural<keyof typeof en>;
 export type Params = Record<string, string | number>;
 type Catalog = Record<string, string>;
 
@@ -75,9 +79,11 @@ export const useI18n = create<I18nState>((set, get) => ({
 export function useResolvedLocale(): string {
   const pref = useAppearance((s) => s.language);
   const locale = useI18n((s) => s.locale);
-  // Keep the store in step with the preference.
   const wanted = resolveLocale(pref, navigator.languages, availableLocales());
-  if (wanted !== locale) void useI18n.getState().setLocale(wanted);
+  // Keep the store in step with the preference (an effect, not render: it updates other components).
+  useEffect(() => {
+    void useI18n.getState().setLocale(wanted);
+  }, [wanted]);
   return locale;
 }
 
@@ -134,6 +140,36 @@ export function useT(): (key: MessageKey, params?: Params) => string {
   return (key, params) => translate(locale, catalog, key, params);
 }
 
+/**
+ * Look up text by a key built at runtime (e.g. `plugin.<id>.name`), falling back to the given
+ * English text. Used for strings that ship inside plugin definitions.
+ */
+export function translateDynamic(
+  locale: string,
+  catalog: Catalog | null,
+  key: string,
+  fallback: string,
+): string {
+  const english = en as Catalog;
+  if (isPseudo(locale)) return pseudoize(locale, english[key] ?? fallback);
+  return catalog?.[key] ?? english[key] ?? fallback;
+}
+
+export function useTDynamic(): (key: string, fallback: string) => string {
+  const locale = useI18n((s) => s.locale);
+  const catalog = useI18n((s) => s.catalog);
+  return (key, fallback) => translateDynamic(locale, catalog, key, fallback);
+}
+
+/** Name of a language (by code) written in the UI language, e.g. "Bengali" / "বাংলা". */
+export function languageName(code: string, uiLocale: string): string {
+  try {
+    return new Intl.DisplayNames([intlLocale(uiLocale)], { type: 'language' }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
 /** Display name of a locale in its own language, e.g. "Español". */
 export function localeName(code: string): string {
   if (code === 'en-XA') return 'Pseudo (accented, longer text)';
@@ -146,9 +182,14 @@ export function localeName(code: string): string {
   }
 }
 
-/** Compact duration like "1 h 05 min" in the current locale. */
+/** A locale code Intl understands (pseudo-locales map to a real one). */
+export function intlLocale(locale: string): string {
+  return locale === 'ar-XB' ? 'ar' : isPseudo(locale) ? 'en' : locale;
+}
+
+/** Compact duration like "1 hr 5 min" in the given locale. */
 export function formatDurationLocale(seconds: number, locale: string): string {
-  const base = isPseudo(locale) ? 'en' : locale;
+  const base = intlLocale(locale);
   const nf = (unit: 'hour' | 'minute', v: number): string =>
     new Intl.NumberFormat(base, { style: 'unit', unit, unitDisplay: 'short' }).format(v);
   const h = Math.floor(seconds / 3600);

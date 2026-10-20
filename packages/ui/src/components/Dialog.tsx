@@ -11,6 +11,8 @@ export interface DialogProps {
   description?: string | undefined;
   children: ReactNode;
   className?: string | undefined;
+  /** Accessible label of the close button (defaults to English). */
+  closeLabel?: string | undefined;
 }
 
 /** Modal dialog with platform-neutral styling, focus trap and Escape handling from Radix. */
@@ -21,6 +23,7 @@ export function Dialog({
   description,
   children,
   className,
+  closeLabel,
 }: DialogProps) {
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
@@ -45,7 +48,7 @@ export function Dialog({
               )}
             </div>
             <RadixDialog.Close asChild>
-              <IconButton label="Close" size="sm">
+              <IconButton label={closeLabel ?? 'Close'} size="sm">
                 <X />
               </IconButton>
             </RadixDialog.Close>
