@@ -34,6 +34,8 @@
     "global-shortcut:default",
     "deep-link:default",
     "updater:default",
+    "dialog:allow-save",
+    "fs:allow-write-text-file",
     {
       "identifier": "http:default",
       "allow": [

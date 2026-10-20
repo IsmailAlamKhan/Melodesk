@@ -7,6 +7,9 @@ import { ItemRow } from '../components/ItemRow';
 import { ListSkeleton, PageSkeleton } from '../components/PageSkeleton';
 import { PageHeaderView } from '../components/PageHeaderView';
 import { EditableTrackList } from '../components/EditableTrackList';
+import { PlaylistToolsMenu } from '../tools/PlaylistToolsMenu';
+import { sortTracks, type SortKey, type Track } from '../tools/playlistTools';
+import { useState } from 'react';
 import { ShelfView } from '../components/ShelfView';
 
 /** Artist, album and playlist pages: hero header + shelves; long track lists continue on scroll. */
@@ -17,6 +20,7 @@ export function DetailPage({ kind }: { kind: 'artist' | 'album' | 'playlist' }) 
   const browseId = kind === 'playlist' ? `VL${id}` : id;
   const q = useInfiniteBrowse(browseId, search.get('params') ?? undefined);
   const sentinel = useRef<HTMLDivElement>(null);
+  const [viewSort, setViewSort] = useState<{ key: SortKey; dir: 'asc' | 'desc' } | null>(null);
 
   useEffect(() => {
     const el = sentinel.current;
@@ -45,15 +49,30 @@ export function DetailPage({ kind }: { kind: 'artist' | 'album' | 'playlist' }) 
     (s) => s !== trackShelf && !(trackShelf && s.layout === 'list' && !s.title),
   );
   const playlistId = page?.header?.playlistId ?? (kind === 'playlist' ? id : null);
+  const songTracks = tracks.filter((t): t is Track => t.kind === 'song' || t.kind === 'video');
+  const shownTracks = viewSort ? sortTracks(songTracks, viewSort.key, viewSort.dir) : tracks;
+  const editable = !!page?.header?.isEditable && !!playlistId && !viewSort;
   return (
     <div className="flex flex-col gap-6 pb-8">
       {page?.header && <PageHeaderView header={page.header} round={kind === 'artist'} />}
-      {tracks.length > 0 && page?.header?.isEditable && playlistId && (
+      {kind !== 'artist' && songTracks.length > 0 && (
+        <div className="px-6">
+          <PlaylistToolsMenu
+            title={page?.header?.title ?? 'Playlist'}
+            playlistId={playlistId}
+            tracks={songTracks}
+            editable={!!page?.header?.isEditable && !!playlistId}
+            viewSort={viewSort}
+            onViewSort={setViewSort}
+          />
+        </div>
+      )}
+      {tracks.length > 0 && editable && playlistId && (
         <EditableTrackList playlistId={playlistId} tracks={tracks} />
       )}
-      {tracks.length > 0 && !(page?.header?.isEditable && playlistId) && (
+      {tracks.length > 0 && !editable && (
         <div role="table" className="flex flex-col px-4">
-          {tracks.map((t, i) => (
+          {shownTracks.map((t, i) => (
             <ItemRow
               key={t.key}
               item={t}

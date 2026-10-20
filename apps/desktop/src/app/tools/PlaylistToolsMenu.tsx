@@ -1,0 +1,197 @@
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { Button } from '@melodesk/ui';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowDownAZ, Copy, Download, GitMerge, Wrench } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { fetchAddToPlaylistOptions, removeFromPlaylist } from '../dialogs/playlists';
+import { openDialog } from '../dialogs/store';
+import { toast } from '../toast';
+import {
+  applyOrder,
+  exportPlaylist,
+  findDuplicates,
+  mergeInto,
+  sortTracks,
+  type SortKey,
+  type Track,
+} from './playlistTools';
+
+const menuClass =
+  'z-50 min-w-56 rounded-lg border border-border bg-bg-elevated p-1 text-sm shadow-xl';
+const itemClass =
+  'flex cursor-default select-none items-center gap-3 rounded-md px-3 py-2 outline-none data-[highlighted]:bg-bg-overlay data-[disabled]:opacity-50';
+
+export interface PlaylistToolsProps {
+  title: string;
+  playlistId: string | null;
+  tracks: Track[];
+  editable: boolean;
+  /** View-only sort applied by the page (null = YouTube's order). */
+  viewSort: { key: SortKey; dir: 'asc' | 'desc' } | null;
+  onViewSort: (sort: { key: SortKey; dir: 'asc' | 'desc' } | null) => void;
+}
+
+/** "Tools" menu on playlist/album pages: sort, duplicates, merge, export. */
+export function PlaylistToolsMenu({
+  title,
+  playlistId,
+  tracks,
+  editable,
+  viewSort,
+  onViewSort,
+}: PlaylistToolsProps) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const options = useQuery({
+    queryKey: ['addToPlaylist', 'merge'],
+    queryFn: () => fetchAddToPlaylistOptions([tracks[0]?.videoId ?? '']),
+    enabled: tracks.length > 0,
+  });
+  const dupes = findDuplicates(tracks);
+  const extra = dupes.flatMap((g) => g.slice(1));
+  const sortItem = (key: SortKey, label: string): ReactNode => (
+    <DropdownMenu.Item
+      key={key}
+      className={itemClass}
+      onSelect={() =>
+        onViewSort(
+          viewSort?.key === key
+            ? viewSort.dir === 'asc'
+              ? { key, dir: 'desc' }
+              : null
+            : { key, dir: 'asc' },
+        )
+      }
+    >
+      <ArrowDownAZ className="size-4" />
+      {label}
+      {viewSort?.key === key && (
+        <span className="ml-auto text-xs text-fg-subtle">{viewSort.dir === 'asc' ? '↑' : '↓'}</span>
+      )}
+    </DropdownMenu.Item>
+  );
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <Button variant="ghost" disabled={!tracks.length}>
+          <Wrench className="size-4" />
+          Tools
+          {busy && <span className="text-xs text-fg-subtle">{busy}</span>}
+        </Button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content align="start" className={menuClass}>
+          <DropdownMenu.Label className="px-3 py-1 text-xs text-fg-subtle">
+            Sort view
+          </DropdownMenu.Label>
+          {sortItem('title', 'Title')}
+          {sortItem('artist', 'Artist')}
+          {sortItem('album', 'Album')}
+          {sortItem('duration', 'Duration')}
+          {editable && playlistId && viewSort && (
+            <DropdownMenu.Item
+              className={itemClass}
+              onSelect={() => {
+                const desired = sortTracks(tracks, viewSort.key, viewSort.dir);
+                setBusy('Reordering…');
+                applyOrder(playlistId, tracks, desired, (done, total) =>
+                  setBusy(`${String(done)}/${String(total)}`),
+                )
+                  .catch((e: unknown) => toast(String(e)))
+                  .finally(() => {
+                    setBusy(null);
+                    onViewSort(null);
+                  });
+              }}
+            >
+              <ArrowDownAZ className="size-4" />
+              Apply this order to the playlist
+            </DropdownMenu.Item>
+          )}
+          <DropdownMenu.Separator className="my-1 h-px bg-border" />
+          <DropdownMenu.Item
+            className={itemClass}
+            disabled={!extra.length}
+            onSelect={() => {
+              if (!editable || !playlistId) {
+                toast(
+                  `${String(extra.length)} duplicate${extra.length === 1 ? '' : 's'}: ${extra
+                    .map((t) => t.title)
+                    .slice(0, 3)
+                    .join(', ')}${extra.length > 3 ? '…' : ''}`,
+                );
+                return;
+              }
+              openDialog({
+                type: 'confirm',
+                title: 'Remove duplicates?',
+                body: `${String(extra.length)} duplicate${extra.length === 1 ? '' : 's'} will be removed from this playlist, keeping the first of each.`,
+                confirmLabel: 'Remove',
+                danger: true,
+                onConfirm: () =>
+                  removeFromPlaylist(
+                    playlistId,
+                    extra
+                      .filter((t) => t.setVideoId)
+                      .map((t) => ({ videoId: t.videoId, setVideoId: t.setVideoId ?? '' })),
+                  ),
+              });
+            }}
+          >
+            <Copy className="size-4" />
+            {extra.length ? `Duplicates (${String(extra.length)})` : 'No duplicates'}
+          </DropdownMenu.Item>
+          <DropdownMenu.Sub>
+            <DropdownMenu.SubTrigger className={itemClass}>
+              <GitMerge className="size-4" />
+              Merge into…
+            </DropdownMenu.SubTrigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.SubContent className={menuClass}>
+                {(options.data ?? [])
+                  .filter((o) => o.playlistId !== playlistId && o.playlistId !== 'LM')
+                  .map((o) => (
+                    <DropdownMenu.Item
+                      key={o.playlistId}
+                      className={itemClass}
+                      onSelect={() => {
+                        setBusy('Merging…');
+                        mergeInto(o.playlistId, o.title, tracks)
+                          .catch((e: unknown) => toast(String(e)))
+                          .finally(() => setBusy(null));
+                      }}
+                    >
+                      {o.title}
+                    </DropdownMenu.Item>
+                  ))}
+                {!options.data?.length && (
+                  <div className="px-3 py-2 text-xs text-fg-subtle">
+                    {options.isPending ? 'Loading…' : 'No playlists'}
+                  </div>
+                )}
+              </DropdownMenu.SubContent>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Sub>
+          <DropdownMenu.Separator className="my-1 h-px bg-border" />
+          <DropdownMenu.Item
+            className={itemClass}
+            onSelect={() =>
+              void exportPlaylist(title, tracks, 'csv').catch((e: unknown) => toast(String(e)))
+            }
+          >
+            <Download className="size-4" />
+            Export as CSV
+          </DropdownMenu.Item>
+          <DropdownMenu.Item
+            className={itemClass}
+            onSelect={() =>
+              void exportPlaylist(title, tracks, 'json').catch((e: unknown) => toast(String(e)))
+            }
+          >
+            <Download className="size-4" />
+            Export as JSON
+          </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  );
+}

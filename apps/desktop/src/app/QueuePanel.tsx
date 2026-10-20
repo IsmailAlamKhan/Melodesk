@@ -22,6 +22,7 @@ import { GripVertical, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
+import { QueueToolsMenu } from './tools/QueueToolsMenu';
 
 /** The page's live queue, mirrored from YouTube's own store; drag to reorder, click to jump. */
 export function QueuePanel() {
@@ -61,14 +62,17 @@ export function QueuePanel() {
           <div className="text-xs text-fg-subtle">Playing from</div>
           <div className="truncate text-sm font-medium">{queue.title ?? 'Queue'}</div>
         </div>
-        <label className="flex items-center gap-2 text-xs text-fg-muted">
-          Autoplay
-          <input
-            type="checkbox"
-            checked={queue.autoplay}
-            onChange={(e) => void sendCommand({ type: 'setAutoplay', enabled: e.target.checked })}
-          />
-        </label>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 text-xs text-fg-muted">
+            Autoplay
+            <input
+              type="checkbox"
+              checked={queue.autoplay}
+              onChange={(e) => void sendCommand({ type: 'setAutoplay', enabled: e.target.checked })}
+            />
+          </label>
+          <QueueToolsMenu />
+        </div>
       </header>
       <div className="flex-1 overflow-y-auto px-2 pb-4">
         <DndContext

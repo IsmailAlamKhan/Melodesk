@@ -5,6 +5,8 @@ interface UiState {
   toggleRightPanel: (panel: 'queue' | 'lyrics') => void;
   nowPlayingOpen: boolean;
   setNowPlayingOpen: (open: boolean) => void;
+  sleepUntil: number | null;
+  setSleepUntil: (until: number | null) => void;
 }
 
 /** Dev aid: VITE_DEV_PANEL=queue|lyrics opens that panel on launch. */
@@ -17,6 +19,10 @@ function devPanel(): 'queue' | 'lyrics' | null {
 export const useUiStore = create<UiState>((set) => ({
   rightPanel: devPanel(),
   nowPlayingOpen: false,
+  sleepUntil: null,
+  setSleepUntil: (until) => {
+    set({ sleepUntil: until });
+  },
   setNowPlayingOpen: (open) => {
     set({ nowPlayingOpen: open });
   },
