@@ -24,7 +24,7 @@ export function Sidebar() {
   return (
     <nav
       aria-label="Primary"
-      className="flex h-full flex-col border-r border-border bg-bg-elevated"
+      className="flex h-full min-h-0 flex-col border-r border-border bg-bg-elevated"
     >
       <div data-tauri-drag-region className="h-10 shrink-0" />
       <div className="flex flex-col gap-1 px-3">
