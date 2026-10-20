@@ -192,6 +192,15 @@ export class BridgeController {
       case 'setVolume':
         p?.setVolume?.(Math.round(cmd.volume * 100));
         break;
+      case 'volumeStep': {
+        const current = p?.getVolume?.() ?? (v ? v.volume * 100 : 100);
+        p?.setVolume?.(Math.round(clamp(current + cmd.delta * 100, 0, 100)));
+        break;
+      }
+      case 'toggleMute':
+        if (p?.isMuted?.() ?? v?.muted) p?.unMute?.();
+        else p?.mute?.();
+        break;
       case 'setMuted':
         if (cmd.muted) p?.mute?.();
         else p?.unMute?.();

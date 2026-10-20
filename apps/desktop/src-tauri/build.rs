@@ -7,6 +7,8 @@ fn main() {
             "player_command",
             "player_set_visible",
             "bridge_emit",
+            "get_settings",
+            "set_settings",
         ]),
     ))
     .expect("failed to run tauri-build");

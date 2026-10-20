@@ -98,6 +98,11 @@ pub enum PlayerCommand {
     SetVideoMode {
         video: bool,
     },
+    /// Relative volume change from global shortcuts (-1..=1).
+    VolumeStep {
+        delta: f64,
+    },
+    ToggleMute,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -164,6 +169,13 @@ impl PlayerCommand {
             {
                 Err(PlayerError::InvalidCommand(
                     "playback rate must be within 0.25..=3",
+                ))
+            }
+            PlayerCommand::VolumeStep { delta }
+                if !(delta.is_finite() && (-1.0..=1.0).contains(delta)) =>
+            {
+                Err(PlayerError::InvalidCommand(
+                    "volume step must be within -1..=1",
                 ))
             }
             PlayerCommand::Endpoint { endpoint, .. }
@@ -234,6 +246,13 @@ pub fn create_player_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()>
     Ok(())
 }
 
+/// Fire-and-forget variant for native callers (tray, shortcuts, MPRIS); errors are logged.
+pub fn dispatch<R: Runtime>(app: &AppHandle<R>, command: PlayerCommand) {
+    if let Err(e) = player_command(app.clone(), command) {
+        eprintln!("[player] {e}");
+    }
+}
+
 /// UI → player. Evaluates a single, serialised, serde-validated command in the player webview.
 #[tauri::command]
 pub fn player_command<R: Runtime>(
@@ -283,6 +302,7 @@ pub fn bridge_emit<R: Runtime>(
     }
     #[cfg(debug_assertions)]
     dev::observe(&event, &bytes);
+    crate::native::observe(window.app_handle(), &event);
     window
         .app_handle()
         .emit_to(MAIN_LABEL, BRIDGE_EVENT_CHANNEL, event)?;

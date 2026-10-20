@@ -25,7 +25,7 @@ export function Layout() {
       )}
     >
       <Sidebar />
-      <div className="flex min-w-0 flex-col">
+      <div data-content className="flex min-w-0 flex-col">
         <div data-tauri-drag-region className="flex h-14 shrink-0 items-center gap-2 px-3 pt-2">
           <IconButton label="Back" size="sm" onClick={() => navigate(-1)}>
             <ChevronLeft />

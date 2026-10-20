@@ -77,6 +77,27 @@ the website's. The live queue, shuffle/repeat and like state are mirrored from t
 store (`store.subscribe`), and "play next"/"add to queue" insert through the same store action
 the website uses.
 
+## Native integration (Phase 2)
+
+- **Now Playing, media keys, SMTC.** WKWebView (macOS) and WebView2 (Windows) forward the
+  page's Media Session to the OS, so Control Center / Now Playing, the keyboard media keys and
+  Windows' System Media Transport Controls work without any code of ours. On Linux,
+  `media.rs` publishes MPRIS through souvlaki from the bridge's track/state events.
+- **Tray / menu bar.** `native.rs` builds a tray with the current track and play/pause/next/
+  previous, a Playback submenu in the macOS app menu, and applies sidebar vibrancy (macOS) or
+  Mica/Acrylic (Windows). Closing the window hides it when "close to tray" is on.
+- **Shortcuts.** Global combos are user-configurable in Settings and stored with the other
+  settings in `settings.json` (tauri-plugin-store); `shortcuts.rs` re-registers on change.
+- **Deep links.** `melodesk://watch?v=…`, `melodesk://playlist?list=…`,
+  `melodesk://search?q=…`, `melodesk://open?url=<music.youtube.com link>` and plain
+  music.youtube.com / youtu.be links are forwarded by `deeplink.rs` (allow-listed hosts only)
+  and resolved by `openUrl.ts` into our routes or playback. A second launch with a link is
+  routed to the running instance by the single-instance plugin.
+- **Not done, and why.** macOS Dock menu controls: Tauri 2.12 has no dock-menu API (only
+  dock visibility); the tray menu and Now Playing cover the same controls. Windows taskbar
+  thumbnail buttons and jump lists need Win32 code outside Tauri's surface; deferred.
+  Handoff needs Apple entitlements and an iOS counterpart; deferred.
+
 ## Gotchas learned the hard way
 
 - `app.security.freezePrototype` must stay **false**: Tauri injects the prototype freeze into

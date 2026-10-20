@@ -16,6 +16,7 @@ import { run } from '../data/innertube';
 import { sendCommand } from './ipc';
 import { toast } from '../app/toast';
 import { openDialog } from '../app/dialogs/store';
+import { openUrl } from '@tauri-apps/plugin-opener';
 
 /** Raw InnerTube endpoint object the page understands, rebuilt from our typed endpoint. */
 export function rawEndpoint(ep: Endpoint): Record<string, unknown> | null {
@@ -178,6 +179,10 @@ export async function runMenuItem(
   if (m.navigate) {
     if (m.navigate.type === 'watch' || m.navigate.type === 'watchPlaylist') {
       await playEndpoint(m.navigate);
+      return;
+    }
+    if (m.navigate.type === 'url') {
+      if (m.navigate.url.startsWith('https://')) await openUrl(m.navigate.url);
       return;
     }
     const route = routeForEndpoint(m.navigate);

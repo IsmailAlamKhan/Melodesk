@@ -31,6 +31,8 @@ export const PlayerCommandSchema = z.discriminatedUnion('type', [
   /** 0..1 */
   z.object({ type: z.literal('setVolume'), volume: z.number().min(0).max(1) }),
   z.object({ type: z.literal('setMuted'), muted: z.boolean() }),
+  z.object({ type: z.literal('volumeStep'), delta: z.number().min(-1).max(1) }),
+  z.object({ type: z.literal('toggleMute') }),
   /** Navigate the player webview within music.youtube.com. Path must be absolute ("/explore"). */
   z.object({ type: z.literal('navigate'), path: z.string().regex(/^\/[^\s]*$/) }),
   /** Ask the bridge to re-emit `ready`, `state` and `track`. */

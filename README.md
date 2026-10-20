@@ -39,7 +39,9 @@ Planned and in progress; ticked items work today.
 - [x] Library (playlists, songs, albums, artists, subscriptions, podcasts, uploads, history)
 - [x] Live queue panel with drag-and-drop reorder, play next, add to queue
 - [ ] Create / rename / delete playlists, add-to-playlist dialog, lyrics panel (parsers done, UI pending)
-- [ ] macOS Now Playing, Windows media controls, Linux MPRIS
+- [x] Now Playing / media keys (macOS, Windows via the webview), MPRIS (Linux), tray with controls
+- [x] Close to tray, launch at login, configurable global shortcuts, track-change notifications
+- [x] `melodesk://` deep links and music.youtube.com link handling, signed auto-updates
 - [ ] Mini player, full-screen Now Playing with synced lyrics
 - [ ] Last.fm / ListenBrainz scrobbling, Discord Rich Presence (opt-in)
 - [ ] Listening stats, command palette, themes, plugins

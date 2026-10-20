@@ -19,6 +19,17 @@ body {
   cursor: default;
 }
 
+/* macOS: the window carries an NSVisualEffect sidebar material; let it show through the sidebar. */
+:root[data-platform='macos'] body {
+  background: transparent;
+}
+:root[data-platform='macos'] [data-vibrancy] {
+  background: color-mix(in oklch, var(--color-bg-elevated) 55%, transparent);
+}
+:root[data-platform='macos'] [data-content] {
+  background: var(--color-bg);
+}
+
 /* Native-feeling, unobtrusive scrollbars in our own UI */
 * {
   scrollbar-width: thin;
