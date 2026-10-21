@@ -27,6 +27,26 @@ jobs:
       - run: pnpm i18n:check
       - run: pnpm test
 
+  e2e:
+    name: End-to-end tests (UI against a mocked Tauri backend)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:bridge
+      - run: pnpm --filter @melodesk/desktop exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces
+          path: apps/desktop/test-results
+
   rust:
     name: Clippy, rustfmt, Rust tests (${{ matrix.os }})
     strategy:
