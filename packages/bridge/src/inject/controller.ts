@@ -244,9 +244,17 @@ export class BridgeController {
           bar.onRepeatButtonClick?.();
         break;
       }
-      case 'queueSelect':
-        getQueueApi()?.selectQueueItem?.(cmd.index);
+      case 'queueSelect': {
+        // The page's own selectQueueItem() wants an internal item id we cannot see. A queue item
+        // carries the endpoint the website's own click would navigate to, so hand that back.
+        const q = safeCall(() => getStore()?.getState()) as
+          { queue?: { items?: unknown[]; automixItems?: unknown[] } } | undefined;
+        const all = [...(q?.queue?.items ?? []), ...(q?.queue?.automixItems ?? [])];
+        const endpoint = queueItemFromState(all[cmd.index], false)?.endpoint;
+        if (endpoint) this.runEndpoint(endpoint, 'navigate');
+        else log('warn', `queueSelect: no endpoint for item ${String(cmd.index)}`);
         break;
+      }
       case 'queueRemove':
         getQueueApi()?.removeItem?.(cmd.index);
         break;
