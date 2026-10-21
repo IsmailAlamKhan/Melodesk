@@ -31,8 +31,9 @@ Everything below is off until you switch it on, and each one says in Settings wh
 
 - **Listening history and stats** are written to a local SQLite database and never uploaded. The
   Stats page and its "copy a summary" button only use that database.
-- **Settings, the saved place for "Continue listening", your corrections to lyrics lookups** and the
-  offline cover cache are local files, in the app's data folder.
+- **Settings, the saved place for "Continue listening", your recent searches, your corrections to
+  lyrics lookups** and the offline cover cache are local files, in the app's data folder. Recent
+  searches can be cleared from the search box.
 - The **colours of a page** are worked out from its artwork on your computer.
 
 ## What the code does not do

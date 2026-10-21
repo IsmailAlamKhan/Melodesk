@@ -1,5 +1,6 @@
 import { Tooltip, cn } from '@melodesk/ui';
-import { Search, X } from 'lucide-react';
+import { Clock, Search, X } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useSuggestions } from '../../data/hooks';
@@ -7,6 +8,10 @@ import { useT } from '../../i18n/index';
 import { playItem, routeForEndpoint } from '../../player/actions';
 import { Artwork } from '../../app/components/Artwork';
 import { KIND_KEY } from '../../app/components/kinds';
+import { loadRecent, pushRecent, saveRecent } from './recent';
+
+/** Marks the "clear recent searches" row in the dropdown's list. */
+const CLEAR = '\u0000clear';
 
 /** Search field with live suggestions (queries and entities) from the account's own suggestions. */
 export function SearchBox() {
@@ -26,7 +31,21 @@ export function SearchBox() {
   const [debounced, setDebounced] = useState('');
   const input = useRef<HTMLInputElement>(null);
   const suggestions = useSuggestions(debounced);
+  const qc = useQueryClient();
+  const recent = useQuery({
+    queryKey: ['recent-searches'],
+    queryFn: loadRecent,
+    staleTime: Infinity,
+  });
+  const remember = (next: string[]): void => {
+    qc.setQueryData(['recent-searches'], next);
+    void saveRecent(next).catch(() => undefined);
+  };
+  // With nothing typed yet, the box offers what you searched for before (kept on this computer).
+  const showRecent = open && !value.trim() && (recent.data?.length ?? 0) > 0;
   const list = open && debounced ? (suggestions.data ?? []) : [];
+  // The rows of the dropdown, one list for the keyboard: recent searches then a way to clear them.
+  const recentRows = showRecent ? [...(recent.data ?? []), CLEAR] : [];
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -53,9 +72,23 @@ export function SearchBox() {
 
   const submit = (q: string): void => {
     setOpen(false);
-    if (q.trim()) void navigate(`/search?q=${encodeURIComponent(q.trim())}`);
+    if (q.trim()) {
+      remember(pushRecent(recent.data ?? [], q));
+      void navigate(`/search?q=${encodeURIComponent(q.trim())}`);
+    }
   };
   const choose = (i: number): void => {
+    if (showRecent) {
+      const pick = recentRows[i];
+      if (pick === CLEAR) {
+        remember([]);
+        setOpen(false);
+      } else if (pick) {
+        setValue(pick);
+        submit(pick);
+      }
+      return;
+    }
     const s = list[i];
     if (!s) {
       submit(value);
@@ -80,7 +113,7 @@ export function SearchBox() {
           dir="auto"
           ref={input}
           role="combobox"
-          aria-expanded={list.length > 0}
+          aria-expanded={list.length > 0 || showRecent}
           aria-controls="search-suggestions"
           aria-autocomplete="list"
           value={value}
@@ -94,7 +127,8 @@ export function SearchBox() {
           onBlur={() => window.setTimeout(() => setOpen(false), 120)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') choose(active);
-            else if (e.key === 'ArrowDown') setActive((a) => Math.min(a + 1, list.length - 1));
+            else if (e.key === 'ArrowDown')
+              setActive((a) => Math.min(a + 1, (showRecent ? recentRows.length : list.length) - 1));
             else if (e.key === 'ArrowUp') setActive((a) => Math.max(a - 1, -1));
             else if (e.key === 'Escape') setOpen(false);
           }}
@@ -113,6 +147,41 @@ export function SearchBox() {
           </Tooltip>
         )}
       </div>
+      {showRecent && (
+        <ul
+          id="search-suggestions"
+          role="listbox"
+          aria-label={t('search.recent')}
+          className="absolute top-11 right-0 left-0 z-30 overflow-hidden rounded-lg border border-border bg-bg-elevated py-1 shadow-xl"
+        >
+          {recentRows.map((r, i) => (
+            <li
+              key={r}
+              role="option"
+              aria-selected={i === active}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                choose(i);
+              }}
+              onMouseEnter={() => setActive(i)}
+              className={cn(
+                'flex cursor-default items-center gap-3 px-3 py-2 text-sm',
+                i === active && 'bg-bg-overlay',
+                r === CLEAR && 'text-fg-muted',
+              )}
+            >
+              {r === CLEAR ? (
+                <span className="truncate text-xs">{t('search.clearRecent')}</span>
+              ) : (
+                <>
+                  <Clock className="size-4 shrink-0 text-fg-subtle" />
+                  <span className="truncate">{r}</span>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
       {list.length > 0 && (
         <ul
           id="search-suggestions"
