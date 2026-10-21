@@ -71,3 +71,43 @@ input[type='range'] {
     animation: none;
   }
 }
+
+/*
+ * Clickable things show a hand. The body is "default" (so text is not an I-beam) and Tailwind's
+ * base resets buttons to the arrow, so say it here. Utility classes (cursor-grab on drag handles,
+ * cursor-default on menu items) are in a later layer and still win.
+ */
+@layer base {
+  a[href],
+  button:not(:disabled),
+  summary,
+  select:not(:disabled),
+  label:has(> input[type='checkbox']),
+  label:has(> input[type='radio']),
+  label:has(> input[type='color']),
+  input[type='checkbox']:not(:disabled),
+  input[type='radio']:not(:disabled),
+  input[type='color'],
+  [role='button']:not([aria-disabled='true']),
+  [role='link'],
+  [role='switch'],
+  [role='radio'],
+  [role='tab'],
+  [role='slider'],
+  [data-slider-root]:not([data-disabled]) {
+    cursor: pointer;
+  }
+  input[type='text'],
+  input[type='search'],
+  input[type='url'],
+  input[type='email'],
+  input[type='password'],
+  input[type='number'],
+  textarea {
+    cursor: text;
+  }
+  button:disabled,
+  [aria-disabled='true'] {
+    cursor: default;
+  }
+}

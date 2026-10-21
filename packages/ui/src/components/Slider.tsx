@@ -30,6 +30,7 @@ export function Slider({
   return (
     <Tooltip label={valueLabel ? `${label} · ${valueLabel(value)}` : label}>
       <RadixSlider.Root
+        data-slider-root=""
         dir="ltr"
         className={cn(
           'group relative flex h-5 w-full touch-none items-center select-none',
