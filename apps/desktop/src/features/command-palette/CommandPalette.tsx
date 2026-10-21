@@ -141,6 +141,12 @@ export function CommandPalette() {
             <input
               ref={input}
               autoFocus
+              role="combobox"
+              aria-expanded
+              aria-controls="palette-list"
+              aria-autocomplete="list"
+              aria-activedescendant={total > 0 ? `palette-option-${String(active)}` : undefined}
+              aria-label={t('palette.placeholder')}
               value={query}
               placeholder={t('palette.placeholder')}
               onChange={(e) => {
@@ -162,10 +168,16 @@ export function CommandPalette() {
               {t('palette.esc')}
             </kbd>
           </div>
-          <ul role="listbox" className="max-h-[50vh] overflow-y-auto p-1">
+          <ul
+            id="palette-list"
+            role="listbox"
+            aria-label={t('palette.title')}
+            className="max-h-[50vh] overflow-y-auto p-1"
+          >
             {matches.map((c, i) => (
               <Row
                 key={c.id}
+                id={`palette-option-${String(i)}`}
                 active={i === active}
                 onClick={() => choose(i)}
                 onHover={() => setActive(i)}
@@ -178,6 +190,7 @@ export function CommandPalette() {
             {entities.map((e, i) => (
               <Row
                 key={`${e.type}-${e.text}`}
+                id={`palette-option-${String(matches.length + i)}`}
                 active={matches.length + i === active}
                 onClick={() => choose(matches.length + i)}
                 onHover={() => setActive(matches.length + i)}
@@ -197,6 +210,7 @@ export function CommandPalette() {
             ))}
             {q && (
               <Row
+                id={`palette-option-${String(total - 1)}`}
                 active={total - 1 === active}
                 onClick={() => choose(total - 1)}
                 onHover={() => setActive(total - 1)}
@@ -212,30 +226,33 @@ export function CommandPalette() {
   );
 }
 
+/** One option of the palette's list. The input drives the keyboard; the mouse clicks the row itself. */
 function Row({
+  id,
   active,
   onClick,
   onHover,
   children,
 }: {
+  id: string;
   active: boolean;
   onClick: () => void;
   onHover: () => void;
   children: ReactNode;
 }) {
   return (
-    <li role="option" aria-selected={active}>
-      <button
-        type="button"
-        onMouseEnter={onHover}
-        onClick={onClick}
-        className={cn(
-          'flex w-full items-center gap-3 rounded-md px-3 py-2 text-start text-sm',
-          active && 'bg-bg-overlay',
-        )}
-      >
-        {children}
-      </button>
+    <li
+      id={id}
+      role="option"
+      aria-selected={active}
+      onMouseEnter={onHover}
+      onClick={onClick}
+      className={cn(
+        'flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-start text-sm',
+        active && 'bg-bg-overlay',
+      )}
+    >
+      {children}
     </li>
   );
 }

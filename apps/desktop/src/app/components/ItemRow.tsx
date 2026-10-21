@@ -93,7 +93,10 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
           isCurrent && 'bg-accent-soft text-accent',
         )}
       >
-        <div className="flex w-8 items-center justify-center text-xs tabular-nums text-fg-subtle max-rail:hidden">
+        <div
+          role="cell"
+          className="flex w-8 items-center justify-center text-xs tabular-nums text-fg-subtle max-rail:hidden"
+        >
           {playable ? (
             <>
               <span className={cn('group-hover:hidden', isCurrent && playing && 'hidden')}>
@@ -121,12 +124,14 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
             <span>{showIndex && index !== undefined ? index + 1 : ''}</span>
           )}
         </div>
-        <Artwork
-          thumbnails={item.thumbnails}
-          size={dense ? 36 : 40}
-          round={item.kind === 'artist'}
-        />
-        <div className="min-w-0">
+        <div role="cell">
+          <Artwork
+            thumbnails={item.thumbnails}
+            size={dense ? 36 : 40}
+            round={item.kind === 'artist'}
+          />
+        </div>
+        <div role="cell" className="min-w-0">
           <Marquee
             label={item.title}
             className={cn('text-sm font-medium', !isCurrent && 'text-fg')}
@@ -161,7 +166,7 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
           </div>
         </div>
         {showAlbum && (
-          <div className="truncate text-xs text-fg-muted max-rail:hidden">
+          <div role="cell" className="truncate text-xs text-fg-muted max-rail:hidden">
             {album ? (
               <LinkRun name={album.name} route={routeForEndpoint(album.endpoint)} last />
             ) : item.kind === 'song' || item.kind === 'video' ? (
@@ -171,11 +176,15 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
             )}
           </div>
         )}
-        <div className="text-xs tabular-nums text-fg-subtle">{fmt(duration)}</div>
-        <ItemMenuButton
-          item={item}
-          className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 max-rail:opacity-100"
-        />
+        <div role="cell" className="text-xs tabular-nums text-fg-subtle">
+          {fmt(duration)}
+        </div>
+        <div role="cell">
+          <ItemMenuButton
+            item={item}
+            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 max-rail:opacity-100"
+          />
+        </div>
       </div>
     </ItemContextMenu>
   );

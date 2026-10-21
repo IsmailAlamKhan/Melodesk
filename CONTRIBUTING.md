@@ -36,6 +36,13 @@ and read [docs/extending.md](docs/extending.md) for what a feature can add, how 
 not) depend on each other, and how to make part of it optional. `pnpm features:removable` checks that
 every feature folder can be deleted without breaking the build.
 
+### Accessibility
+
+`e2e/a11y.e2e.ts` runs axe (WCAG 2.1 A and AA) over the main screens in the dark and light themes and
+at phone width, and fails on any violation. New screens should get a few lines there. In short: give
+every control a name, keep lists and tables in their real roles (a `row` needs `cell`s), do not nest
+buttons in options, and keep text readable in both themes.
+
 ## Before you push
 
 ```bash

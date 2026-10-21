@@ -18,12 +18,12 @@ export function HealthBanner() {
   const ready = usePlayerStore((s) => s.ready);
   const [slow, setSlow] = useState(false);
   useEffect(() => {
-    if (ready) {
-      setSlow(false);
-      return;
-    }
+    if (ready) return;
     const timer = window.setTimeout(() => setSlow(true), SLOW_START_MS);
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      setSlow(false);
+    };
   }, [ready]);
   const stuck = !ready && slow;
   if (health.status === 'ok' && !stuck) return null;
