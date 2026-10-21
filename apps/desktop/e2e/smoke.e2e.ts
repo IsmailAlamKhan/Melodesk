@@ -16,7 +16,8 @@ test('the player bar follows the track and sends transport commands', async ({ p
   await page.goto('/');
   await startPlayback(page, { positionS: 12 });
   await expect(page.getByText('Test Song').first()).toBeVisible();
-  await expect(page.getByText('Test Artist').first()).toBeVisible();
+  // The byline the player reports, then the artists YouTube lists for the track once known.
+  await expect(page.getByText(/Test Artist|Rick Astley/u).first()).toBeVisible();
   await page.getByRole('button', { name: 'Pause' }).first().click();
   expect((await sentCommands(page)).some((c) => c['type'] === 'toggle')).toBe(true);
 });
