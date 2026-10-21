@@ -12,6 +12,8 @@ export const selectors = {
   moviePlayer: '#movie_player',
   /** The media element the player is driving. Source of play/pause/timeupdate events. */
   video: '#movie_player video.html5-main-video, ytmusic-player video',
+  /** The "Video paused. Continue watching?" question (see idle-prompt.ts). */
+  idlePrompt: 'ytmusic-you-there-renderer, yt-confirm-dialog-renderer, tp-yt-paper-dialog',
   /** Present only while logged out. */
   signInLink: 'ytmusic-nav-bar a.sign-in-link, a[href*="accounts.google.com/ServiceLogin"]',
   /** Present only while logged in. */

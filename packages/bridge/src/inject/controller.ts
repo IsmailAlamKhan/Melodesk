@@ -20,6 +20,7 @@ import {
   propNames,
 } from './page-api';
 import { AudioEngine } from './audio';
+import { watchIdlePrompt } from './idle-prompt';
 import { setVideoLayout } from './video-layout';
 import { selectors } from './selectors.v1';
 import { emit, log } from './transport';
@@ -144,6 +145,7 @@ export class BridgeController {
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
+    watchIdlePrompt();
     this.subscribeStore();
     this.emitReady();
     this.emitTrack(true);

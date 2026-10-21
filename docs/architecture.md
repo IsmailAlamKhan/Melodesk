@@ -203,6 +203,14 @@ controls and any ads are untouched. Closing the window hides it, and the UI swit
 so frames are not decoded for a window nobody can see. The selectors it depends on are in
 `selectors.v1.ts`; if YouTube changes its markup the window shows the normal page, which still plays.
 
+## "Continue watching?"
+
+YouTube pauses playback and asks "Video paused. Continue watching?" after a while without mouse or
+keyboard input in the page. The player window is hidden, so it never sees the user's input and the
+question appears mid-session. `inject/idle-prompt.ts` presses "Yes" for the user. It only answers
+that question: YouTube's dedicated element, or a dialog whose text says "continue watching", and
+never another confirmation (deleting a playlist and so on). It does not touch the stream or ads.
+
 ## Gotchas learned the hard way
 
 - `app.security.freezePrototype` must stay **false**: Tauri injects the prototype freeze into
