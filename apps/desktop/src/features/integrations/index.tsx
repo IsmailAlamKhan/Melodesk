@@ -3,6 +3,7 @@ import { defineFeature, lyricsSources, type LyricsSource } from '../../core';
 import {
   enablePlugin,
   isLyricsProviderOn,
+  lyricsSignature,
   lyricsFromPlugins,
   startPluginHost,
   usePluginHost,
@@ -17,6 +18,7 @@ const lrclib: LyricsSource = {
   id: 'lrclib',
   label: 'LRCLIB',
   isActive: isLyricsProviderOn,
+  signature: lyricsSignature,
   subscribe: (onChange) => usePluginHost.subscribe(onChange),
   activate: () => void enablePlugin('lrclib'),
   fetch: lyricsFromPlugins,

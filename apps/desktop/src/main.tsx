@@ -78,7 +78,7 @@ createRoot(root).render(
             buster: 'v1',
             dehydrateOptions: {
               shouldDehydrateQuery: (q) =>
-                q.state.status === 'success' && shouldPersistQuery(q.queryKey),
+                q.state.status === 'success' && shouldPersistQuery(q.queryKey, q.state.data),
             },
           }}
         >

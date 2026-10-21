@@ -37,7 +37,13 @@ export const sqlitePersister: Persister = createAsyncStoragePersister({
 });
 
 /** Only cache what is worth a fast first paint; never search results or mutations. */
-export function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
+export function shouldPersistQuery(queryKey: readonly unknown[], data?: unknown): boolean {
   const kind = queryKey[0];
+  if (kind === 'lyrics') {
+    // Lyrics that were found are kept (they show offline and save asking again); a miss is not, since
+    // it may only have been a slow source.
+    const found = data as { text?: string | null; synced?: unknown[] | null } | undefined;
+    return !!found && (!!found.text || !!found.synced?.length);
+  }
   return kind === 'browse' || kind === 'account' || kind === 'library';
 }

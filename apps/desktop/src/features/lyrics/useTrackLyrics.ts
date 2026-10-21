@@ -56,6 +56,11 @@ async function fromSources(
   return null;
 }
 
+/** Whether a lookup found anything, for what to keep and for how long. */
+export function hasLyrics(data: LyricsData | undefined): boolean {
+  return !!data && (!!data.text || !!data.synced?.length);
+}
+
 export function useTrackLyrics(): TrackLyrics {
   const videoId = usePlayerStore((s) => s.track?.videoId ?? null);
   const ready = usePlayerStore((s) => s.ready);
@@ -68,6 +73,7 @@ export function useTrackLyrics(): TrackLyrics {
     [timedSource],
   );
   const lrclibOn = useSyncExternalStore(subscribeTimed, () => timedSource?.isActive() ?? false);
+  const signature = useSyncExternalStore(subscribeTimed, () => timedSource?.signature?.() ?? '');
 
   const overrideQuery = useQuery({
     queryKey: ['lyrics-override', videoId],
@@ -83,9 +89,11 @@ export function useTrackLyrics(): TrackLyrics {
   };
 
   const lyrics = useQuery<LyricsData>({
-    queryKey: ['lyrics', videoId, lrclibOn, override?.title ?? '', override?.artist ?? ''],
+    queryKey: ['lyrics', videoId, signature, override?.title ?? '', override?.artist ?? ''],
     enabled: ready && videoId !== null && !overrideQuery.isPending,
-    staleTime: 1000 * 60 * 60,
+    // Lyrics that were found keep for an hour; a miss is tried again after a minute (a source may
+    // simply have been slow).
+    staleTime: (query) => (hasLyrics(query.state.data) ? 1000 * 60 * 60 : 1000 * 60),
     queryFn: async () => {
       const next = await qc.query(nextQuery(videoId));
       const own = next.lyricsBrowseId

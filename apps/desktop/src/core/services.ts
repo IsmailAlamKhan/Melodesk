@@ -24,6 +24,11 @@ export interface LyricsSource {
   isActive: () => boolean;
   /** Be told when that changes (returns an unsubscribe), so views can follow it. */
   subscribe: (onChange: () => void) => () => void;
+  /**
+   * A short text that changes when what the source would answer changes (which plugins are on), so
+   * lyrics looked up before that are looked up again.
+   */
+  signature?: () => string;
   /** Turn it on (the lyrics view offers this when the lyrics it has are not timed). */
   activate: () => void;
   fetch: (track: PluginTrack) => Promise<LyricsResult | null>;

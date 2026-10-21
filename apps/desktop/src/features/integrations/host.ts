@@ -298,6 +298,20 @@ export function startPluginHost(): () => void {
   };
 }
 
+/** Which plugins that find or help find lyrics are switched on, as a stable text. */
+export function lyricsSignature(): string {
+  return usePluginHost
+    .getState()
+    .plugins.filter(
+      (p) =>
+        p.enabled &&
+        (p.manifest.provides.includes('lyrics') || p.manifest.provides.includes('identify')),
+    )
+    .map((p) => p.manifest.id)
+    .sort()
+    .join(',');
+}
+
 /** Whether any plugin that provides lyrics is switched on. */
 export function isLyricsProviderOn(): boolean {
   return usePluginHost
