@@ -176,6 +176,9 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
         }
         case 'get_settings':
           return settings;
+        case 'plugin:opener|open_url':
+          sent.push({ type: 'open_url', url: args['url'] });
+          return null;
         case 'set_settings':
           settings = args['settings'] as typeof settings;
           sent.push({ type: 'set_settings', settings });

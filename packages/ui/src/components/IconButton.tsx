@@ -5,7 +5,7 @@ import { Tooltip } from './Tooltip';
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** Required: icon buttons have no visible text. */
   label: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   variant?: 'ghost' | 'solid';
 }
 
@@ -26,6 +26,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
         size === 'sm' && 'size-8 [&>svg]:size-4',
         size === 'md' && 'size-10 [&>svg]:size-5',
         size === 'lg' && 'size-12 [&>svg]:size-6',
+        size === 'xl' && 'size-14 [&>svg]:size-7',
         variant === 'ghost' && 'text-fg-muted hover:bg-accent-soft hover:text-accent',
         variant === 'solid' && 'bg-accent text-accent-fg hover:brightness-110',
         className,

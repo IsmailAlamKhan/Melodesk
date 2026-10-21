@@ -177,3 +177,18 @@ input[type='checkbox'][role='switch']:focus-visible {
 input[type='checkbox'][role='switch']:disabled {
   opacity: 0.4;
 }
+
+/* The player bar's wash follows the album art; registering the colour lets it fade between songs. */
+@property --bar-tint {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+.player-bar {
+  transition: --bar-tint 700ms var(--ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  .player-bar {
+    transition: none;
+  }
+}

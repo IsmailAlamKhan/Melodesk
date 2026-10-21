@@ -4,6 +4,8 @@ import { Tooltip } from './Tooltip';
 
 export interface SliderProps {
   label: string;
+  /** `line` is a hairline edge-to-edge progress bar that thickens on hover (the player's seek bar). */
+  variant?: 'default' | 'line';
   /** Shown after the label in the tooltip, e.g. "50%" or "1:02". */
   valueLabel?: (value: number) => string;
   value: number;
@@ -18,6 +20,7 @@ export interface SliderProps {
 
 export function Slider({
   label,
+  variant = 'default',
   valueLabel,
   value,
   max,
@@ -33,7 +36,8 @@ export function Slider({
         data-slider-root=""
         dir="ltr"
         className={cn(
-          'group relative flex h-5 w-full touch-none items-center select-none',
+          'group relative flex w-full touch-none items-center select-none',
+          variant === 'line' ? 'h-4' : 'h-5',
           className,
         )}
         value={[Math.min(value, max)]}
@@ -47,8 +51,18 @@ export function Slider({
           if (v[0] !== undefined) onCommit?.(v[0]);
         }}
       >
-        <RadixSlider.Track className="relative h-1 grow rounded-full bg-accent-muted transition-[height] duration-150 group-hover:h-1.5">
-          <RadixSlider.Range className="absolute h-full rounded-full bg-accent group-hover:brightness-110" />
+        <RadixSlider.Track
+          className={cn(
+            'relative grow bg-accent-muted transition-[height] duration-150',
+            variant === 'line' ? 'h-[3px] group-hover:h-1.5' : 'h-1 rounded-full group-hover:h-1.5',
+          )}
+        >
+          <RadixSlider.Range
+            className={cn(
+              'absolute h-full bg-accent group-hover:brightness-110',
+              variant !== 'line' && 'rounded-full',
+            )}
+          />
         </RadixSlider.Track>
         <RadixSlider.Thumb
           aria-label={label}
