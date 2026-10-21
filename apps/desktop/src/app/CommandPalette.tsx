@@ -8,6 +8,7 @@ import {
   Library,
   ListMusic,
   Maximize2,
+  Mic,
   MicVocal,
   Pause,
   PictureInPicture2,
@@ -54,6 +55,7 @@ export function CommandPalette() {
   const queue = usePlayerStore((s) => s.queue);
   const toggleRightPanel = useUiStore((s) => s.toggleRightPanel);
   const setNowPlayingOpen = useUiStore((s) => s.setNowPlayingOpen);
+  const setKaraokeOpen = useUiStore((s) => s.setKaraokeOpen);
   const suggestions = useSuggestions(open && query.trim().length > 1 ? query.trim() : '');
 
   useEffect(() => {
@@ -176,6 +178,12 @@ export function CommandPalette() {
         label: t('palette.cmd.nowPlaying'),
         icon: <Maximize2 className="size-4" />,
         run: () => setNowPlayingOpen(true),
+      },
+      {
+        id: 'karaoke',
+        label: t('palette.cmd.karaoke'),
+        icon: <Mic className="size-4" />,
+        run: () => setKaraokeOpen(true),
       },
       {
         id: 'mini',

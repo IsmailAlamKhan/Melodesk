@@ -12,6 +12,7 @@ import { QueuePanel } from './QueuePanel';
 import { DialogHost } from './dialogs/DialogHost';
 import { SearchBox } from './SearchBox';
 import { useAudioSync } from '../audio/useAudioSync';
+import { KaraokeView } from './KaraokeView';
 import { Sidebar } from './Sidebar';
 import { Toaster } from './components/Toaster';
 import { useUiStore } from './uiStore';
@@ -81,6 +82,7 @@ export function Layout() {
         <PlayerBar />
       </div>
       <NowPlayingView />
+      <KaraokeView />
       <CommandPalette />
       <Toaster />
       <DialogHost />

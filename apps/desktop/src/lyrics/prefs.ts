@@ -13,6 +13,8 @@ export interface LyricsPrefs {
   libreKey: string;
   /** The user has agreed to send lyric text to MyMemory. */
   translationConsent: boolean;
+  /** Karaoke lyric size. */
+  karaokeSize: 'm' | 'l' | 'xl';
 }
 
 const DEFAULTS: LyricsPrefs = {
@@ -24,6 +26,7 @@ const DEFAULTS: LyricsPrefs = {
   libreUrl: 'http://localhost:5000',
   libreKey: '',
   translationConsent: false,
+  karaokeSize: 'l',
 };
 
 const KEY = 'lyrics:prefs';
@@ -57,6 +60,7 @@ export const useLyricsPrefs = create<State>((set, get) => ({
       libreUrl: s.libreUrl,
       libreKey: s.libreKey,
       translationConsent: s.translationConsent,
+      karaokeSize: s.karaokeSize,
     };
     void kvSet(KEY, JSON.stringify(prefs)).catch(() => undefined);
   },

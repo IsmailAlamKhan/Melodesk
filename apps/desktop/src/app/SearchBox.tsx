@@ -13,7 +13,14 @@ export function SearchBox() {
   const t = useT();
   const navigate = useNavigate();
   const [sp] = useSearchParams();
-  const [value, setValue] = useState(sp.get('q') ?? '');
+  const query = sp.get('q') ?? '';
+  const [value, setValue] = useState(query);
+  // Follow the URL: landing on a search from elsewhere (karaoke, the palette) fills the box.
+  const [seenQuery, setSeenQuery] = useState(query);
+  if (query !== seenQuery) {
+    setSeenQuery(query);
+    setValue(query);
+  }
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const [debounced, setDebounced] = useState('');

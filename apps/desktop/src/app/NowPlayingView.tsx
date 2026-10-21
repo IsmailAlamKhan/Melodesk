@@ -2,6 +2,7 @@ import { IconButton, Slider, cn } from '@melodesk/ui';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronDown,
+  MicVocal,
   Pause,
   Play,
   Repeat,
@@ -52,6 +53,7 @@ export function NowPlayingView() {
   const t = useT();
   const open = useUiStore((s) => s.nowPlayingOpen);
   const close = useUiStore((s) => s.setNowPlayingOpen);
+  const openKaraoke = useUiStore((s) => s.setKaraokeOpen);
   const track = usePlayerStore((s) => s.track);
   const state = usePlayerStore((s) => s.state);
   const queue = usePlayerStore((s) => s.queue);
@@ -98,8 +100,11 @@ export function NowPlayingView() {
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,color-mix(in_oklch,var(--np-accent)_35%,transparent),transparent_60%),linear-gradient(to_bottom,transparent,var(--color-bg)_120%)]" />
           <div
             data-tauri-drag-region
-            className="absolute inset-x-0 top-0 flex h-14 items-center justify-end px-3 pt-2"
+            className="absolute inset-x-0 top-0 z-10 flex h-14 items-center justify-end gap-1 px-3 pt-2"
           >
+            <IconButton label={t('karaoke.open')} onClick={() => openKaraoke(true)}>
+              <MicVocal />
+            </IconButton>
             <IconButton label={t('nowPlaying.close')} onClick={() => close(false)}>
               <ChevronDown />
             </IconButton>

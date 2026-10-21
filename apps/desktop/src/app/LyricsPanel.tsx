@@ -1,43 +1,14 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@melodesk/ui';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { fetchLyrics, fetchNext } from '../data/innertube';
-import { loadOffset, saveOffset, useLyricsPrefs } from '../lyrics/prefs';
-import {
-  activeIndex,
-  lineProgress,
-  rowsFromLyrics,
-  type LyricsData,
-  type LyricsRow,
-} from '../lyrics/rows';
+import { useEffect, useRef } from 'react';
+import { lineProgress, type LyricsRow } from '../lyrics/rows';
 import { describeTranslateError } from '../lyrics/describeError';
-import { transliterationCaveat } from '../lyrics/transliterate';
-import { useRomanized, useTranslated } from '../lyrics/useExtras';
+import { useTrackLyrics } from '../lyrics/useTrackLyrics';
 import { useT } from '../i18n';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
-import { enablePlugin, isPluginEnabled, lyricsFromPlugins, usePluginHost } from '../plugins/host';
+import { usePositionMs } from '../player/usePositionMs';
+import { enablePlugin } from '../plugins/host';
 import { LyricsToolbar } from './LyricsToolbar';
-
-/** Playback position in ms; ticks often enough to switch lines promptly. */
-function usePositionMs(): number {
-  const state = usePlayerStore((s) => s.state);
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!state?.playing) return;
-    const id = window.setInterval(() => {
-      setNow(Date.now());
-    }, 80);
-    return () => {
-      window.clearInterval(id);
-    };
-  }, [state?.playing]);
-  if (!state) return 0;
-  return (
-    (state.playing ? state.position + Math.max(0, now - state.sampledAt) / 1000 : state.position) *
-    1000
-  );
-}
 
 /** Fills the active line left to right in step with the song, without re-rendering the list. */
 function KaraokeText({
@@ -81,81 +52,25 @@ function KaraokeText({
 /** Lyrics for the current track: timed when available, click a line to seek, optional romanization and translation. */
 export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
   const t = useT();
-  const videoId = usePlayerStore((s) => s.track?.videoId ?? null);
   const title = usePlayerStore((s) => s.track?.title ?? null);
-  const ready = usePlayerStore((s) => s.ready);
   const positionMs = usePositionMs();
   const listRef = useRef<HTMLDivElement>(null);
-  const qc = useQueryClient();
-  const prefs = useLyricsPrefs();
-  const lrclibOn = usePluginHost((s) =>
-    s.plugins.some((p) => p.manifest.id === 'lrclib' && p.enabled),
-  );
-
-  const lyrics = useQuery<LyricsData>({
-    queryKey: ['lyrics', videoId, lrclibOn],
-    enabled: ready && videoId !== null,
-    staleTime: 1000 * 60 * 60,
-    queryFn: async () => {
-      const next = await fetchNext({ videoId: videoId ?? '' });
-      const own = next.lyricsBrowseId
-        ? await fetchLyrics(next.lyricsBrowseId)
-        : { text: null, source: null, synced: null };
-      if (own.synced) return { ...own, origin: 'youtube' as const };
-      // YouTube's web lyrics are usually untimed. If LRCLIB is on, prefer its timed lyrics.
-      const t = usePlayerStore.getState().track;
-      const st = usePlayerStore.getState().state;
-      const plugin =
-        t?.videoId && isPluginEnabled('lrclib')
-          ? await lyricsFromPlugins({
-              videoId: t.videoId,
-              title: t.title,
-              artist: t.artist,
-              album: t.album,
-              artworkUrl: t.artworkUrl,
-              durationSeconds: st?.duration ?? null,
-            })
-          : null;
-      if (plugin?.synced)
-        return {
-          text: plugin.text,
-          source: plugin.source,
-          synced: plugin.synced,
-          origin: 'plugin' as const,
-        };
-      if (own.text) return { ...own, origin: 'youtube' as const };
-      if (plugin)
-        return {
-          text: plugin.text,
-          source: plugin.source,
-          synced: plugin.synced,
-          origin: 'plugin' as const,
-        };
-      return { ...own, origin: 'youtube' as const };
-    },
-  });
-
-  const offset = useQuery({
-    queryKey: ['lyrics-offset', videoId],
-    enabled: videoId !== null,
-    staleTime: Infinity,
-    queryFn: () => loadOffset(videoId ?? ''),
-  });
-  const offsetMs = offset.data ?? 0;
-  const setOffset = (ms: number): void => {
-    if (!videoId) return;
-    qc.setQueryData(['lyrics-offset', videoId], ms);
-    void saveOffset(videoId, ms);
-  };
-
+  const {
+    videoId,
+    lyrics,
+    rows,
+    hasTimed,
+    offsetMs,
+    setOffset,
+    lrclibOn,
+    prefs,
+    romanized,
+    translated,
+    caveat,
+    activeAt,
+  } = useTrackLyrics();
   const data = lyrics.data;
-  const rows = useMemo(() => (data ? rowsFromLyrics(data) : []), [data]);
-  const texts = useMemo(() => rows.map((r) => r.text), [rows]);
-  const romanized = useRomanized(texts, prefs.romanize);
-  const translated = useTranslated(videoId, texts, prefs.translate);
-  const caveat = useMemo(() => transliterationCaveat(texts), [texts]);
-  const hasTimed = !!data?.synced?.length;
-  const active = hasTimed ? activeIndex(rows, positionMs, offsetMs) : -1;
+  const active = activeAt(positionMs);
 
   useEffect(() => {
     const el = listRef.current?.querySelector<HTMLElement>(`[data-line="${String(active)}"]`);
@@ -278,7 +193,7 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
 }
 
 /** Offer timed lyrics from LRCLIB (opt-in: it receives the title, artist and length). */
-function TimedBanner() {
+export function TimedBanner() {
   const t = useT();
   return (
     <div className="mb-3 flex flex-col gap-2 rounded-md bg-bg-overlay px-3 py-2 text-xs text-fg-muted">

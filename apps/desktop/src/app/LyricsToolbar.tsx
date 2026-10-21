@@ -1,11 +1,12 @@
 import * as Popover from '@radix-ui/react-popover';
 import { IconButton, cn } from '@melodesk/ui';
-import { Languages, SlidersHorizontal, Timer, Type } from 'lucide-react';
+import { Languages, MicVocal, SlidersHorizontal, Timer, Type } from 'lucide-react';
 import { languageName, useI18n, useT } from '../i18n';
 import { useLyricsPrefs } from '../lyrics/prefs';
 import { LANGUAGES, type Provider } from '../lyrics/translate';
 import type { Caveat } from '../lyrics/transliterate';
 import { openDialog } from './dialogs/store';
+import { useUiStore } from './uiStore';
 
 const panel = 'z-50 w-80 rounded-lg border border-border bg-bg-elevated p-4 text-sm shadow-xl';
 const select = 'h-8 w-full rounded-md border border-border bg-bg px-2 text-sm';
@@ -22,6 +23,8 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
   const t = useT();
   const locale = useI18n((s) => s.locale);
   const p = useLyricsPrefs();
+  const karaokeOpen = useUiStore((s) => s.karaokeOpen);
+  const openKaraoke = useUiStore((s) => s.setKaraokeOpen);
   const toggleTranslate = (): void => {
     if (p.translate) {
       p.update({ translate: false });
@@ -63,6 +66,12 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
       >
         <Languages />
       </IconButton>
+
+      {!karaokeOpen && (
+        <IconButton label={t('karaoke.open')} size="sm" onClick={() => openKaraoke(true)}>
+          <MicVocal />
+        </IconButton>
+      )}
 
       <Popover.Root>
         <Popover.Trigger asChild>

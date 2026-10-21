@@ -5,6 +5,8 @@ interface UiState {
   toggleRightPanel: (panel: 'queue' | 'lyrics') => void;
   nowPlayingOpen: boolean;
   setNowPlayingOpen: (open: boolean) => void;
+  karaokeOpen: boolean;
+  setKaraokeOpen: (open: boolean) => void;
   sleepUntil: number | null;
   setSleepUntil: (until: number | null) => void;
 }
@@ -19,6 +21,10 @@ function devPanel(): 'queue' | 'lyrics' | null {
 export const useUiStore = create<UiState>((set) => ({
   rightPanel: devPanel(),
   nowPlayingOpen: false,
+  karaokeOpen: false,
+  setKaraokeOpen: (open) => {
+    set({ karaokeOpen: open });
+  },
   sleepUntil: null,
   setSleepUntil: (until) => {
     set({ sleepUntil: until });
