@@ -5,6 +5,8 @@ import {
   parseLrc,
   PluginManifestSchema,
   firstPartyPlugins,
+  pickSong,
+  cleanLrc,
 } from '../src';
 
 describe('parseLrc', () => {
@@ -97,5 +99,40 @@ describe('open:link', () => {
       permissions: [],
     });
     expect(m.linkHosts).toEqual([]);
+  });
+});
+
+describe('NetEase matching', () => {
+  const track = {
+    videoId: 'x',
+    title: 'Yellow',
+    artist: 'Coldplay • Parachutes • 2000',
+    album: null,
+    artworkUrl: null,
+    durationSeconds: 267,
+  };
+  it('picks the song with the right title, artist and length', () => {
+    const song = pickSong(
+      [
+        { id: 1, name: 'Yellow (Live)', duration: 400000, artists: [{ name: 'Someone Else' }] },
+        { id: 2, name: 'Yellow', duration: 266773, artists: [{ name: 'Coldplay' }] },
+        { id: 3, name: 'Yellow', duration: 150000, artists: [{ name: 'Cover Band' }] },
+      ],
+      track,
+    );
+    expect(song?.id).toBe(2);
+  });
+  it('returns nothing rather than lyrics for a different song', () => {
+    expect(
+      pickSong(
+        [{ id: 9, name: 'Fix You', duration: 295000, artists: [{ name: 'Coldplay' }] }],
+        track,
+      ),
+    ).toBeNull();
+  });
+  it('drops credit lines and keeps the lyrics', () => {
+    const lrc =
+      '[00:00.00]作词 : Chris Martin\n[00:01.00]Look at the stars\n[00:05.00]Look how they shine';
+    expect(cleanLrc(lrc)).toBe('[00:01.00]Look at the stars\n[00:05.00]Look how they shine');
   });
 });

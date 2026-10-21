@@ -18,6 +18,7 @@ export const lrclib = definePlugin({
       'Shows lyrics from LRCLIB when YouTube Music has none. Sends the track title, artist and duration to lrclib.net.',
     permissions: ['network:fetch'],
     hosts: ['lrclib.net'],
+    provides: ['lyrics'],
     enabledByDefault: false,
   },
   setup(ctx) {

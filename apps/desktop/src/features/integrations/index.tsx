@@ -2,18 +2,21 @@ import { Plug } from 'lucide-react';
 import { defineFeature, lyricsSources, type LyricsSource } from '../../core';
 import {
   enablePlugin,
-  isPluginEnabled,
+  isLyricsProviderOn,
   lyricsFromPlugins,
   startPluginHost,
   usePluginHost,
 } from './host';
 import { PluginsSection } from './PluginsSection';
 
-/** Offers LRCLIB to the lyrics view: the plugin is opt-in, so the view can ask to turn it on. */
+/**
+ * Offers the lyrics plugins to the lyrics view. They are opt-in, so the view can ask to turn one on
+ * (LRCLIB, which has the most timed lyrics) and treats any of them being on as "on".
+ */
 const lrclib: LyricsSource = {
   id: 'lrclib',
   label: 'LRCLIB',
-  isActive: () => isPluginEnabled('lrclib'),
+  isActive: isLyricsProviderOn,
   subscribe: (onChange) => usePluginHost.subscribe(onChange),
   activate: () => void enablePlugin('lrclib'),
   fetch: lyricsFromPlugins,

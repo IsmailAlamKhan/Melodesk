@@ -21,6 +21,8 @@ export const PluginManifestSchema = z.object({
   hosts: z.array(z.string().max(253)).default([]),
   /** Hosts whose https links the plugin may open in the user's browser. Required with `open:link`. */
   linkHosts: z.array(z.string().max(253)).default([]),
+  /** What the plugin adds to the app besides its own card: `lyrics` makes it a lyrics source. */
+  provides: z.array(z.enum(['lyrics'])).default([]),
   /** Disabled by default unless true; integrations that send data stay opt-in. */
   enabledByDefault: z.boolean().default(false),
 });

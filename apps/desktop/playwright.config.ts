@@ -9,6 +9,8 @@ export default defineConfig({
   testDir: './e2e',
   testMatch: '**/*.e2e.ts',
   fullyParallel: true,
+  // Each worker is a headless Chromium; on a laptop three is plenty and keeps the fans down.
+  ...(process.env['CI'] ? {} : { workers: 3 }),
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 1 : 0,
   reporter: process.env['CI'] ? [['github'], ['list']] : 'list',

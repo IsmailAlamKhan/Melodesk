@@ -291,22 +291,36 @@ export function startPluginHost(): () => void {
   };
 }
 
-/** Lyrics providers from enabled plugins, in settings order. Each gets a time limit. */
+/** Whether any plugin that provides lyrics is switched on. */
+export function isLyricsProviderOn(): boolean {
+  return usePluginHost
+    .getState()
+    .plugins.some((p) => p.enabled && p.manifest.provides.includes('lyrics'));
+}
+
+/**
+ * Ask every enabled lyrics plugin at once (each gets a time limit) and take the best answer: the
+ * first timed result in settings order, else the first plain one.
+ */
 export async function lyricsFromPlugins(track: PluginTrack): Promise<LyricsResult | null> {
-  for (const p of usePluginHost.getState().plugins) {
-    const provider = p.instance?.lyricsProvider;
-    if (!p.enabled || !provider) continue;
-    try {
-      const result = await Promise.race([
-        provider(track),
-        new Promise<null>((resolve) => window.setTimeout(() => resolve(null), 8000)),
-      ]);
-      if (result) return result;
-    } catch (err) {
-      console.warn(`[plugin:${p.manifest.id}] lyrics failed`, err);
-    }
-  }
-  return null;
+  const asked = usePluginHost
+    .getState()
+    .plugins.filter((p) => p.enabled && p.instance?.lyricsProvider);
+  const answers = await Promise.all(
+    asked.map(async (p): Promise<LyricsResult | null> => {
+      try {
+        return await Promise.race([
+          p.instance?.lyricsProvider?.(track) ?? Promise.resolve(null),
+          new Promise<null>((resolve) => window.setTimeout(() => resolve(null), 8000)),
+        ]);
+      } catch (err) {
+        console.warn(`[plugin:${p.manifest.id}] lyrics failed`, err);
+        return null;
+      }
+    }),
+  );
+  const found = answers.filter((a): a is LyricsResult => a !== null);
+  return found.find((a) => a.synced?.length) ?? found[0] ?? null;
 }
 
 export function isPluginEnabled(id: string): boolean {

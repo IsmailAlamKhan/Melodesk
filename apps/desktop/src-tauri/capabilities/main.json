@@ -41,6 +41,8 @@
       "identifier": "http:default",
       "allow": [
         { "url": "https://lrclib.net/*" },
+        { "url": "https://music.163.com/*" },
+        { "url": "https://api.lyrics.ovh/*" },
         { "url": "https://ws.audioscrobbler.com/*" },
         { "url": "https://api.listenbrainz.org/*" },
         { "url": "https://api.mymemory.translated.net/*" },

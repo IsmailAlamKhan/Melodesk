@@ -96,6 +96,27 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
       return { status: 200, body: JSON.stringify({ token: 'test-token' }) };
     if (url.includes('lrclib.net') && opts.lrclib)
       return { status: 200, body: JSON.stringify(opts.lrclib) };
+    if (url.includes('music.163.com/api/search'))
+      return {
+        status: 200,
+        body: JSON.stringify({
+          result: {
+            songs: [
+              { id: 7, name: 'Test Song', duration: 200000, artists: [{ name: 'Test Artist' }] },
+            ],
+          },
+        }),
+      };
+    if (url.includes('music.163.com/api/song/lyric'))
+      return {
+        status: 200,
+        body: JSON.stringify({
+          lrc: {
+            lyric:
+              '[00:00.00]作词 : Someone\n[00:05.00]First netease line\n[00:10.00]Second netease line\n[00:15.00]Third netease line',
+          },
+        }),
+      };
     return { status: 404, body: '{}' };
   });
 

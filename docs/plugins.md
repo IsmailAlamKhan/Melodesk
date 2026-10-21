@@ -46,6 +46,14 @@ If it is part of how Melodesk looks or behaves (a page, a panel, a menu), it is 
 [extending.md](extending.md). If it sends the user's listening data or fetches from an outside
 service, it is a **plugin**, so its access is declared and visible.
 
+### Lyrics plugins
+
+A plugin that returns lyrics sets `provides: ['lyrics']` in its manifest and a `lyricsProvider` on its
+instance (see LRCLIB, NetEase and lyrics.ovh). Every enabled lyrics plugin is asked at once, each with a
+time limit, and the best answer wins: the first timed result in Settings order, else the first plain
+one. Return `null` when you are not sure of the match; wrong lyrics are worse than none (NetEase's
+`pickSong` shows one way to check title, artist and length).
+
 ## Shape of a plugin
 
 ```ts
