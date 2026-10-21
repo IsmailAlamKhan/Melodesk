@@ -38,7 +38,7 @@ export function ItemCard({ item, width }: { item: Item; width?: number }) {
         onKeyDown={(e) => {
           if (e.key === 'Enter') open();
         }}
-        className="group flex shrink-0 cursor-pointer flex-col gap-2 rounded-lg p-2 outline-none transition-colors duration-(--duration-fast) hover:bg-bg-overlay focus-visible:ring-2 focus-visible:ring-accent"
+        className="group box-content flex shrink-0 cursor-pointer flex-col gap-2 rounded-lg p-2 outline-none transition-colors duration-(--duration-fast) hover:bg-bg-overlay focus-visible:ring-2 focus-visible:ring-accent"
         style={{ width: isVideo ? tile * 1.6 : tile }}
       >
         <div className="relative">
