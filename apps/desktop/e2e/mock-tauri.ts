@@ -271,6 +271,9 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
         case 'plugin:http|fetch_cancel_body':
         case 'plugin:deep-link|get_current':
         case 'set_native_labels':
+        case 'player_reload':
+          sent.push({ type: 'player_reload' });
+          return null;
         case 'player_set_visible':
           return null;
         default:

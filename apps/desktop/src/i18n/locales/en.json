@@ -96,6 +96,8 @@
   "header.subscribed": "Subscribed",
   "health.broken": "Melodesk can’t control YouTube Music right now. An app update is probably needed.",
   "health.degraded": "Some controls may not work. An app update is probably needed.",
+  "health.reload": "Reload player",
+  "health.slow": "The player is taking a while to start. Reloading it usually helps.",
   "karaoke.close": "Close karaoke",
   "karaoke.findVersion": "Find a karaoke version",
   "karaoke.interlude": "Instrumental",

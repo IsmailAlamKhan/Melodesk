@@ -66,6 +66,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             player::player_command,
             player::player_set_visible,
+            player::player_reload,
             player::bridge_emit,
             settings::get_settings,
             settings::set_settings,

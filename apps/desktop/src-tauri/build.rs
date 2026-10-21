@@ -6,6 +6,7 @@ fn main() {
         tauri_build::AppManifest::new().commands(&[
             "player_command",
             "player_set_visible",
+            "player_reload",
             "bridge_emit",
             "get_settings",
             "set_settings",

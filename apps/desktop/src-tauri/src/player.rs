@@ -321,6 +321,17 @@ pub fn player_set_visible<R: Runtime>(app: AppHandle<R>, visible: bool) -> Resul
     Ok(())
 }
 
+/// Load the player page again: the way out when YouTube Music's page got stuck or never attached.
+/// Playback stops and starts over from the page's own state; nothing else is touched.
+#[tauri::command]
+pub fn player_reload<R: Runtime>(app: AppHandle<R>) -> Result<(), PlayerError> {
+    let player = app
+        .get_webview_window(PLAYER_LABEL)
+        .ok_or(PlayerError::NoPlayerWindow)?;
+    player.eval("window.location.reload();")?;
+    Ok(())
+}
+
 /// Player → UI. The only command the music.youtube.com webview can reach. The payload is
 /// untrusted: it is bounded in size, never inspected here, and schema-validated in the UI.
 #[tauri::command]
