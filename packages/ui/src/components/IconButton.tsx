@@ -1,5 +1,6 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
 import { cn } from '../cn';
+import { Tooltip } from './Tooltip';
 
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** Required: icon buttons have no visible text. */
@@ -12,12 +13,11 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
   { className, label, size = 'md', variant = 'ghost', type = 'button', ...props },
   ref,
 ) {
-  return (
+  const button = (
     <button
       ref={ref}
       type={type}
       aria-label={label}
-      title={label}
       className={cn(
         'inline-flex shrink-0 items-center justify-center rounded-full select-none',
         'transition-colors duration-(--duration-fast) ease-(--ease-out)',
@@ -32,5 +32,13 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       )}
       {...props}
     />
+  );
+  // A disabled button gets no pointer events, so its tooltip hangs off a wrapper instead.
+  return props.disabled ? (
+    <Tooltip label={label}>
+      <span className="inline-flex shrink-0 rounded-full">{button}</span>
+    </Tooltip>
+  ) : (
+    <Tooltip label={label}>{button}</Tooltip>
   );
 });

@@ -1,4 +1,4 @@
-import { IconButton, Slider, cn } from '@melodesk/ui';
+import { IconButton, Slider, Tooltip, cn } from '@melodesk/ui';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   AArrowDown,
@@ -425,6 +425,7 @@ function Stage() {
           <span className="w-10 text-right">{fmt(scrub ?? positionS)}</span>
           <Slider
             label={t('player.seek')}
+            valueLabel={fmt}
             value={scrub ?? positionS}
             max={duration}
             step={0.5}
@@ -454,14 +455,16 @@ function Stage() {
           >
             <SkipBack />
           </IconButton>
-          <button
-            type="button"
-            aria-label={playing ? t('player.pause') : t('player.play')}
-            onClick={() => void sendCommand({ type: 'toggle' })}
-            className="flex size-14 items-center justify-center rounded-full bg-fg text-bg shadow-lg transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
-          >
-            {playing ? <Pause className="size-6" /> : <Play className="size-6 translate-x-0.5" />}
-          </button>
+          <Tooltip label={playing ? t('player.pause') : t('player.play')}>
+            <button
+              type="button"
+              aria-label={playing ? t('player.pause') : t('player.play')}
+              onClick={() => void sendCommand({ type: 'toggle' })}
+              className="flex size-14 items-center justify-center rounded-full bg-fg text-bg shadow-lg transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              {playing ? <Pause className="size-6" /> : <Play className="size-6 translate-x-0.5" />}
+            </button>
+          </Tooltip>
           <IconButton
             label={t('player.next')}
             size="lg"

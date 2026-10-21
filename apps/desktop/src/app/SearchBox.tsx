@@ -1,4 +1,4 @@
-import { cn } from '@melodesk/ui';
+import { Tooltip, cn } from '@melodesk/ui';
 import { Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -101,14 +101,16 @@ export function SearchBox() {
           className="h-full min-w-0 flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-fg-subtle"
         />
         {value && (
-          <button
-            type="button"
-            aria-label={t('common.clear')}
-            onClick={() => setValue('')}
-            className="text-fg-subtle hover:text-fg"
-          >
-            <X className="size-4" />
-          </button>
+          <Tooltip label={t('common.clear')}>
+            <button
+              type="button"
+              aria-label={t('common.clear')}
+              onClick={() => setValue('')}
+              className="text-fg-subtle hover:text-fg"
+            >
+              <X className="size-4" />
+            </button>
+          </Tooltip>
         )}
       </div>
       {list.length > 0 && (

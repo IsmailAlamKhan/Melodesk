@@ -1,5 +1,5 @@
 import * as Popover from '@radix-ui/react-popover';
-import { IconButton, cn } from '@melodesk/ui';
+import { IconButton, Tooltip, cn } from '@melodesk/ui';
 import { Languages, MicVocal, SlidersHorizontal, Timer, Type } from 'lucide-react';
 import { languageName, useI18n, useT } from '../i18n';
 import { useLyricsPrefs } from '../lyrics/prefs';
@@ -209,12 +209,9 @@ export function LyricsToolbar({ hasTimedLines, offsetMs, onOffset, caveat }: Lyr
         </Popover.Portal>
       </Popover.Root>
       {caveat && (
-        <span
-          className="ms-1 text-[11px] text-fg-subtle"
-          title={caveat === 'kanji' ? t('lyrics.caveat.kanji') : t('lyrics.caveat.abjad')}
-        >
-          {t('lyrics.approximate')}
-        </span>
+        <Tooltip label={caveat === 'kanji' ? t('lyrics.caveat.kanji') : t('lyrics.caveat.abjad')}>
+          <span className="ms-1 text-[11px] text-fg-subtle">{t('lyrics.approximate')}</span>
+        </Tooltip>
       )}
     </div>
   );

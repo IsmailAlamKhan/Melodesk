@@ -17,7 +17,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { QueueItem } from '@melodesk/bridge/protocol';
-import { IconButton, cn } from '@melodesk/ui';
+import { IconButton, Tooltip, cn } from '@melodesk/ui';
 import { GripVertical, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useT } from '../i18n';
@@ -134,15 +134,17 @@ function QueueRow({
       onDoubleClick={() => void sendCommand({ type: 'queueSelect', index })}
     >
       {!item.isAutomix ? (
-        <button
-          type="button"
-          aria-label={t('queue.dragToReorder')}
-          className="cursor-grab text-fg-subtle opacity-0 group-hover:opacity-100 active:cursor-grabbing"
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical className="size-4" />
-        </button>
+        <Tooltip label={t('queue.dragToReorder')}>
+          <button
+            type="button"
+            aria-label={t('queue.dragToReorder')}
+            className="cursor-grab text-fg-subtle opacity-0 group-hover:opacity-100 active:cursor-grabbing"
+            {...attributes}
+            {...listeners}
+          >
+            <GripVertical className="size-4" />
+          </button>
+        </Tooltip>
       ) : (
         <span className="w-4" />
       )}

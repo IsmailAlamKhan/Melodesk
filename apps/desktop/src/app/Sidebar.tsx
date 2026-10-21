@@ -1,5 +1,5 @@
 import { BROWSE_IDS } from '@melodesk/adapter';
-import { cn } from '@melodesk/ui';
+import { Tooltip, cn } from '@melodesk/ui';
 import { BarChart3, Compass, Home, Library, ListMusic, Plus, Settings } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { NavLink } from 'react-router';
@@ -53,14 +53,16 @@ export function Sidebar() {
       <div className="mt-4 flex items-center justify-between px-5 text-xs font-medium tracking-wide text-fg-subtle uppercase">
         <span>{t('nav.playlists')}</span>
         {loggedIn && (
-          <button
-            type="button"
-            aria-label={t('nav.newPlaylist')}
-            className="text-fg-subtle hover:text-fg"
-            onClick={() => openDialog({ type: 'createPlaylist' })}
-          >
-            <Plus className="size-4" />
-          </button>
+          <Tooltip label={t('nav.newPlaylist')}>
+            <button
+              type="button"
+              aria-label={t('nav.newPlaylist')}
+              className="text-fg-subtle hover:text-fg"
+              onClick={() => openDialog({ type: 'createPlaylist' })}
+            >
+              <Plus className="size-4" />
+            </button>
+          </Tooltip>
         )}
       </div>
       <div className="mt-1 flex-1 overflow-y-auto px-3 pb-2">

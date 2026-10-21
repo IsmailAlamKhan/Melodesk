@@ -206,6 +206,7 @@ export function MiniPlayer() {
         <span>{fmt(position)}</span>
         <Slider
           label={t('player.seek')}
+          valueLabel={fmt}
           value={position}
           max={state?.duration ?? 0}
           step={0.5}

@@ -17,7 +17,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Item } from '@melodesk/adapter';
-import { IconButton, cn } from '@melodesk/ui';
+import { IconButton, Tooltip, cn } from '@melodesk/ui';
 import { GripVertical, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useT } from '../../i18n';
@@ -98,15 +98,17 @@ function SortableRow({
         isDragging && 'z-10 rounded-md bg-bg-overlay shadow',
       )}
     >
-      <button
-        type="button"
-        aria-label={t('queue.dragToReorder')}
-        className="w-6 cursor-grab text-fg-subtle opacity-0 group-hover/row:opacity-100 active:cursor-grabbing"
-        {...attributes}
-        {...listeners}
-      >
-        <GripVertical className="size-4" />
-      </button>
+      <Tooltip label={t('queue.dragToReorder')}>
+        <button
+          type="button"
+          aria-label={t('queue.dragToReorder')}
+          className="w-6 cursor-grab text-fg-subtle opacity-0 group-hover/row:opacity-100 active:cursor-grabbing"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="size-4" />
+        </button>
+      </Tooltip>
       <div className="min-w-0 flex-1">
         <ItemRow
           item={track}

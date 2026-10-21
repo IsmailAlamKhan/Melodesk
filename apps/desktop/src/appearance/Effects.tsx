@@ -1,3 +1,4 @@
+import { TooltipProvider } from '@melodesk/ui';
 import { DirectionProvider } from '@radix-ui/react-direction';
 import { MotionConfig } from 'framer-motion';
 import { useEffect, useState, type ReactNode } from 'react';
@@ -66,7 +67,9 @@ export function AppearanceEffects({ children }: { children: ReactNode }) {
   // Respect the OS "reduce motion" setting for every Framer Motion animation.
   return (
     <DirectionProvider dir={resolveDirection(prefs.direction, locale)}>
-      <MotionConfig reducedMotion="user">{children}</MotionConfig>
+      <MotionConfig reducedMotion="user">
+        <TooltipProvider>{children}</TooltipProvider>
+      </MotionConfig>
     </DirectionProvider>
   );
 }

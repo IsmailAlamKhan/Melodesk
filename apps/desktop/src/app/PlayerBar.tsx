@@ -1,4 +1,4 @@
-import { IconButton, Slider, cn } from '@melodesk/ui';
+import { IconButton, Slider, Tooltip, cn } from '@melodesk/ui';
 import {
   Heart,
   MonitorPlay,
@@ -105,18 +105,20 @@ export function PlayerBar() {
     >
       <div className="flex min-w-0 items-center gap-3">
         {track?.artworkUrl ? (
-          <button
-            type="button"
-            aria-label={t('player.openNowPlaying')}
-            onClick={() => openNowPlaying(true)}
-            className="shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-accent"
-          >
-            <CachedImg
-              src={track.artworkUrl}
-              alt=""
-              className="size-12 rounded-sm bg-bg-overlay object-cover"
-            />
-          </button>
+          <Tooltip label={t('player.openNowPlaying')}>
+            <button
+              type="button"
+              aria-label={t('player.openNowPlaying')}
+              onClick={() => openNowPlaying(true)}
+              className="shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              <CachedImg
+                src={track.artworkUrl}
+                alt=""
+                className="size-12 rounded-sm bg-bg-overlay object-cover"
+              />
+            </button>
+          </Tooltip>
         ) : (
           <div className="size-12 shrink-0 rounded-sm bg-bg-overlay" />
         )}
@@ -225,6 +227,7 @@ export function PlayerBar() {
           <span className="w-10 text-right">{fmt(scrub ?? position)}</span>
           <Slider
             label={t('player.seek')}
+            valueLabel={fmt}
             value={scrub ?? position}
             max={duration}
             step={0.5}
@@ -278,6 +281,7 @@ export function PlayerBar() {
         </IconButton>
         <Slider
           label={t('player.volume')}
+          valueLabel={(v) => `${String(Math.round(v * 100))}%`}
           className="w-28"
           value={muted ? 0 : volume}
           max={1}

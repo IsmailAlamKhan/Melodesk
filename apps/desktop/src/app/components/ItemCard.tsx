@@ -1,5 +1,5 @@
 import type { Item } from '@melodesk/adapter';
-import { cn } from '@melodesk/ui';
+import { Tooltip, cn } from '@melodesk/ui';
 import { Play } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { playItem, routeForEndpoint } from '../../player/actions';
@@ -50,17 +50,19 @@ export function ItemCard({ item, width }: { item: Item; width?: number }) {
             className={cn(isVideo && 'aspect-video w-full')}
           />
           {playable && (
-            <button
-              type="button"
-              aria-label={t('media.playItem', { title: item.title })}
-              onClick={(e) => {
-                e.stopPropagation();
-                void playItem(item);
-              }}
-              className="absolute end-2 bottom-2 flex size-10 items-center justify-center rounded-full bg-bg/90 text-fg opacity-0 shadow-lg transition-all duration-(--duration-fast) group-hover:opacity-100 hover:scale-105 focus-visible:opacity-100"
-            >
-              <Play className="size-5 translate-x-px" />
-            </button>
+            <Tooltip label={t('media.playItem', { title: item.title })}>
+              <button
+                type="button"
+                aria-label={t('media.playItem', { title: item.title })}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  void playItem(item);
+                }}
+                className="absolute end-2 bottom-2 flex size-10 items-center justify-center rounded-full bg-bg/90 text-fg opacity-0 shadow-lg transition-all duration-(--duration-fast) group-hover:opacity-100 hover:scale-105 focus-visible:opacity-100"
+              >
+                <Play className="size-5 translate-x-px" />
+              </button>
+            </Tooltip>
           )}
           <ItemMenuButton
             item={item}

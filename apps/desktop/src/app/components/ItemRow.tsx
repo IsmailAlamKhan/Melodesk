@@ -1,5 +1,5 @@
 import type { Item } from '@melodesk/adapter';
-import { cn } from '@melodesk/ui';
+import { Tooltip, cn } from '@melodesk/ui';
 import { Play } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { useT } from '../../i18n';
@@ -86,17 +86,19 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
               <span className={cn('group-hover:hidden', isCurrent && playing && 'hidden')}>
                 {showIndex && index !== undefined ? index + 1 : ''}
               </span>
-              <button
-                type="button"
-                aria-label={t('media.playItem', { title: item.title })}
-                onClick={activate}
-                className={cn(
-                  'hidden size-8 items-center justify-center rounded-full text-fg group-hover:flex',
-                  isCurrent && playing && 'flex',
-                )}
-              >
-                {isCurrent && playing ? <EqBars /> : <Play className="size-4 translate-x-px" />}
-              </button>
+              <Tooltip label={t('media.playItem', { title: item.title })}>
+                <button
+                  type="button"
+                  aria-label={t('media.playItem', { title: item.title })}
+                  onClick={activate}
+                  className={cn(
+                    'hidden size-8 items-center justify-center rounded-full text-fg group-hover:flex',
+                    isCurrent && playing && 'flex',
+                  )}
+                >
+                  {isCurrent && playing ? <EqBars /> : <Play className="size-4 translate-x-px" />}
+                </button>
+              </Tooltip>
             </>
           ) : (
             <span>{showIndex && index !== undefined ? index + 1 : ''}</span>

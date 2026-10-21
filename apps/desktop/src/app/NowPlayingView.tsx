@@ -1,4 +1,4 @@
-import { IconButton, Slider, cn } from '@melodesk/ui';
+import { IconButton, Slider, Tooltip, cn } from '@melodesk/ui';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronDown,
@@ -135,6 +135,7 @@ export function NowPlayingView() {
                   <span className="w-12 text-right">{fmt(scrub ?? position)}</span>
                   <Slider
                     label={t('player.seek')}
+                    valueLabel={fmt}
                     value={scrub ?? position}
                     max={duration}
                     step={0.5}
@@ -165,18 +166,20 @@ export function NowPlayingView() {
                   >
                     <SkipBack />
                   </IconButton>
-                  <button
-                    type="button"
-                    aria-label={playing ? t('player.pause') : t('player.play')}
-                    onClick={() => void sendCommand({ type: 'toggle' })}
-                    className="flex size-16 items-center justify-center rounded-full bg-fg text-bg shadow-lg transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
-                  >
-                    {playing ? (
-                      <Pause className="size-7" />
-                    ) : (
-                      <Play className="size-7 translate-x-0.5" />
-                    )}
-                  </button>
+                  <Tooltip label={playing ? t('player.pause') : t('player.play')}>
+                    <button
+                      type="button"
+                      aria-label={playing ? t('player.pause') : t('player.play')}
+                      onClick={() => void sendCommand({ type: 'toggle' })}
+                      className="flex size-16 items-center justify-center rounded-full bg-fg text-bg shadow-lg transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
+                    >
+                      {playing ? (
+                        <Pause className="size-7" />
+                      ) : (
+                        <Play className="size-7 translate-x-0.5" />
+                      )}
+                    </button>
+                  </Tooltip>
                   <IconButton
                     label={t('player.next')}
                     size="lg"

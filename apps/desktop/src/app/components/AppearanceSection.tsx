@@ -1,4 +1,4 @@
-import { cn } from '@melodesk/ui';
+import { Tooltip, cn } from '@melodesk/ui';
 import {
   ACCENT_PRESETS,
   oklchToRgb,
@@ -104,20 +104,20 @@ export function AppearanceSection() {
           {ACCENT_PRESETS.map((p) => {
             const selected = a.accent.kind === 'preset' && a.accent.id === p.id;
             return (
-              <button
-                key={p.id}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                aria-label={t(ACCENT_KEYS[p.id])}
-                title={t(ACCENT_KEYS[p.id])}
-                onClick={() => a.update({ accent: { kind: 'preset', id: p.id } })}
-                className={cn(
-                  'size-8 rounded-full border-2 transition-transform hover:scale-110',
-                  selected ? 'border-fg' : 'border-transparent',
-                )}
-                style={{ background: toHex(presetRgb(p.id)) }}
-              />
+              <Tooltip key={p.id} label={t(ACCENT_KEYS[p.id])}>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  aria-label={t(ACCENT_KEYS[p.id])}
+                  onClick={() => a.update({ accent: { kind: 'preset', id: p.id } })}
+                  className={cn(
+                    'size-8 rounded-full border-2 transition-transform hover:scale-110',
+                    selected ? 'border-fg' : 'border-transparent',
+                  )}
+                  style={{ background: toHex(presetRgb(p.id)) }}
+                />
+              </Tooltip>
             );
           })}
           <button
