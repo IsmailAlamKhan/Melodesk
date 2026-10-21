@@ -196,7 +196,7 @@ export function NowPlayingView() {
             )}
             <div
               className={cn(
-                'min-h-0 flex-1 flex-col gap-5 overflow-y-auto md:flex',
+                'min-h-0 flex-1 flex-col gap-5 md:flex',
                 showPlayer ? 'flex' : 'hidden',
               )}
             >
@@ -215,11 +215,23 @@ export function NowPlayingView() {
                   initial={{ opacity: 0, scale: 0.94 }}
                   animate={{ opacity: 1, scale: playing ? 1 : 0.9 }}
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  className="aspect-square w-[min(100cqw,100cqh)] overflow-hidden rounded-3xl bg-bg-overlay shadow-[0_30px_80px_-24px_var(--np-accent)]"
+                  className="relative aspect-square w-[min(100cqw,100cqh)]"
                 >
+                  {/* Ambient light: a blurred copy of the cover behind it, not a box shadow, so it
+                      has no hard edge and nothing clips it. */}
                   {track?.artworkUrl && (
-                    <Img src={track.artworkUrl} alt="" className="size-full object-cover" />
+                    <Img
+                      src={track.artworkUrl}
+                      alt=""
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 size-full translate-y-3 scale-95 rounded-3xl object-cover opacity-70 blur-2xl saturate-150"
+                    />
                   )}
+                  <div className="relative size-full overflow-hidden rounded-3xl bg-bg-overlay shadow-xl ring-1 ring-white/10">
+                    {track?.artworkUrl && (
+                      <Img src={track.artworkUrl} alt="" className="size-full object-cover" />
+                    )}
+                  </div>
                 </motion.div>
               </div>
               <div className="w-full shrink-0">
