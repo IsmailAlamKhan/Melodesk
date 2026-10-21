@@ -19,6 +19,8 @@ export interface AppearancePrefs {
   direction: Direction;
   /** "system" or a locale code such as "en". */
   language: string;
+  /** Colour artist, album and playlist pages from their artwork. */
+  pageColors: boolean;
 }
 
 export const DEFAULT_APPEARANCE: AppearancePrefs = {
@@ -28,6 +30,7 @@ export const DEFAULT_APPEARANCE: AppearancePrefs = {
   density: 'comfortable',
   direction: 'auto',
   language: 'system',
+  pageColors: true,
 };
 
 export const MIRROR_KEY = 'melodesk.appearance';
@@ -59,6 +62,7 @@ export function sanitize(raw: unknown): AppearancePrefs {
       typeof o['language'] === 'string' && /^[\w-]{2,12}$/u.test(o['language'])
         ? o['language']
         : 'system',
+    pageColors: typeof o['pageColors'] === 'boolean' ? o['pageColors'] : true,
   };
 }
 
@@ -78,6 +82,7 @@ function snapshot(s: AppearancePrefs): AppearancePrefs {
     density: s.density,
     direction: s.direction,
     language: s.language,
+    pageColors: s.pageColors,
   };
 }
 

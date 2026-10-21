@@ -376,6 +376,8 @@
   "settings.notSignedIn": "Not signed in",
   "settings.notify": "Notify when the track changes",
   "settings.notifyHint": "Only while Melodesk is not the focused window.",
+  "settings.pageColors": "Color pages from artwork",
+  "settings.pageColors.hint": "Artist, album and playlist pages take the colors of their artwork. The rest of the app keeps your accent.",
   "settings.shortcuts": "Global shortcuts",
   "settings.shortcutsHint": "Work in every app while Melodesk is in the background, so avoid combinations you type or select text with. Click a field and press the keys; Esc cancels and Backspace clears. Media keys are handled by the system and need no setup.",
   "settings.showPlayer": "Show player window",

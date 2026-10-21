@@ -173,6 +173,21 @@ export function AppearanceSection() {
         <span className="text-xs text-fg-subtle">{t('settings.accent.hint')}</span>
       </div>
 
+      <label className="flex items-start justify-between gap-4">
+        <span className="flex flex-col gap-1">
+          <span className="text-sm text-fg-muted">{t('settings.pageColors')}</span>
+          <span className="text-xs text-fg-subtle">{t('settings.pageColors.hint')}</span>
+        </span>
+        <input
+          type="checkbox"
+          role="switch"
+          aria-label={t('settings.pageColors')}
+          checked={a.pageColors}
+          onChange={(e) => a.update({ pageColors: e.target.checked })}
+          className="mt-1 size-4 shrink-0 accent-accent"
+        />
+      </label>
+
       <div className="flex flex-col gap-2">
         <span className="text-sm text-fg-muted">{t('settings.density')}</span>
         <Segmented

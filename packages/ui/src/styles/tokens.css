@@ -228,7 +228,8 @@
   initial-value: #000000;
 }
 
-:root {
+:root,
+.themed-scope {
   transition:
     --color-accent 450ms var(--ease-out),
     --color-accent-fg 450ms var(--ease-out),

@@ -1,3 +1,4 @@
+import { pickThumb } from '@melodesk/adapter';
 import { useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 import { useInfiniteBrowse } from '../../data/hooks';
@@ -5,6 +6,7 @@ import { playEndpoint } from '../../player/actions';
 import { ErrorState } from '../../app/components/ErrorState';
 import { ItemRow } from '../../app/components/ItemRow';
 import { ListSkeleton, PageSkeleton } from '../../app/components/PageSkeleton';
+import { ThemedScope } from '../../app/components/ThemedScope';
 import { PageHeaderView } from '../../app/components/PageHeaderView';
 import { EditableTrackList } from '../../app/components/EditableTrackList';
 import { sortTracks, type SortKey, type Track } from '../../app/components/trackSort';
@@ -55,56 +57,58 @@ export function DetailPage({ kind }: { kind: 'artist' | 'album' | 'playlist' }) 
   const shownTracks = viewSort ? sortTracks(songTracks, viewSort.key, viewSort.dir) : tracks;
   const editable = !!page?.header?.isEditable && !!playlistId && !viewSort;
   return (
-    <div className="flex flex-col gap-6 pb-8">
-      {page?.header && <PageHeaderView header={page.header} round={kind === 'artist'} />}
-      {kind !== 'artist' && songTracks.length > 0 && (
-        <div className="px-4 md:px-6">
-          <Slot
-            name="playlist.header"
-            title={page?.header?.title ?? t('kind.playlist')}
-            playlistId={playlistId}
-            tracks={songTracks}
-            editable={!!page?.header?.isEditable && !!playlistId}
-            viewSort={viewSort}
-            onViewSort={setViewSort}
-          />
-        </div>
-      )}
-      {tracks.length > 0 && editable && playlistId && (
-        <EditableTrackList playlistId={playlistId} tracks={tracks} />
-      )}
-      {tracks.length > 0 && !editable && (
-        <div role="table" className="flex flex-col px-4">
-          {shownTracks.map((t, i) => (
-            <ItemRow
-              key={t.key}
-              item={t}
-              index={i}
-              showIndex
-              showAlbum={kind === 'playlist'}
-              onPlay={
-                playlistId && (t.kind === 'song' || t.kind === 'video')
-                  ? () =>
-                      void playEndpoint({
-                        type: 'watch',
-                        videoId: t.videoId,
-                        playlistId,
-                        index: i,
-                        ...(t.setVideoId ? { playlistSetVideoId: t.setVideoId } : {}),
-                      })
-                  : undefined
-              }
+    <ThemedScope artworkUrl={pickThumb(page?.header?.thumbnails ?? [], 160)}>
+      <div className="flex flex-col gap-6 pb-8">
+        {page?.header && <PageHeaderView header={page.header} round={kind === 'artist'} />}
+        {kind !== 'artist' && songTracks.length > 0 && (
+          <div className="px-4 md:px-6">
+            <Slot
+              name="playlist.header"
+              title={page?.header?.title ?? t('kind.playlist')}
+              playlistId={playlistId}
+              tracks={songTracks}
+              editable={!!page?.header?.isEditable && !!playlistId}
+              viewSort={viewSort}
+              onViewSort={setViewSort}
             />
+          </div>
+        )}
+        {tracks.length > 0 && editable && playlistId && (
+          <EditableTrackList playlistId={playlistId} tracks={tracks} />
+        )}
+        {tracks.length > 0 && !editable && (
+          <div role="table" className="flex flex-col px-4">
+            {shownTracks.map((t, i) => (
+              <ItemRow
+                key={t.key}
+                item={t}
+                index={i}
+                showIndex
+                showAlbum={kind === 'playlist'}
+                onPlay={
+                  playlistId && (t.kind === 'song' || t.kind === 'video')
+                    ? () =>
+                        void playEndpoint({
+                          type: 'watch',
+                          videoId: t.videoId,
+                          playlistId,
+                          index: i,
+                          ...(t.setVideoId ? { playlistSetVideoId: t.setVideoId } : {}),
+                        })
+                    : undefined
+                }
+              />
+            ))}
+            {q.isFetchingNextPage && <ListSkeleton rows={4} />}
+            <div ref={sentinel} className="h-px" />
+          </div>
+        )}
+        <div className="flex flex-col gap-8 px-2">
+          {others.map((s) => (
+            <ShelfView key={s.id} shelf={s} />
           ))}
-          {q.isFetchingNextPage && <ListSkeleton rows={4} />}
-          <div ref={sentinel} className="h-px" />
         </div>
-      )}
-      <div className="flex flex-col gap-8 px-2">
-        {others.map((s) => (
-          <ShelfView key={s.id} shelf={s} />
-        ))}
       </div>
-    </div>
+    </ThemedScope>
   );
 }

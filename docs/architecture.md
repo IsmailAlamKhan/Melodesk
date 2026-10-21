@@ -178,6 +178,16 @@ the website uses.
   with ordinary modifiers, select-all/copy/paste/cut/undo, and bare keys, both when saving and when
   registering. Media keys cover play/pause/next/previous without any of this.
 
+## Page colours
+
+Artist, album and playlist pages take the colours of their artwork or banner (`ThemedScope`). The
+image's average saturated colour seeds a Material scheme using the `content` variant, which keeps the
+seed's own hue (the app's Expressive scheme rotates hues, which would not look like the artwork). The
+scheme is written as CSS variables on the page's wrapper only, so the sidebar and player bar keep the
+user's accent, and it fades in and out because `.themed-scope` shares the colour transitions of
+`:root`. Grey artwork, an image that cannot be read, or the Settings switch fall back to the app's
+colours.
+
 ## Window sizes
 
 The shell follows Material's window size classes, with plain responsive classes and no separate code

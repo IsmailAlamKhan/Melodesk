@@ -11,6 +11,7 @@
 import {
   Hct,
   MaterialDynamicColors,
+  SchemeContent,
   SchemeExpressive,
   argbFromHex,
   hexFromArgb,
@@ -19,6 +20,11 @@ import { presetRgb, toHex, type AccentPresetId, type Rgb } from './color';
 
 export type ThemeName = 'dark' | 'light' | 'amoled';
 export type ContrastLevel = 'standard' | 'medium' | 'high';
+/**
+ * `expressive` is the app's own look (the hues are rotated away from the seed for a livelier
+ * palette); `content` keeps the seed's own hue, which is what colouring a page from its artwork needs.
+ */
+export type SchemeVariant = 'expressive' | 'content';
 
 /** Material's contrast levels: 0 standard, 0.5 medium, 1 high. */
 export const CONTRAST_VALUE: Record<ContrastLevel, number> = { standard: 0, medium: 0.5, high: 1 };
@@ -72,14 +78,14 @@ export function roleColors(
   seed: string,
   theme: ThemeName,
   contrast: ContrastLevel = 'standard',
+  variant: SchemeVariant = 'expressive',
 ): Record<Role, string> & { 'on-surface-subtle': string } {
   const dark = theme !== 'light';
-  const scheme = new SchemeExpressive(
-    Hct.fromInt(argbFromHex(seed)),
-    dark,
-    CONTRAST_VALUE[contrast],
-    '2025',
-  );
+  const source = Hct.fromInt(argbFromHex(seed));
+  const scheme =
+    variant === 'content'
+      ? new SchemeContent(source, dark, CONTRAST_VALUE[contrast], '2025')
+      : new SchemeExpressive(source, dark, CONTRAST_VALUE[contrast], '2025');
   const out = {} as Record<Role, string>;
   for (const [name, color] of Object.entries(ROLES) as [Role, (typeof ROLES)[Role]][])
     out[name] = hexFromArgb(color.getArgb(scheme));
@@ -112,8 +118,9 @@ export function colorVars(
   seed: string,
   theme: ThemeName,
   contrast: ContrastLevel = 'standard',
+  variant: SchemeVariant = 'expressive',
 ): Vars {
-  const r = roleColors(seed, theme, contrast);
+  const r = roleColors(seed, theme, contrast, variant);
   const vars: Vars = {};
   for (const [name, value] of Object.entries(r)) vars[`--color-${name}`] = value;
   Object.assign(vars, {
@@ -170,5 +177,5 @@ export function registrationCss(): string {
   const transition = names
     .map((n) => `${n} ${String(COLOR_TRANSITION_MS)}ms var(--ease-out)`)
     .join(',\n    ');
-  return `${rules}\n\n:root {\n  transition:\n    ${transition};\n}\n`;
+  return `${rules}\n\n:root,\n.themed-scope {\n  transition:\n    ${transition};\n}\n`;
 }
