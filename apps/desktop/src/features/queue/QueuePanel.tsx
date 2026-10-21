@@ -142,7 +142,7 @@ function QueueRow({
           <button
             type="button"
             aria-label={t('queue.dragToReorder')}
-            className="cursor-grab text-fg-subtle opacity-0 group-hover:opacity-100 active:cursor-grabbing"
+            className="cursor-grab touch-none text-fg-subtle opacity-0 group-hover:opacity-100 active:cursor-grabbing max-rail:opacity-100"
             {...attributes}
             {...listeners}
           >
@@ -169,7 +169,7 @@ function QueueRow({
         <IconButton
           label={t('queue.remove')}
           size="sm"
-          className="opacity-0 group-hover:opacity-100"
+          className="opacity-0 group-hover:opacity-100 max-rail:opacity-100"
           onClick={() => void sendCommand({ type: 'queueRemove', index })}
         >
           <X />

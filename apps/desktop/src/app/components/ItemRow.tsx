@@ -84,13 +84,14 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
         className={cn(
           'group grid cursor-pointer items-center gap-3 rounded-lg px-2 outline-none hover:bg-bg-overlay focus-visible:ring-2 focus-visible:ring-accent',
           dense ? 'h-[calc(var(--row-h)-0.5rem)]' : 'h-(--row-h)',
+          // Narrow windows drop the index/play column and the album column.
           showAlbum
-            ? 'grid-cols-[2rem_auto_minmax(0,1fr)_auto_2.5rem] rail:grid-cols-[2rem_auto_minmax(0,3fr)_minmax(0,2fr)_auto_2.5rem]'
-            : 'grid-cols-[2rem_auto_minmax(0,1fr)_auto_2.5rem]',
+            ? 'grid-cols-[auto_minmax(0,1fr)_auto_2.5rem] rail:grid-cols-[2rem_auto_minmax(0,3fr)_minmax(0,2fr)_auto_2.5rem]'
+            : 'grid-cols-[auto_minmax(0,1fr)_auto_2.5rem] rail:grid-cols-[2rem_auto_minmax(0,1fr)_auto_2.5rem]',
           isCurrent && 'bg-accent-soft text-accent',
         )}
       >
-        <div className="flex w-8 items-center justify-center text-xs tabular-nums text-fg-subtle">
+        <div className="flex w-8 items-center justify-center text-xs tabular-nums text-fg-subtle max-rail:hidden">
           {playable ? (
             <>
               <span className={cn('group-hover:hidden', isCurrent && playing && 'hidden')}>

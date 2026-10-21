@@ -147,6 +147,39 @@ test('a playlist page fits and lists tracks in one column set', async ({ page })
   expect(await overflowing(page), 'playlist').toEqual([]);
 });
 
+test('tapping the player card opens Now Playing, and queue rows can be reordered by touch', async ({
+  page,
+}) => {
+  await startPlayback(page, { track: WITH_ART });
+  await emit(page, {
+    type: 'queue',
+    queue: {
+      index: 0,
+      shuffle: false,
+      repeat: 'off',
+      autoplay: true,
+      title: 'Test mix',
+      items: ['One', 'Two'].map((title, i) => ({
+        videoId: `vid${String(i)}`,
+        title,
+        artist: 'Test Artist',
+        album: null,
+        artworkUrl: null,
+        durationSeconds: 180,
+        endpoint: null,
+        isAutomix: false,
+      })),
+    },
+  });
+  await page.getByRole('button', { name: 'Queue' }).first().click();
+  // No hovering on a phone: the drag handle and the remove button are always there.
+  await expect(page.getByRole('button', { name: 'Drag to reorder' }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Remove from queue' }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('contentinfo').getByText('Test Song').click();
+  await expect(page.getByRole('region', { name: /now playing/iu })).toBeVisible();
+});
+
 test.describe('in between: a navigation rail', () => {
   test.use({ viewport: { width: 700, height: 800 } });
 

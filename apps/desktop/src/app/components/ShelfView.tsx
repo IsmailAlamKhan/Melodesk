@@ -52,10 +52,20 @@ export function ShelfView({ shelf }: { shelf: Shelf }) {
             )}
             {shelf.layout === 'carousel' && (
               <>
-                <IconButton label={t('shelf.previous')} size="sm" onClick={() => scrollBy(-1)}>
+                <IconButton
+                  label={t('shelf.previous')}
+                  size="sm"
+                  className="max-rail:hidden"
+                  onClick={() => scrollBy(-1)}
+                >
                   <ChevronLeft className="rtl:-scale-x-100" />
                 </IconButton>
-                <IconButton label={t('shelf.next')} size="sm" onClick={() => scrollBy(1)}>
+                <IconButton
+                  label={t('shelf.next')}
+                  size="sm"
+                  className="max-rail:hidden"
+                  onClick={() => scrollBy(1)}
+                >
                   <ChevronRight className="rtl:-scale-x-100" />
                 </IconButton>
               </>

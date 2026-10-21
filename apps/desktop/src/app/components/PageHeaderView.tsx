@@ -27,11 +27,11 @@ export function PageHeaderView({ header, round }: { header: PageHeader; round?: 
   const [expanded, setExpanded] = useState(false);
   const description = header.description ?? '';
   return (
-    <header className="flex flex-col gap-6 bg-[linear-gradient(to_bottom,color-mix(in_oklch,var(--color-primary)_30%,transparent),transparent)] p-4 md:flex-row md:p-6 md:items-end">
+    <header className="flex flex-col gap-6 bg-[linear-gradient(to_bottom,color-mix(in_oklch,var(--color-primary)_30%,transparent),transparent)] p-4 max-md:items-center max-md:text-center md:flex-row md:items-end md:p-6">
       {header.thumbnails.length > 0 && (
         <Artwork thumbnails={header.thumbnails} size={224} round={round} className="shadow-2xl" />
       )}
-      <div className="flex min-w-0 flex-1 flex-col gap-3">
+      <div className="flex min-w-0 flex-1 flex-col gap-3 max-md:items-center">
         {header.subtitle && !round && (
           <div className="text-sm text-fg-muted">{header.subtitle}</div>
         )}
@@ -53,7 +53,7 @@ export function PageHeaderView({ header, round }: { header: PageHeader; round?: 
             {description}
           </p>
         )}
-        <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="mt-2 flex flex-wrap items-center gap-2 max-md:justify-center">
           {header.playEndpoint && (
             <Button variant="primary" onClick={() => void playEndpoint(header.playEndpoint)}>
               {header.playEndpoint === header.shuffleEndpoint ? (

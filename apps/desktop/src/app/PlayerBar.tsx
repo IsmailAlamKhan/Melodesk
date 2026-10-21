@@ -90,7 +90,18 @@ export function PlayerBar() {
         ) : (
           <div className="size-11 shrink-0 rounded-lg bg-bg-overlay wide:size-14" />
         )}
-        <div className="min-w-0">
+        <div
+          className="min-w-0"
+          onClick={(e) => {
+            // On a narrow window the player is a card: tapping it opens Now Playing.
+            if (
+              canOpenNowPlaying &&
+              window.matchMedia('(max-width: 599px)').matches &&
+              !(e.target instanceof Element && e.target.closest('a, button'))
+            )
+              runAction('nowPlaying.open');
+          }}
+        >
           <div className="truncate text-[15px] leading-tight font-semibold">
             {track?.title ?? t('player.nothingPlaying')}
           </div>
