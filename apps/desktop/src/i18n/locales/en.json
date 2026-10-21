@@ -238,6 +238,7 @@
   "visualizer.ring": "Ring",
   "visualizer.simulatedNote": "Moves with the rhythm of playback. On this system Melodesk cannot hear the sound itself.",
   "visualizer.wave": "Wave",
+  "offline.banner": "You are offline. Covers and pages you have already opened still show; playing music and searching need a connection.",
   "palette.cmd.explore": "Go to Explore",
   "palette.cmd.history": "Go to History",
   "palette.cmd.home": "Go to Home",

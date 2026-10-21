@@ -5,6 +5,7 @@ import { AppProviders, FeatureBoundary, Slot, useContribution } from '../core';
 import { useT } from '../i18n';
 import { usePlayerStore } from '../player/store';
 import { HealthBanner } from './HealthBanner';
+import { OfflineBanner } from './OfflineBanner';
 import { PageCrashed } from './PageCrashed';
 import { PlayerBar } from './PlayerBar';
 import { DialogHost } from './dialogs/DialogHost';
@@ -73,6 +74,7 @@ export function Layout() {
             ))}
             <Slot name="topBar.end" />
           </div>
+          <OfflineBanner />
           <HealthBanner />
           <main className={cn('min-h-0 flex-1 overflow-y-auto', !ready && 'opacity-80')}>
             {/* A page that throws shows an apology and a way out instead of a blank window; the
