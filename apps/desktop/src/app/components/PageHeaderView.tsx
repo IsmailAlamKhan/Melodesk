@@ -1,6 +1,15 @@
 import type { PageHeader } from '@melodesk/adapter';
 import { Button, IconButton, cn } from '@melodesk/ui';
-import { Heart, MoreHorizontal, Pencil, Play, Radio, Shuffle, Trash2 } from 'lucide-react';
+import {
+  Bookmark,
+  Heart,
+  MoreHorizontal,
+  Pencil,
+  Play,
+  Radio,
+  Shuffle,
+  Trash2,
+} from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { DropdownEntries, entryIcon, isDangerIcon, menuContent } from './menu';
 import { useState } from 'react';
@@ -72,7 +81,8 @@ export function PageHeaderView({ header, round }: { header: PageHeader; round?: 
           {header.actions.map((a) => {
             const active = a.isToggled ? a.toggledAction : a.action;
             // Icon-only buttons we don't understand (e.g. YouTube's own edit button) are skipped.
-            if (!active || (!a.text && a.icon !== 'LIKE' && a.icon !== 'SUBSCRIBE')) return null;
+            const known = ['LIKE', 'SUBSCRIBE', 'BOOKMARK', 'BOOKMARK_BORDER'];
+            if (!active || (!a.text && !known.includes(a.icon ?? ''))) return null;
             const label =
               a.icon === 'LIKE'
                 ? a.isToggled
@@ -94,6 +104,9 @@ export function PageHeaderView({ header, round }: { header: PageHeader; round?: 
               >
                 {a.icon === 'LIKE' && (
                   <Heart className={cn('size-4', a.isToggled && 'fill-current')} />
+                )}
+                {(a.icon === 'BOOKMARK' || a.icon === 'BOOKMARK_BORDER') && (
+                  <Bookmark className={cn('size-4', a.isToggled && 'fill-current')} />
                 )}
                 {label}
               </Button>

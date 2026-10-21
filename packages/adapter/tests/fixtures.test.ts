@@ -67,6 +67,10 @@ describe('browse pages (logged-out fixtures)', () => {
     expect(page.header?.title).toBe('The Hit List');
     expect(page.header?.secondSubtitle).toContain('51 songs');
     expect(page.header?.playEndpoint?.type).toBe('watch');
+    // Header buttons without visible text get YouTube's own label, never the icon's internal name.
+    const save = page.header?.actions.find((a) => a.icon === 'BOOKMARK_BORDER');
+    expect(save?.text).toBe('Save to library');
+    for (const a of page.header?.actions ?? []) expect(a.text).not.toMatch(/^[A-Z][A-Z_]+$/u);
     const tracks = page.shelves.find((s) =>
       s.id.includes('RDCLAK5uy_kmPRjHDECIcuVwnKsx2Ng7fyNgFKWNJFs'),
     );

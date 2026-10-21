@@ -22,8 +22,11 @@ import { ParseError } from '../../errors';
 function buttonAction(b: unknown): PageHeader['actions'][number] | null {
   const toggle = obj(nav(b, ['toggleButtonRenderer']));
   if (toggle) {
+    // Never fall back to the icon's own name ("BOOKMARK_BORDER"): use YouTube's accessibility label.
     const label =
-      text(toggle['defaultText']) ?? str(nav(toggle, ['defaultIcon', 'iconType'])) ?? '';
+      text(toggle['defaultText']) ??
+      str(nav(toggle, ['accessibilityData', 'accessibilityData', 'label'])) ??
+      '';
     return {
       icon: str(nav(toggle, ['defaultIcon', 'iconType'])) ?? null,
       text: label,
