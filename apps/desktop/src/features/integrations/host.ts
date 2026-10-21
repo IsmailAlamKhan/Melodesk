@@ -6,6 +6,9 @@
 import {
   PluginManifestSchema,
   firstPartyPlugins,
+  lyricsCandidates,
+  plainName,
+  type SongGuess,
   type LyricsResult,
   type PluginContext,
   type PluginDefinition,
@@ -20,6 +23,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { create } from 'zustand';
 import { useFeatures } from '../../core';
 import { kvDel, kvGet, kvSet } from '../../data/kv';
+import { loadLyricsOverride } from '../../data/lyricsOverride';
 import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
 import { toast } from '../../app/toast';
@@ -141,7 +145,10 @@ function buildContext(
   if (has('network:fetch')) {
     ctx.fetch = async (url, init) => {
       const u = new URL(url);
-      if (u.protocol !== 'https:' || !hosts.has(u.hostname))
+      // https only, except for this computer: a plugin that lists `localhost` may talk to a program
+      // running here (such as Ollama) over plain http, and nothing else may use http.
+      const local = u.hostname === 'localhost' || u.hostname === '127.0.0.1';
+      if (!hosts.has(u.hostname) || (u.protocol !== 'https:' && !(local && u.protocol === 'http:')))
         throw new Error(`plugin ${manifest.id} may not fetch ${u.hostname}`);
       const res = await tauriFetch(url, {
         method: init?.method ?? 'GET',
@@ -298,29 +305,98 @@ export function isLyricsProviderOn(): boolean {
     .plugins.some((p) => p.enabled && p.manifest.provides.includes('lyrics'));
 }
 
+const PROVIDER_BUDGET_MS = 14_000;
+const IDENTIFY_BUDGET_MS = 30_000;
+
+const within = <T>(ms: number, work: Promise<T>, fallback: T): Promise<T> =>
+  Promise.race([work, new Promise<T>((resolve) => window.setTimeout(() => resolve(fallback), ms))]);
+
 /**
- * Ask every enabled lyrics plugin at once (each gets a time limit) and take the best answer: the
- * first timed result in settings order, else the first plain one.
+ * Every enabled lyrics plugin tries every guess at once: each plugin works through the guesses in
+ * order within a time budget, and the best answer wins (the first timed result in settings order,
+ * else the first plain one). A guess that is not what the player reports is looked up without the
+ * track's length (a cover is not the original's length) and the result says how it was matched.
  */
-export async function lyricsFromPlugins(track: PluginTrack): Promise<LyricsResult | null> {
-  const asked = usePluginHost
+async function askProviders(
+  track: PluginTrack,
+  guesses: readonly SongGuess[],
+): Promise<LyricsResult | null> {
+  const providers = usePluginHost
     .getState()
     .plugins.filter((p) => p.enabled && p.instance?.lyricsProvider);
   const answers = await Promise.all(
-    asked.map(async (p): Promise<LyricsResult | null> => {
-      try {
-        return await Promise.race([
-          p.instance?.lyricsProvider?.(track) ?? Promise.resolve(null),
-          new Promise<null>((resolve) => window.setTimeout(() => resolve(null), 8000)),
-        ]);
-      } catch (err) {
-        console.warn(`[plugin:${p.manifest.id}] lyrics failed`, err);
-        return null;
-      }
-    }),
+    providers.map((p) =>
+      within(
+        PROVIDER_BUDGET_MS,
+        (async (): Promise<LyricsResult | null> => {
+          let plain: LyricsResult | null = null;
+          for (const g of guesses) {
+            const asked: PluginTrack = {
+              ...track,
+              title: g.title,
+              artist: g.artist,
+              durationSeconds: g.source === 'reported' ? track.durationSeconds : null,
+            };
+            try {
+              const found = await p.instance?.lyricsProvider?.(asked);
+              if (!found) continue;
+              const labelled =
+                g.source === 'reported'
+                  ? found
+                  : { ...found, source: `${found.source} · matched as “${g.title}”` };
+              if (labelled.synced?.length) return labelled;
+              plain ??= labelled;
+            } catch (err) {
+              console.warn(`[plugin:${p.manifest.id}] lyrics failed`, err);
+            }
+          }
+          return plain;
+        })(),
+        null,
+      ),
+    ),
   );
   const found = answers.filter((a): a is LyricsResult => a !== null);
   return found.find((a) => a.synced?.length) ?? found[0] ?? null;
+}
+
+/**
+ * Lyrics for a track from the enabled plugins. First the listener's own correction, then the title
+ * as the player reports it and cleaned-up versions of it (covers, "From the film …", "Artist - Song").
+ * Only if all of that finds nothing, and an AI song finder is on, is it asked which song this is.
+ */
+export async function lyricsFromPlugins(track: PluginTrack): Promise<LyricsResult | null> {
+  const override = await loadLyricsOverride(track.videoId);
+  const user: SongGuess[] = override ? [{ ...override, source: 'user' }] : [];
+  const tried = [...user, ...lyricsCandidates(track)];
+  const first = await askProviders(track, tried);
+  if (first) return first;
+
+  const finders = usePluginHost
+    .getState()
+    .plugins.filter((p) => p.enabled && p.instance?.identifySong);
+  if (finders.length === 0) return null;
+  const seen = new Set(tried.map((g) => `${plainName(g.title)}|${plainName(g.artist)}`));
+  const ai = (
+    await Promise.all(
+      finders.map((p) =>
+        within(
+          IDENTIFY_BUDGET_MS,
+          p.instance?.identifySong?.(track) ?? Promise.resolve([]),
+          [],
+        ).catch(() => []),
+      ),
+    )
+  )
+    .flat()
+    .map((g): SongGuess => ({ ...g, source: 'ai' }))
+    .filter((g) => {
+      const key = `${plainName(g.title)}|${plainName(g.artist)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  return ai.length > 0 ? askProviders(track, ai) : null;
 }
 
 export function isPluginEnabled(id: string): boolean {

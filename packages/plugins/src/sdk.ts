@@ -100,6 +100,11 @@ export interface PluginContext {
 export interface PluginInstance {
   /** Optional: provide lyrics when YouTube has none (lyrics fallback plugins). */
   lyricsProvider?: (track: PluginTrack) => Promise<LyricsResult | null>;
+  /**
+   * Optional: work out which song a track really is (a cover, a remix, "From the film …" uploads), as
+   * guesses of the original title and artist, best first. Used to find lyrics when the plain lookup fails.
+   */
+  identifySong?: (track: PluginTrack) => Promise<{ title: string; artist: string }[]>;
   /** Optional: a user-facing action shown in the plugin's settings card. */
   actions?: { label: string; run: () => Promise<void> }[];
   /** Optional: status line for the settings card. */

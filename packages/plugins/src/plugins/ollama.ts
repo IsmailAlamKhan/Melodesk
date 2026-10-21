@@ -1,0 +1,152 @@
+import { definePlugin, type PluginTrack } from '../sdk';
+
+interface Guess {
+  title: string;
+  artist: string;
+}
+
+const DEFAULT_URL = 'http://localhost:11434';
+const DEFAULT_MODEL = 'llama3.2:3b';
+const CACHE_DAYS = 90;
+
+/** What the model is asked. It names songs; it is never asked for lyrics. */
+export function buildPrompt(track: PluginTrack): string {
+  const uploader = track.artist.split(' • ')[0] ?? track.artist;
+  return [
+    'You identify songs for a music player.',
+    `The player shows a track titled ${JSON.stringify(track.title)} uploaded by ${JSON.stringify(uploader)}.`,
+    'It may be a cover, a remix, a slowed or sped-up version, a live recording or a song from a film,',
+    'so the title can carry extra words and the uploader may not be the original singer.',
+    'Give the most likely original songs: the plain title (no "cover", "from the film", "official video"',
+    'or similar) and the original artist(s). At most three, most likely first. If you are not sure, still',
+    'give your best guess for the first one. Do not write lyrics.',
+    'Reply with JSON only, in exactly this shape: {"songs":[{"title":"...","artist":"..."}]}',
+  ].join(' ');
+}
+
+/** The guesses in a model's reply, or none if it did not follow the shape. */
+export function parseGuesses(reply: string): Guess[] {
+  let data: unknown;
+  try {
+    data = JSON.parse(reply);
+  } catch {
+    // Some models wrap the JSON in prose or a code fence.
+    const m = /\{[\s\S]*\}/u.exec(reply);
+    if (!m) return [];
+    try {
+      data = JSON.parse(m[0]);
+    } catch {
+      return [];
+    }
+  }
+  const songs = (data as { songs?: unknown }).songs;
+  if (!Array.isArray(songs)) return [];
+  return songs
+    .flatMap((s): Guess[] => {
+      const o = s as { title?: unknown; artist?: unknown };
+      return typeof o.title === 'string' && o.title.trim()
+        ? [
+            {
+              title: o.title.trim().slice(0, 200),
+              artist: typeof o.artist === 'string' ? o.artist.trim().slice(0, 200) : '',
+            },
+          ]
+        : [];
+    })
+    .slice(0, 3);
+}
+
+/**
+ * Works out which song a track really is by asking an AI model that runs on your own computer
+ * (Ollama). Nothing leaves the machine and no model ships with Melodesk.
+ */
+export const ollama = definePlugin({
+  manifest: {
+    id: 'ollama',
+    name: 'Local AI song finder',
+    version: '1.0.0',
+    description:
+      'Asks an AI model running on your own computer (Ollama) which song a title really is, so lyrics can be found for covers, remixes and “From the film …” uploads. The title and uploader go to localhost only. Needs Ollama and a small model, for example “ollama pull llama3.2:3b”.',
+    permissions: ['network:fetch', 'storage:plugin'],
+    hosts: ['localhost', '127.0.0.1'],
+    provides: ['identify'],
+  },
+  settingsFields: [
+    {
+      key: 'url',
+      label: 'Ollama address',
+      type: 'text',
+      default: DEFAULT_URL,
+      hint: 'Always on this computer',
+    },
+    {
+      key: 'model',
+      label: 'Model',
+      type: 'text',
+      default: DEFAULT_MODEL,
+      hint: 'Any model you have pulled; small ones are fast enough',
+    },
+  ],
+  setup(ctx) {
+    let status = 'Ready';
+    const base = (): string => String(ctx.settings['url'] ?? DEFAULT_URL).replace(/\/+$/u, '');
+    const model = (): string => String(ctx.settings['model'] ?? DEFAULT_MODEL);
+
+    const check = async (): Promise<void> => {
+      if (!ctx.fetch) return;
+      try {
+        const res = await ctx.fetch(`${base()}/api/tags`);
+        if (!res.ok) {
+          status = `Ollama answered ${String(res.status)}`;
+          return;
+        }
+        const body = (await res.json()) as { models?: { name?: string }[] };
+        const names = (body.models ?? []).map((m) => m.name ?? '');
+        const wanted = model();
+        status = names.some((n) => n === wanted || n.split(':')[0] === wanted)
+          ? `Ready · ${wanted}`
+          : `Model “${wanted}” is not installed. Run: ollama pull ${wanted}`;
+      } catch {
+        status = `Cannot reach Ollama at ${base()}. Is it running?`;
+      }
+    };
+    void check();
+
+    return {
+      status: () => status,
+      actions: [{ label: 'Check connection', run: check }],
+      identifySong: async (track) => {
+        if (!ctx.fetch) return [];
+        const key = `ai:${track.videoId}`;
+        const cached = await ctx.storage?.get<{ at: number; guesses: Guess[] }>(key);
+        if (cached && Date.now() - cached.at < CACHE_DAYS * 86_400_000) return cached.guesses;
+        try {
+          const res = await ctx.fetch(`${base()}/api/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: model(),
+              prompt: buildPrompt(track),
+              stream: false,
+              format: 'json',
+              options: { temperature: 0, num_predict: 220 },
+            }),
+          });
+          if (!res.ok) {
+            status = `Ollama answered ${String(res.status)} (is “${model()}” installed?)`;
+            return [];
+          }
+          const body = (await res.json()) as { response?: string };
+          const guesses = parseGuesses(body.response ?? '');
+          status = `Ready · ${model()}`;
+          // Only worth keeping if the model produced something; a miss may be a model that was busy.
+          if (guesses.length > 0) await ctx.storage?.set(key, { at: Date.now(), guesses });
+          return guesses;
+        } catch {
+          status = `Cannot reach Ollama at ${base()}. Is it running?`;
+          return [];
+        }
+      },
+    };
+  },
+});

@@ -17,7 +17,9 @@ export const lyricsovh = definePlugin({
     return {
       lyricsProvider: async (track): Promise<LyricsResult | null> => {
         if (!fetch) return null;
-        const artist = track.artist.split(' • ')[0] ?? track.artist;
+        const artist = (track.artist.split(' • ')[0] ?? track.artist).trim();
+        // Its lookup is by artist and title; without an artist there is nothing to ask.
+        if (!artist) return null;
         const res = await fetch(
           `https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(track.title)}`,
         );

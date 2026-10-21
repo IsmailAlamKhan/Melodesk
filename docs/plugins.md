@@ -54,6 +54,27 @@ time limit, and the best answer wins: the first timed result in Settings order, 
 one. Return `null` when you are not sure of the match; wrong lyrics are worse than none (NetEase's
 `pickSong` shows one way to check title, artist and length).
 
+### Finding lyrics for covers and unusual titles
+
+A track called "Zara Zara Bahekta Hai | RHTDM | Zendria" is a cover, and no lyrics source knows it
+under that name. The host therefore asks each lyrics plugin about several guesses, best first, not only
+the title as reported (`lyricsCandidates` in `packages/plugins/src/candidates.ts`): your own correction,
+the reported title, the title without "(From …)", "(Official Video)" and similar, each part of a
+"A | B | C" or "Artist - Song" title with the uploader left out, and the same without an artist. Guesses
+that differ from what the player reports are asked without the track's length, since a cover is not
+the original's length, and the lyrics say how they were matched ("matched as “…”"). Titles that
+look ordinary are looked up exactly as before.
+
+If that finds nothing and a plugin with `provides: ['identify']` is on, it is asked which song the
+track really is. The first one is **Local AI song finder**, which asks a model running on your own
+computer through Ollama (no model ships with Melodesk, and the title and uploader go to `localhost`
+only). To make your own, give the instance an `identifySong(track)` that returns
+`{ title, artist }[]`, best first. A plugin lists `localhost` in `hosts` to reach a program on this
+machine over plain http; everything else stays https only.
+
+And when the machine cannot work it out either, the lyrics panel has "Wrong or missing lyrics? Look
+up another song": type the real title and artist and the lookup uses that for the track from then on.
+
 ## Shape of a plugin
 
 ```ts

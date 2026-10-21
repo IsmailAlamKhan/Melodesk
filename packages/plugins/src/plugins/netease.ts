@@ -24,12 +24,17 @@ const plain = (s: string): string =>
 export function pickSong(songs: readonly Song[], track: PluginTrack): Song | null {
   const title = plain(track.title);
   const artist = plain(track.artist.split(' • ')[0] ?? track.artist);
+  // With no artist to check, a title that matches exactly has to be enough.
+  const needed = artist ? 3 : 2;
   let best: { song: Song; score: number } | null = null;
   for (const song of songs) {
     const name = plain(song.name);
     if (!name || !(name === title || name.includes(title) || title.includes(name))) continue;
     let score = name === title ? 2 : 0;
-    if (song.artists?.some((a) => plain(a.name) === artist || artist.includes(plain(a.name))))
+    if (
+      artist &&
+      song.artists?.some((a) => plain(a.name) === artist || artist.includes(plain(a.name)))
+    )
       score += 3;
     if (track.durationSeconds) {
       const off = Math.abs(song.duration / 1000 - track.durationSeconds);
@@ -39,7 +44,7 @@ export function pickSong(songs: readonly Song[], track: PluginTrack): Song | nul
     }
     if (!best || score > best.score) best = { song, score };
   }
-  return best && best.score >= 3 ? best.song : null;
+  return best && best.score >= needed ? best.song : null;
 }
 
 /** Drops the credit lines NetEase puts first ("作词 : …", "Lyrics by …") and empty timestamps. */

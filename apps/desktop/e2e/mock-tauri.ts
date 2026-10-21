@@ -62,6 +62,8 @@ function innertubeResponse(endpoint: string, body: Record<string, unknown>): unk
 export interface MockOptions {
   /** Body LRCLIB returns, or null to answer 404 (no timed lyrics). */
   lrclib?: { syncedLyrics: string; plainLyrics: string } | null;
+  /** Answers plugin HTTP requests before the built-in ones; return null to fall through. */
+  http?: (url: string) => { status: number; body: unknown } | null;
   /** Optional native modules this build has (default: unknown, so all are assumed). */
   nativeModules?: string[];
 }
@@ -92,6 +94,8 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
     innertubeResponse(endpoint, body),
   );
   await page.exposeFunction('__nodeHttp', (url: string) => {
+    const custom = opts.http?.(url);
+    if (custom) return { status: custom.status, body: JSON.stringify(custom.body) };
     if (url.includes('ws.audioscrobbler.com'))
       return { status: 200, body: JSON.stringify({ token: 'test-token' }) };
     if (url.includes('lrclib.net') && opts.lrclib)

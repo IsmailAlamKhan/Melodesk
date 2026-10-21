@@ -8,6 +8,7 @@ import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
 import { usePositionMs } from '../../player/usePositionMs';
 import { lyricsSources } from '../../core';
+import { LyricsFinder } from './LyricsFinder';
 import { LyricsToolbar } from './LyricsToolbar';
 
 /** Fills the active line left to right in step with the song, without re-rendering the list. */
@@ -63,6 +64,8 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
     offsetMs,
     setOffset,
     lrclibOn,
+    override,
+    setOverride,
     prefs,
     romanized,
     translated,
@@ -98,6 +101,7 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
       <div className="flex flex-col gap-3 p-4 text-sm text-fg-muted">
         <div>{data?.source ?? t('lyrics.none')}</div>
         {!lrclibOn && <TimedBanner />}
+        <LyricsFinder override={override} onSave={setOverride} startOpen />
       </div>
     );
 
@@ -206,6 +210,9 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
           })}
         </ol>
         {data.source && <div className="pt-2 text-xs text-fg-subtle">{data.source}</div>}
+        <div className="pt-3">
+          <LyricsFinder override={override} onSave={setOverride} />
+        </div>
       </div>
     </div>
   );

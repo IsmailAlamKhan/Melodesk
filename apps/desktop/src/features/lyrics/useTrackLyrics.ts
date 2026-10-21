@@ -2,6 +2,11 @@ import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-q
 import type { PluginTrack } from '@melodesk/plugins';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { fetchLyrics } from '../../data/innertube';
+import {
+  loadLyricsOverride,
+  saveLyricsOverride,
+  type LyricsOverride,
+} from '../../data/lyricsOverride';
 import { nextQuery } from '../../player/nextInfo';
 import { usePlayerStore } from '../../player/store';
 import { lyricsSources, type LyricsSource } from '../../core';
@@ -19,6 +24,9 @@ export interface TrackLyrics {
   offsetMs: number;
   setOffset: (ms: number) => void;
   lrclibOn: boolean;
+  /** The listener's own answer to "which song is this?", if they gave one. */
+  override: LyricsOverride | null;
+  setOverride: (value: LyricsOverride | null) => void;
   prefs: LyricsPrefs;
   romanized: ReturnType<typeof useRomanized>;
   translated: ReturnType<typeof useTranslated>;
@@ -61,9 +69,22 @@ export function useTrackLyrics(): TrackLyrics {
   );
   const lrclibOn = useSyncExternalStore(subscribeTimed, () => timedSource?.isActive() ?? false);
 
+  const overrideQuery = useQuery({
+    queryKey: ['lyrics-override', videoId],
+    enabled: videoId !== null,
+    staleTime: Infinity,
+    queryFn: () => loadLyricsOverride(videoId ?? ''),
+  });
+  const override = overrideQuery.data ?? null;
+  const setOverride = (value: LyricsOverride | null): void => {
+    if (!videoId) return;
+    qc.setQueryData(['lyrics-override', videoId], value);
+    void saveLyricsOverride(videoId, value);
+  };
+
   const lyrics = useQuery<LyricsData>({
-    queryKey: ['lyrics', videoId, lrclibOn],
-    enabled: ready && videoId !== null,
+    queryKey: ['lyrics', videoId, lrclibOn, override?.title ?? '', override?.artist ?? ''],
+    enabled: ready && videoId !== null && !overrideQuery.isPending,
     staleTime: 1000 * 60 * 60,
     queryFn: async () => {
       const next = await qc.query(nextQuery(videoId));
@@ -134,6 +155,8 @@ export function useTrackLyrics(): TrackLyrics {
     offsetMs,
     setOffset,
     lrclibOn,
+    override,
+    setOverride,
     prefs,
     romanized,
     translated,
