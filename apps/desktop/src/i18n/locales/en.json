@@ -256,6 +256,7 @@
   "plugin.perm.discord": "Discord",
   "plugin.perm.network": "network",
   "plugin.perm.notifications": "notifications",
+  "plugin.perm.openLink": "opens links in your browser",
   "plugin.perm.playbackControl": "controls playback",
   "plugin.perm.playbackRead": "reads what is playing",
   "plugin.perm.storage": "stores its own data",

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { emit, installTauri } from './mock-tauri';
+import { emit, installTauri, sentCommands } from './mock-tauri';
 
 test.beforeEach(async ({ page }) => {
   await installTauri(page);
@@ -33,4 +33,17 @@ test('clearing a field brings the hint back', async ({ page }) => {
   await expect(page.getByText('Enter your API key and secret first')).toBeHidden();
   await page.getByLabel('API key').fill('');
   await expect(page.getByText('Enter your API key and secret first')).toBeVisible();
+});
+
+test('Last.fm opens its approval page in the real browser, not a webview window', async ({
+  page,
+}) => {
+  await page.getByRole('switch', { name: /Last\.fm/u }).check();
+  await expect(page.getByText('opens links in your browser: www.last.fm')).toBeVisible();
+  await page.getByLabel('API key').fill('test-key');
+  await page.getByLabel('Shared secret').fill('test-secret');
+  await page.getByRole('button', { name: 'Connect to Last.fm' }).click();
+  await expect(page.getByText('Approve Melodesk in your browser').first()).toBeVisible();
+  const opened = (await sentCommands(page)).find((c) => c['type'] === 'open_url');
+  expect(opened?.['url']).toBe('https://www.last.fm/api/auth/?api_key=test-key&token=test-token');
 });

@@ -6,6 +6,7 @@ export const PluginPermissionSchema = z.enum([
   'network:fetch',
   'storage:plugin',
   'notifications',
+  'open:link',
   'native:discord',
 ]);
 export type PluginPermission = z.infer<typeof PluginPermissionSchema>;
@@ -18,6 +19,8 @@ export const PluginManifestSchema = z.object({
   permissions: z.array(PluginPermissionSchema),
   /** Hosts the plugin may fetch from (exact hostnames). Required with `network:fetch`. */
   hosts: z.array(z.string().max(253)).default([]),
+  /** Hosts whose https links the plugin may open in the user's browser. Required with `open:link`. */
+  linkHosts: z.array(z.string().max(253)).default([]),
   /** Disabled by default unless true; integrations that send data stay opt-in. */
   enabledByDefault: z.boolean().default(false),
 });

@@ -90,6 +90,8 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
     innertubeResponse(endpoint, body),
   );
   await page.exposeFunction('__nodeHttp', (url: string) => {
+    if (url.includes('ws.audioscrobbler.com'))
+      return { status: 200, body: JSON.stringify({ token: 'test-token' }) };
     if (url.includes('lrclib.net') && opts.lrclib)
       return { status: 200, body: JSON.stringify(opts.lrclib) };
     return { status: 404, body: '{}' };
@@ -173,6 +175,9 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
               showHide: null,
             },
           };
+        case 'plugin:opener|open_url':
+          sent.push({ type: 'open_url', url: args['url'] });
+          return null;
         case 'set_settings':
           sent.push({ type: 'set_settings', settings: args['settings'] });
           return null;

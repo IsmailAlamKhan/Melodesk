@@ -13,8 +13,9 @@ export const lastfm = definePlugin({
     name: 'Last.fm',
     version: '1.0.0',
     description: 'Scrobbles what you listen to (title, artist, album) to your Last.fm account.',
-    permissions: ['playback:read', 'network:fetch', 'storage:plugin', 'notifications'],
+    permissions: ['playback:read', 'network:fetch', 'storage:plugin', 'notifications', 'open:link'],
     hosts: ['ws.audioscrobbler.com'],
+    linkHosts: ['www.last.fm'],
   },
   settingsFields: [
     { key: 'apiKey', label: 'API key', type: 'text' },
@@ -130,10 +131,13 @@ export const lastfm = definePlugin({
                 'Last.fm',
                 'Approve Melodesk in your browser, then press Connect again.',
               );
-              window.open(
-                `https://www.last.fm/api/auth/?api_key=${encodeURIComponent(key())}&token=${encodeURIComponent(pendingToken)}`,
-                '_blank',
-              );
+              const url = `https://www.last.fm/api/auth/?api_key=${encodeURIComponent(key())}&token=${encodeURIComponent(pendingToken)}`;
+              try {
+                await ctx.openLink?.(url);
+              } catch (e) {
+                status = `Could not open your browser: ${String(e)}`;
+                pendingToken = null;
+              }
               return;
             }
             const res = await call('auth.getSession', { token: pendingToken });

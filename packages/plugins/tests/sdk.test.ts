@@ -80,3 +80,22 @@ describe('first-party manifests', () => {
     }
   });
 });
+
+describe('open:link', () => {
+  it('Last.fm declares the permission and the one host it may open', () => {
+    const lastfm = firstPartyPlugins.find((p) => p.manifest.id === 'lastfm');
+    const m = PluginManifestSchema.parse(lastfm?.manifest);
+    expect(m.permissions).toContain('open:link');
+    expect(m.linkHosts).toEqual(['www.last.fm']);
+  });
+  it('defaults to no openable hosts', () => {
+    const m = PluginManifestSchema.parse({
+      id: 'demo',
+      name: 'Demo',
+      version: '1',
+      description: '',
+      permissions: [],
+    });
+    expect(m.linkHosts).toEqual([]);
+  });
+});

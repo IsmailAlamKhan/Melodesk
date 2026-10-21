@@ -51,6 +51,9 @@ export interface StorageApi {
   remove(key: string): Promise<void>;
 }
 
+/** Open an https link in the user's own browser. Only hosts in the manifest's `linkHosts` work. */
+export type OpenLinkApi = (url: string) => Promise<void>;
+
 export type NotifyApi = (title: string, body?: string) => void;
 
 export interface NativeApi {
@@ -86,6 +89,7 @@ export interface PluginContext {
   fetch?: FetchApi;
   storage?: StorageApi;
   notify?: NotifyApi;
+  openLink?: OpenLinkApi;
   native?: NativeApi;
   /** Current values of the plugin's own settings fields. */
   settings: Record<string, string | number | boolean>;

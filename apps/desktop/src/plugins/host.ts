@@ -15,6 +15,7 @@ import {
   type PluginTrack,
 } from '@melodesk/plugins';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { invoke } from '@tauri-apps/api/core';
 import { create } from 'zustand';
 import { kvDel, kvGet, kvSet } from '../data/kv';
@@ -116,6 +117,15 @@ function buildContext(
       next: () => sendCommand({ type: 'next' }),
       previous: () => sendCommand({ type: 'previous' }),
       seek: (seconds) => sendCommand({ type: 'seek', seconds }),
+    };
+  }
+  if (has('open:link')) {
+    const linkHosts = new Set(manifest.linkHosts);
+    ctx.openLink = async (url) => {
+      const u = new URL(url);
+      if (u.protocol !== 'https:' || !linkHosts.has(u.hostname))
+        throw new Error(`plugin ${manifest.id} may not open ${u.hostname}`);
+      await openUrl(url);
     };
   }
   if (has('network:fetch')) {

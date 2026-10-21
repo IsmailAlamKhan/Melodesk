@@ -8,6 +8,7 @@ const PERMISSION_KEYS: Record<string, MessageKey> = {
   'network:fetch': 'plugin.perm.network',
   'storage:plugin': 'plugin.perm.storage',
   notifications: 'plugin.perm.notifications',
+  'open:link': 'plugin.perm.openLink',
   'native:discord': 'plugin.perm.discord',
 };
 
@@ -48,6 +49,7 @@ function PluginCard({ plugin: p }: { plugin: PluginRecord }) {
               >
                 {PERMISSION_KEYS[perm] ? t(PERMISSION_KEYS[perm]) : perm}
                 {perm === 'network:fetch' ? `: ${p.manifest.hosts.join(', ')}` : ''}
+                {perm === 'open:link' ? `: ${p.manifest.linkHosts.join(', ')}` : ''}
               </span>
             ))}
           </div>

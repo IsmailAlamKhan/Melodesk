@@ -17,6 +17,7 @@ export const myPlugin = definePlugin({
     description: 'What it does, and what data it sends where.',
     permissions: ['playback:read', 'network:fetch', 'storage:plugin'],
     hosts: ['api.example.com'], // required with network:fetch; exact hostnames, https only
+    linkHosts: [], // hostnames `ctx.openLink` may open (with the open:link permission)
   },
   settingsFields: [{ key: 'token', label: 'API token', type: 'password' }],
   setup(ctx) {
@@ -45,6 +46,7 @@ permission is not declared, so there is nothing to "escape" from.
 | `network:fetch`    | `ctx.fetch`         | https only, hosts from the manifest, via Tauri's HTTP plugin (also scoped in `capabilities/main.json`) |
 | `storage:plugin`   | `ctx.storage`       | key/value in the local SQLite, namespaced per plugin                                                   |
 | `notifications`    | `ctx.notify`        | in-app toast                                                                                           |
+| `open:link`        | `ctx.openLink`      | opens an https link in the user's browser; only hosts in the manifest's `linkHosts`                    |
 | `native:discord`   | `ctx.native.invoke` | only `discord_set_activity` / `discord_clear`                                                          |
 
 ## Settings and lifecycle
