@@ -1,12 +1,12 @@
 import { useParams, useSearchParams } from 'react-router';
 import { useBrowse } from '../../data/hooks';
-import { ChipBar } from '../components/ChipBar';
-import { ErrorState } from '../components/ErrorState';
-import { PageHeaderView } from '../components/PageHeaderView';
-import { PageSkeleton } from '../components/PageSkeleton';
-import { ShelfView } from '../components/ShelfView';
+import { ChipBar } from '../../app/components/ChipBar';
+import { ErrorState } from '../../app/components/ErrorState';
+import { PageHeaderView } from '../../app/components/PageHeaderView';
+import { PageSkeleton } from '../../app/components/PageSkeleton';
+import { ShelfView } from '../../app/components/ShelfView';
 import { useNavigate } from 'react-router';
-import { useT, type MessageKey } from '../../i18n';
+import { useT, type MessageKey } from '../../i18n/index';
 import { routeForEndpoint } from '../../player/actions';
 
 /** Generic page for any browse id: explore, charts, moods, categories, podcasts, "show all" lists… */

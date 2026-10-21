@@ -2,16 +2,16 @@ import { useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 import { useInfiniteBrowse } from '../../data/hooks';
 import { playEndpoint } from '../../player/actions';
-import { ErrorState } from '../components/ErrorState';
-import { ItemRow } from '../components/ItemRow';
-import { ListSkeleton, PageSkeleton } from '../components/PageSkeleton';
-import { PageHeaderView } from '../components/PageHeaderView';
-import { EditableTrackList } from '../components/EditableTrackList';
-import { PlaylistToolsMenu } from '../tools/PlaylistToolsMenu';
-import { sortTracks, type SortKey, type Track } from '../tools/playlistTools';
+import { ErrorState } from '../../app/components/ErrorState';
+import { ItemRow } from '../../app/components/ItemRow';
+import { ListSkeleton, PageSkeleton } from '../../app/components/PageSkeleton';
+import { PageHeaderView } from '../../app/components/PageHeaderView';
+import { EditableTrackList } from '../../app/components/EditableTrackList';
+import { PlaylistToolsMenu } from '../../app/tools/PlaylistToolsMenu';
+import { sortTracks, type SortKey, type Track } from '../../app/tools/playlistTools';
 import { useState } from 'react';
-import { useT } from '../../i18n';
-import { ShelfView } from '../components/ShelfView';
+import { useT } from '../../i18n/index';
+import { ShelfView } from '../../app/components/ShelfView';
 
 /** Artist, album and playlist pages: hero header + shelves; long track lists continue on scroll. */
 export function DetailPage({ kind }: { kind: 'artist' | 'album' | 'playlist' }) {

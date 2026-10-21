@@ -1,4 +1,4 @@
-import { db } from '../data/persister';
+import { db } from '../../data/persister';
 
 export interface TopEntry {
   key: string;

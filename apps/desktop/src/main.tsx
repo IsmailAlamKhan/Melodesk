@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { AppRouter } from './app/router';
+import { discoverFeatures, useFeatures } from './core';
 import { MiniPlayer } from './mini/MiniPlayer';
 import { AppearanceEffects } from './appearance/Effects';
 import { queryClient } from './data/queryClient';
@@ -10,7 +11,6 @@ import { subscribeToPlayer } from './player/ipc';
 import { useSettings } from './settings/store';
 import { useLyricsPrefs } from './lyrics/prefs';
 import { startPluginHost } from './plugins/host';
-import { startHistoryRecorder } from './stats/recorder';
 import { handleIncomingUrl } from './app/openUrl';
 import { router } from './app/router';
 import { listen } from '@tauri-apps/api/event';
@@ -28,10 +28,12 @@ function isMiniWindowEarly(): boolean {
   return new URLSearchParams(window.location.search).get('window') === 'mini';
 }
 
+// Assemble the app from its features (every folder in src/features) before anything renders.
+useFeatures.getState().register(discoverFeatures());
+void useFeatures.getState().load();
 subscribeToPlayer();
 void useSettings.getState().load();
 void useLyricsPrefs.getState().load();
-if (!isMiniWindowEarly()) startHistoryRecorder();
 void startPluginHost().catch((err: unknown) => {
   console.error('plugin host failed', err);
 });

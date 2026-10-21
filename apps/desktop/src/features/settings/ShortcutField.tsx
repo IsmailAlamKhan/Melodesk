@@ -1,6 +1,6 @@
 import { cn } from '@melodesk/ui';
 import { useEffect, useRef, useState } from 'react';
-import { useT } from '../../i18n';
+import { useT } from '../../i18n/index';
 import { acceleratorFromEvent, shortcutProblem } from '../../settings/store';
 
 /** Click, then press a combination. Esc (or a click elsewhere) cancels; Backspace clears. */

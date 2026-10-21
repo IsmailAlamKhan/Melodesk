@@ -1,29 +1,35 @@
-import { BROWSE_IDS } from '@melodesk/adapter';
-import { Tooltip, cn } from '@melodesk/ui';
-import { BarChart3, Compass, Home, Library, ListMusic, Plus, Settings } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { cn } from '@melodesk/ui';
 import { NavLink } from 'react-router';
-import { useBrowse } from '../data/hooks';
-import { useT, type MessageKey } from '../i18n';
-import { routeForEndpoint } from '../player/actions';
-import { usePlayerStore } from '../player/store';
-import { Artwork } from './components/Artwork';
-import { openDialog } from './dialogs/store';
+import { Slot, useContribution, type NavItem } from '../core';
+import { useT } from '../i18n';
 
-const nav: { to: string; labelKey: MessageKey; icon: LucideIcon; end?: boolean }[] = [
-  { to: '/', labelKey: 'nav.home', icon: Home, end: true },
-  { to: '/explore', labelKey: 'nav.explore', icon: Compass },
-  { to: '/library', labelKey: 'nav.library', icon: Library },
-  { to: '/stats', labelKey: 'nav.stats', icon: BarChart3 },
-];
+function NavEntry({ item }: { item: NavItem }) {
+  const t = useT();
+  return (
+    <NavLink
+      to={item.to}
+      end={item.end ?? false}
+      className={({ isActive }) =>
+        cn(
+          'flex h-(--nav-h) items-center gap-3 rounded-lg px-3 text-sm transition-colors duration-(--duration-fast)',
+          isActive
+            ? 'bg-accent-soft font-medium text-accent'
+            : 'text-fg-muted hover:bg-bg-overlay hover:text-fg',
+        )
+      }
+    >
+      <item.icon className="size-5" />
+      {t(item.label)}
+    </NavLink>
+  );
+}
 
+/** The sidebar is assembled from what features contribute: navigation entries and sections. */
 export function Sidebar() {
   const t = useT();
-  const loggedIn = usePlayerStore((s) => s.loggedIn);
-  const playlists = useBrowse(BROWSE_IDS.libraryPlaylists, undefined);
-  const items = loggedIn
-    ? (playlists.data?.shelves.flatMap((s) => s.items).filter((i) => i.kind === 'playlist') ?? [])
-    : [];
+  const nav = useContribution('nav');
+  const main = nav.filter((n) => (n.placement ?? 'main') === 'main');
+  const bottom = nav.filter((n) => n.placement === 'bottom');
   return (
     <nav
       aria-label={t('nav.primary')}
@@ -31,84 +37,20 @@ export function Sidebar() {
     >
       <div data-tauri-drag-region className="h-10 shrink-0" />
       <div className="flex flex-col gap-1 px-3">
-        {nav.map((n) => (
-          <NavLink
-            key={n.to}
-            to={n.to}
-            end={n.end ?? false}
-            className={({ isActive }) =>
-              cn(
-                'flex h-(--nav-h) items-center gap-3 rounded-lg px-3 text-sm transition-colors duration-(--duration-fast)',
-                isActive
-                  ? 'bg-accent-soft font-medium text-accent'
-                  : 'text-fg-muted hover:bg-bg-overlay hover:text-fg',
-              )
-            }
-          >
-            <n.icon className="size-5" />
-            {t(n.labelKey)}
-          </NavLink>
+        {main.map((n) => (
+          <NavEntry key={`${n.featureId}:${n.id}`} item={n} />
         ))}
       </div>
-      <div className="mt-4 flex items-center justify-between px-5 text-xs font-medium tracking-wide text-fg-subtle uppercase">
-        <span>{t('nav.playlists')}</span>
-        {loggedIn && (
-          <Tooltip label={t('nav.newPlaylist')}>
-            <button
-              type="button"
-              aria-label={t('nav.newPlaylist')}
-              className="text-fg-subtle hover:text-accent"
-              onClick={() => openDialog({ type: 'createPlaylist' })}
-            >
-              <Plus className="size-4" />
-            </button>
-          </Tooltip>
-        )}
+      <div className="flex min-h-0 flex-1 flex-col">
+        <Slot name="sidebar.sections" />
       </div>
-      <div className="mt-1 flex-1 overflow-y-auto px-3 pb-2">
-        {items.map((p) => (
-          <NavLink
-            key={p.key}
-            to={routeForEndpoint(p.endpoint) ?? '#'}
-            className={({ isActive }) =>
-              cn(
-                'flex h-[calc(var(--nav-h)+0.25rem)] items-center gap-2 rounded-lg px-3 text-sm',
-                isActive
-                  ? 'bg-accent-soft font-medium text-accent'
-                  : 'text-fg-muted hover:bg-bg-overlay hover:text-fg',
-              )
-            }
-          >
-            <Artwork thumbnails={p.thumbnails} size={28} />
-            <span className="truncate">{p.title}</span>
-          </NavLink>
-        ))}
-        {loggedIn && !items.length && !playlists.isPending && (
-          <div className="px-2 text-xs text-fg-subtle">{t('nav.noPlaylists')}</div>
-        )}
-        {!loggedIn && (
-          <div className="px-2 text-xs text-fg-subtle">
-            <ListMusic className="mb-1 size-4" />
-            {t('nav.signInForPlaylists')}
-          </div>
-        )}
-      </div>
-      <div className="border-t border-border/60 p-3">
-        <NavLink
-          to="/settings"
-          className={({ isActive }) =>
-            cn(
-              'flex h-(--nav-h) items-center gap-3 rounded-lg px-3 text-sm',
-              isActive
-                ? 'bg-accent-soft font-medium text-accent'
-                : 'text-fg-muted hover:bg-bg-overlay hover:text-fg',
-            )
-          }
-        >
-          <Settings className="size-5" />
-          {t('nav.settings')}
-        </NavLink>
-      </div>
+      {bottom.length > 0 && (
+        <div className="flex flex-col gap-1 border-t border-border/60 p-3">
+          {bottom.map((n) => (
+            <NavEntry key={`${n.featureId}:${n.id}`} item={n} />
+          ))}
+        </div>
+      )}
     </nav>
   );
 }

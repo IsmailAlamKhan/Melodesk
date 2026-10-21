@@ -1,11 +1,11 @@
 import { useSearchParams } from 'react-router';
 import { useSearch } from '../../data/hooks';
 import { Button } from '@melodesk/ui';
-import { useT } from '../../i18n';
-import { ChipBar } from '../components/ChipBar';
-import { ErrorState } from '../components/ErrorState';
-import { ListSkeleton } from '../components/PageSkeleton';
-import { ShelfView } from '../components/ShelfView';
+import { useT } from '../../i18n/index';
+import { ChipBar } from '../../app/components/ChipBar';
+import { ErrorState } from '../../app/components/ErrorState';
+import { ListSkeleton } from '../../app/components/PageSkeleton';
+import { ShelfView } from '../../app/components/ShelfView';
 
 export function SearchPage() {
   const t = useT();

@@ -2,8 +2,8 @@
  * Local listening history, written to SQLite from bridge events. Nothing leaves the machine.
  * One row per play (a track starting), with listened seconds accumulated while it plays.
  */
-import { db } from '../data/persister';
-import { usePlayerStore } from '../player/store';
+import { db } from '../../data/persister';
+import { usePlayerStore } from '../../player/store';
 
 const FLUSH_MS = 10_000;
 

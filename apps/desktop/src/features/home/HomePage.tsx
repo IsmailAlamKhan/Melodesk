@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router';
 import { BROWSE_IDS } from '@melodesk/adapter';
 import { useInfiniteBrowse } from '../../data/hooks';
 import { useAccount } from '../../data/hooks';
-import { ChipBar } from '../components/ChipBar';
-import { ErrorState } from '../components/ErrorState';
-import { PageSkeleton, ShelfSkeleton } from '../components/PageSkeleton';
-import { ShelfView } from '../components/ShelfView';
+import { ChipBar } from '../../app/components/ChipBar';
+import { ErrorState } from '../../app/components/ErrorState';
+import { PageSkeleton, ShelfSkeleton } from '../../app/components/PageSkeleton';
+import { ShelfView } from '../../app/components/ShelfView';
 import { usePlayerStore } from '../../player/store';
-import { Welcome } from '../Welcome';
+import { Welcome } from '../../app/Welcome';
 
 /** The signed-in user's own home feed, in YouTube's order, with infinite continuation. */
 export function HomePage() {

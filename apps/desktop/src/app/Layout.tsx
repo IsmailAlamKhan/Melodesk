@@ -10,7 +10,7 @@ import { NowPlayingView } from './NowPlayingView';
 import { CommandPalette } from './CommandPalette';
 import { QueuePanel } from './QueuePanel';
 import { DialogHost } from './dialogs/DialogHost';
-import { SearchBox } from './SearchBox';
+import { SearchBox } from '../features/search/SearchBox';
 import { useAudioSync } from '../audio/useAudioSync';
 import { AppContextMenu } from './AppContextMenu';
 import { KaraokeView } from './KaraokeView';

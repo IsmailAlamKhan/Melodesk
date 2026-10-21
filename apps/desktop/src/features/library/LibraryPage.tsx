@@ -3,12 +3,12 @@ import { cn } from '@melodesk/ui';
 import { NavLink, Outlet, useLocation } from 'react-router';
 import { useEffect, useRef } from 'react';
 import { useInfiniteBrowse } from '../../data/hooks';
-import { ErrorState } from '../components/ErrorState';
-import { ChipBar } from '../components/ChipBar';
-import { ListSkeleton } from '../components/PageSkeleton';
-import { ShelfView } from '../components/ShelfView';
+import { ErrorState } from '../../app/components/ErrorState';
+import { ChipBar } from '../../app/components/ChipBar';
+import { ListSkeleton } from '../../app/components/PageSkeleton';
+import { ShelfView } from '../../app/components/ShelfView';
 import { useSearchParams } from 'react-router';
-import { useT, type MessageKey } from '../../i18n';
+import { useT, type MessageKey } from '../../i18n/index';
 import { routeForEndpoint } from '../../player/actions';
 import { useNavigate } from 'react-router';
 

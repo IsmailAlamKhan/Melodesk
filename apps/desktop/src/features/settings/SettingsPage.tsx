@@ -4,15 +4,15 @@ import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { useEffect, useState } from 'react';
 import { useAccount } from '../../data/hooks';
-import { useT } from '../../i18n';
+import { useT } from '../../i18n/index';
 import { sendCommand, setPlayerVisible } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
 import { SHORTCUT_ACTIONS, useSettings } from '../../settings/store';
-import { ShortcutField } from '../components/ShortcutField';
-import { PluginsSection } from '../components/PluginsSection';
-import { AppearanceSection } from '../components/AppearanceSection';
-import { StorageSection } from '../components/StorageSection';
-import { toast } from '../toast';
+import { ShortcutField } from './ShortcutField';
+import { PluginsSection } from '../../app/components/PluginsSection';
+import { AppearanceSection } from './AppearanceSection';
+import { StorageSection } from '../../app/components/StorageSection';
+import { toast } from '../../app/toast';
 import { CachedImg } from '../../artwork/CachedImg';
 
 function Toggle({

@@ -1,8 +1,8 @@
 import { cn } from '@melodesk/ui';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { formatDurationLocale, intlLocale, useI18n, useT, type MessageKey } from '../../i18n';
-import { loadStats, type StatsRange, type TopEntry } from '../../stats/queries';
+import { formatDurationLocale, intlLocale, useI18n, useT, type MessageKey } from '../../i18n/index';
+import { loadStats, type StatsRange, type TopEntry } from './queries';
 import { playEndpoint } from '../../player/actions';
 import { useNavigate } from 'react-router';
 import { CachedImg } from '../../artwork/CachedImg';

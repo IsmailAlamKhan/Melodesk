@@ -12,7 +12,7 @@ import {
   type Direction,
   type ThemeMode,
 } from '../../appearance/store';
-import { availableLocales, localeName, useT, type MessageKey } from '../../i18n';
+import { availableLocales, localeName, useT, type MessageKey } from '../../i18n/index';
 
 const ACCENT_KEYS: Record<AccentPresetId, MessageKey> = {
   coral: 'settings.accent.coral',

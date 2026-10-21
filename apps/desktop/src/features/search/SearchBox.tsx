@@ -2,11 +2,11 @@ import { Tooltip, cn } from '@melodesk/ui';
 import { Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { useSuggestions } from '../data/hooks';
-import { useT } from '../i18n';
-import { playItem, routeForEndpoint } from '../player/actions';
-import { Artwork } from './components/Artwork';
-import { KIND_KEY } from './components/kinds';
+import { useSuggestions } from '../../data/hooks';
+import { useT } from '../../i18n/index';
+import { playItem, routeForEndpoint } from '../../player/actions';
+import { Artwork } from '../../app/components/Artwork';
+import { KIND_KEY } from '../../app/components/kinds';
 
 /** Search field with live suggestions (queries and entities) from the account's own suggestions. */
 export function SearchBox() {
