@@ -13,6 +13,7 @@ import {
   ACCENT_PRESETS,
   type Rgb,
 } from './color';
+import { ACCENT_MIN_CONTRAST } from './apply';
 
 const css = readFileSync(
   fileURLToPath(new URL('../../../../packages/ui/src/styles/tokens.css', import.meta.url)),
@@ -56,6 +57,38 @@ describe.each(['dark', 'light', 'amoled'] as const)('%s theme meets WCAG AA', (t
   });
   it('borders are visible but quiet', () => {
     expect(contrast(get('border'), get('bg'))).toBeGreaterThan(1.1);
+  });
+});
+
+const mixRgb = (a: Rgb, b: Rgb, t: number): Rgb => [
+  a[0] * t + b[0] * (1 - t),
+  a[1] * t + b[1] * (1 - t),
+  a[2] * t + b[2] * (1 - t),
+];
+/** accent-soft is 14% accent; gradients can add a little more where they overlap. */
+const TINT = 0.16;
+
+describe.each(['dark', 'light', 'amoled'] as const)('%s theme: accent on its own tint', (theme) => {
+  const t = tokens(theme);
+  it('the default accent stays readable as text on the tinted surfaces', () => {
+    const accent = t['accent'] ?? [0, 0, 0];
+    for (const surface of ['bg', 'bg-elevated']) {
+      const bg = t[surface] ?? [0, 0, 0];
+      expect(contrast(accent, mixRgb(accent, bg, TINT))).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+  it('every preset, once nudged, does too', () => {
+    const page = t['bg'] ?? [0, 0, 0];
+    for (const p of ACCENT_PRESETS) {
+      const accent = ensureContrast(presetRgb(p.id), page, ACCENT_MIN_CONTRAST);
+      for (const surface of ['bg', 'bg-elevated']) {
+        const bg = t[surface] ?? [0, 0, 0];
+        expect(
+          contrast(accent, mixRgb(accent, bg, TINT)),
+          `${p.id} on ${surface}`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    }
   });
 });
 

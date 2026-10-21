@@ -41,7 +41,7 @@ export function HomePage() {
   const shelves = q.data.pages.flatMap((p) => p.shelves);
   return (
     <div className="flex flex-col gap-8 pb-8">
-      <div className="sticky top-0 z-10 bg-bg/80 px-2 pt-4 pb-2 backdrop-blur">
+      <div className="sticky top-0 z-10 px-2 pt-4 pb-2 backdrop-blur-xl">
         <ChipBar
           chips={first?.chips ?? []}
           selected={chip}

@@ -21,6 +21,10 @@
   --color-border: oklch(0.3 0.006 260);
   --color-accent: oklch(0.72 0.17 25);
   --color-accent-fg: oklch(0.15 0.02 25);
+  /* Tints of whatever the accent currently is (preset, custom, or from album art). */
+  --color-accent-soft: color-mix(in oklch, var(--color-accent) 14%, transparent);
+  --color-accent-muted: color-mix(in oklch, var(--color-accent) 30%, transparent);
+  --color-accent-line: color-mix(in oklch, var(--color-accent) 32%, var(--color-border));
   --color-danger: oklch(0.72 0.19 25);
   --color-warning: oklch(0.8 0.15 80);
   --color-success: oklch(0.75 0.15 150);
@@ -44,7 +48,7 @@
   --color-fg-muted: oklch(0.43 0.01 260);
   --color-fg-subtle: oklch(0.5 0.01 260);
   --color-border: oklch(0.88 0.005 260);
-  --color-accent: oklch(0.58 0.2 25);
+  --color-accent: oklch(0.5 0.2 25);
   --color-accent-fg: oklch(0.99 0.01 25);
   --color-danger: oklch(0.52 0.2 25);
   --color-warning: oklch(0.5 0.12 80);

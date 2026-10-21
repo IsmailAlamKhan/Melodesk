@@ -26,8 +26,8 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
         size === 'sm' && 'size-8 [&>svg]:size-4',
         size === 'md' && 'size-10 [&>svg]:size-5',
         size === 'lg' && 'size-12 [&>svg]:size-6',
-        variant === 'ghost' && 'text-fg-muted hover:bg-bg-overlay hover:text-fg',
-        variant === 'solid' && 'bg-fg text-bg hover:brightness-90',
+        variant === 'ghost' && 'text-fg-muted hover:bg-accent-soft hover:text-accent',
+        variant === 'solid' && 'bg-accent text-accent-fg hover:brightness-110',
         className,
       )}
       {...props}

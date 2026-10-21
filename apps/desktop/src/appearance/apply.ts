@@ -40,6 +40,13 @@ const BG: Record<ResolvedTheme, Rgb> = {
   light: parseOklch('oklch(0.985 0.002 260)') ?? [250, 250, 250],
 };
 
+/**
+ * Accent text must stay readable on the background and also on the accent's own tint (selected
+ * nav items, hovered buttons), which is slightly closer to the accent. 5.5 on the page keeps the
+ * worst case on a tint above 4.5 (checked in tokens.test.ts).
+ */
+export const ACCENT_MIN_CONTRAST = 5.5;
+
 /** CSS variable overrides for the accent, or null to use the theme's own accent. */
 export function accentVars(
   prefs: AppearancePrefs,
@@ -52,7 +59,7 @@ export function accentVars(
   else if (prefs.accent.id !== 'coral') base = presetRgb(prefs.accent.id);
   if (!base) return null;
   // Accent is used for text and icons on the page background as well as for fills.
-  const readable = ensureContrast(base, BG[theme], 4.5);
+  const readable = ensureContrast(base, BG[theme], ACCENT_MIN_CONTRAST);
   return { accent: toHex(readable), accentFg: accentForeground(readable) };
 }
 

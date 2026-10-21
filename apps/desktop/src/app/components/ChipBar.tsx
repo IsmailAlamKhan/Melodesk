@@ -25,8 +25,8 @@ export function ChipBar({
             className={cn(
               'h-8 shrink-0 rounded-full border px-3 text-sm transition-colors duration-(--duration-fast)',
               active
-                ? 'border-fg bg-fg text-bg'
-                : 'border-border bg-bg-overlay text-fg-muted hover:text-fg',
+                ? 'border-accent bg-accent text-accent-fg'
+                : 'border-border bg-bg-overlay text-fg-muted hover:border-accent hover:bg-accent-soft hover:text-fg',
             )}
           >
             {c.text}

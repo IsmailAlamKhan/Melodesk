@@ -47,13 +47,13 @@ export function Slider({
           if (v[0] !== undefined) onCommit?.(v[0]);
         }}
       >
-        <RadixSlider.Track className="relative h-1 grow rounded-full bg-border">
-          <RadixSlider.Range className="absolute h-full rounded-full bg-fg group-hover:bg-accent" />
+        <RadixSlider.Track className="relative h-1 grow rounded-full bg-accent-muted">
+          <RadixSlider.Range className="absolute h-full rounded-full bg-accent group-hover:brightness-110" />
         </RadixSlider.Track>
         <RadixSlider.Thumb
           aria-label={label}
           className={cn(
-            'block size-3 rounded-full bg-fg opacity-0 shadow transition-opacity duration-(--duration-fast)',
+            'block size-3 rounded-full bg-accent opacity-0 shadow transition-opacity duration-(--duration-fast)',
             'group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
           )}
         />

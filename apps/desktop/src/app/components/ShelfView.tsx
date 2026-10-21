@@ -31,7 +31,7 @@ export function ShelfView({ shelf }: { shelf: Shelf }) {
                 {shelf.subtitle}
               </div>
             )}
-            <h2 className="truncate font-display text-xl font-semibold tracking-tight">
+            <h2 className="section-title truncate font-display text-xl font-semibold tracking-tight">
               {more ? (
                 <Link to={more} className="hover:underline">
                   {shelf.title}
