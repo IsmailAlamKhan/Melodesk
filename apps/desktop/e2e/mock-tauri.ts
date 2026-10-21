@@ -173,6 +173,9 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
               showHide: null,
             },
           };
+        case 'set_settings':
+          sent.push({ type: 'set_settings', settings: args['settings'] });
+          return null;
         case 'player_command': {
           const command = args['command'] as Record<string, unknown>;
           sent.push(command);

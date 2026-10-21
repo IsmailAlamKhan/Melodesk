@@ -52,7 +52,7 @@ Planned and in progress; ticked items work today.
 - [x] Live queue panel with drag-and-drop reorder, play next, add to queue
 - [x] Create / rename / delete playlists, add-to-playlist dialog, lyrics panel (timed lyrics via the opt-in LRCLIB plugin)
 - [x] Now Playing / media keys (macOS, Windows via the webview), MPRIS (Linux), tray with controls
-- [x] Close to tray, launch at login, configurable global shortcuts, track-change notifications
+- [x] Close to tray, launch at login, optional global shortcuts (none by default; combinations that would break typing in other apps are refused), track-change notifications
 - [x] `melodesk://` deep links and music.youtube.com link handling, signed auto-updates
 - [x] Full-screen Now Playing with synced lyrics
 - [x] Karaoke mode: big sing-along lyrics, words fill in time, countdown through instrumental breaks, timing nudge

@@ -18,7 +18,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dir = join(root, 'apps/desktop/src/i18n/locales');
 const srcDir = join(root, 'apps/desktop/src');
 const PLURAL = /_(zero|one|two|few|many|other)$/u;
-const DYNAMIC_PREFIXES = ['plugin.']; // looked up by key built at runtime
+const DYNAMIC_PREFIXES = ['plugin.', 'shortcut.err.']; // looked up by key built at runtime
 
 const args = process.argv.slice(2);
 if (args[0] === '--new') {

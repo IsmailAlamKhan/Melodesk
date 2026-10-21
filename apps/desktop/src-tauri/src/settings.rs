@@ -20,17 +20,33 @@ pub struct Shortcuts {
     pub show_hide: Option<String>,
 }
 
+/// Global shortcuts work in every app, so there are none by default: anything we picked would take
+/// a combination somebody types with. Media keys already control playback without any of this.
 impl Default for Shortcuts {
     fn default() -> Self {
         Self {
-            play_pause: Some("CommandOrControl+Shift+Space".into()),
-            next: Some("CommandOrControl+Shift+Right".into()),
-            previous: Some("CommandOrControl+Shift+Left".into()),
+            play_pause: None,
+            next: None,
+            previous: None,
             volume_up: None,
             volume_down: None,
             mute: None,
             show_hide: None,
         }
+    }
+}
+
+impl Shortcuts {
+    /// The defaults of earlier versions. Cmd/Ctrl+Shift+Left/Right select text in nearly every
+    /// text field, and as global shortcuts they stole that selection from every app.
+    fn is_legacy_default(&self) -> bool {
+        self.play_pause.as_deref() == Some("CommandOrControl+Shift+Space")
+            && self.next.as_deref() == Some("CommandOrControl+Shift+Right")
+            && self.previous.as_deref() == Some("CommandOrControl+Shift+Left")
+            && self.volume_up.is_none()
+            && self.volume_down.is_none()
+            && self.mute.is_none()
+            && self.show_hide.is_none()
     }
 }
 
@@ -57,11 +73,20 @@ impl Default for Settings {
 }
 
 pub fn load<R: Runtime>(app: &AppHandle<R>) -> Settings {
-    app.store(STORE_FILE)
+    let mut settings: Settings = app
+        .store(STORE_FILE)
         .ok()
         .and_then(|store| store.get(KEY))
         .and_then(|v| serde_json::from_value(v).ok())
-        .unwrap_or_default()
+        .unwrap_or_default();
+    if settings.shortcuts.is_legacy_default() {
+        // Saved by an earlier version that registered these for everyone; clear them for good.
+        settings.shortcuts = Shortcuts::default();
+        if let Err(e) = save(app, &settings) {
+            eprintln!("[settings] could not clear legacy shortcuts: {e}");
+        }
+    }
+    settings
 }
 
 pub fn save<R: Runtime>(app: &AppHandle<R>, settings: &Settings) -> anyhow::Result<()> {
@@ -89,6 +114,7 @@ pub fn get_settings<R: Runtime>(app: AppHandle<R>) -> Settings {
 
 #[tauri::command]
 pub fn set_settings<R: Runtime>(app: AppHandle<R>, settings: Settings) -> Result<(), String> {
+    crate::shortcuts::validate(&settings.shortcuts)?;
     save(&app, &settings).map_err(|e| e.to_string())?;
     if let Ok(mut s) = app.state::<SettingsState>().0.lock() {
         *s = settings.clone();
@@ -96,4 +122,34 @@ pub fn set_settings<R: Runtime>(app: AppHandle<R>, settings: Settings) -> Result
     crate::shortcuts::apply(&app, &settings.shortcuts).map_err(|e| e.to_string())?;
     crate::native::apply_autostart(&app, settings.launch_at_login).map_err(|e| e.to_string())?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn there_are_no_global_shortcuts_by_default() {
+        let d = Shortcuts::default();
+        assert!(d.play_pause.is_none() && d.next.is_none() && d.previous.is_none());
+        assert!(d.volume_up.is_none() && d.volume_down.is_none());
+        assert!(d.mute.is_none() && d.show_hide.is_none());
+    }
+
+    #[test]
+    fn recognises_the_old_defaults_only_when_nothing_else_was_set() {
+        let legacy = Shortcuts {
+            play_pause: Some("CommandOrControl+Shift+Space".into()),
+            next: Some("CommandOrControl+Shift+Right".into()),
+            previous: Some("CommandOrControl+Shift+Left".into()),
+            ..Shortcuts::default()
+        };
+        assert!(legacy.is_legacy_default());
+        let customised = Shortcuts {
+            mute: Some("CommandOrControl+Alt+M".into()),
+            ..legacy
+        };
+        assert!(!customised.is_legacy_default());
+        assert!(!Shortcuts::default().is_legacy_default());
+    }
 }

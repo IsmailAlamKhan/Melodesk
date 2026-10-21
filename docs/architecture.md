@@ -132,6 +132,13 @@ the website uses.
 - **Crossfade** is not attempted: it needs two simultaneous streams or processed audio, and the
   page owns the single player element.
 
+- **Global shortcuts are opt-in.** A system-wide shortcut is taken from every app, so the first
+  version's defaults (Cmd/Ctrl+Shift+Left/Right/Space) broke text selection everywhere. There are no
+  defaults now; saved legacy defaults are cleared on launch (`settings::load`); and
+  `shortcuts::conflict` (mirrored in the UI as `shortcutProblem`) refuses arrow/Home/End/delete keys
+  with ordinary modifiers, select-all/copy/paste/cut/undo, and bare keys, both when saving and when
+  registering. Media keys cover play/pause/next/previous without any of this.
+
 ## Gotchas learned the hard way
 
 - `app.security.freezePrototype` must stay **false**: Tauri injects the prototype freeze into

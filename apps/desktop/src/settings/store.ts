@@ -89,3 +89,58 @@ export function acceleratorFromEvent(e: KeyboardEvent): string | null {
   if (!mods.length && !/^F\d{1,2}$/u.test(name)) return null; // a bare letter would hijack typing everywhere
   return [...mods, name].join('+');
 }
+
+export type ShortcutProblem = 'editing' | 'clipboard' | 'noModifier';
+
+/**
+ * Whether a combination would break typing if registered system-wide: a global shortcut is taken
+ * from every app. Mirrors `shortcuts::conflict` in src-tauri; the shell enforces it too.
+ */
+export function shortcutProblem(combo: string): ShortcutProblem | null {
+  let cmd = false;
+  let alt = false;
+  let key = '';
+  for (const part of combo
+    .split('+')
+    .map((p) => p.trim())
+    .filter(Boolean)) {
+    const l = part.toLowerCase();
+    if (
+      [
+        'commandorcontrol',
+        'cmdorcontrol',
+        'cmd',
+        'command',
+        'super',
+        'meta',
+        'control',
+        'ctrl',
+      ].includes(l)
+    )
+      cmd = true;
+    else if (l === 'alt' || l === 'option') alt = true;
+    else if (l !== 'shift') key = part;
+  }
+  const k = key.toLowerCase();
+  const functionOrMedia = /^f\d{1,2}$/u.test(k) || k.startsWith('media');
+  if (!cmd && !alt && !functionOrMedia) return 'noModifier';
+  const editing = [
+    'left',
+    'right',
+    'up',
+    'down',
+    'home',
+    'end',
+    'pageup',
+    'pagedown',
+    'backspace',
+    'delete',
+    'enter',
+    'return',
+    'tab',
+    'escape',
+  ].includes(k);
+  if (editing && !functionOrMedia) return 'editing';
+  if (cmd && !alt && ['a', 'c', 'v', 'x', 'z', 'y'].includes(k)) return 'clipboard';
+  return null;
+}

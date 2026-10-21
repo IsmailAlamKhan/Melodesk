@@ -18,6 +18,83 @@ enum Action {
     ShowHide,
 }
 
+/// Why a global shortcut would get in the way of typing, or `None` if it is safe to register.
+///
+/// A global shortcut is taken from *every* app, so a combination that edits or selects text there
+/// (Cmd+Shift+Right selects to the end of the line, Cmd+C copies…) would break writing everywhere.
+pub fn conflict(combo: &str) -> Option<&'static str> {
+    let mut cmd = false;
+    let mut ctrl = false;
+    let mut shift = false;
+    let mut alt = false;
+    let mut key = "";
+    for part in combo.split('+').map(str::trim).filter(|p| !p.is_empty()) {
+        match part.to_ascii_lowercase().as_str() {
+            "commandorcontrol" | "cmdorcontrol" | "cmdorctrl" | "commandorctrl" | "cmd"
+            | "command" | "super" | "meta" => cmd = true,
+            "control" | "ctrl" => ctrl = true,
+            "shift" => shift = true,
+            "alt" | "option" => alt = true,
+            _ => key = part,
+        }
+    }
+    let _ = shift;
+    if key.is_empty() {
+        return Some("it has no key");
+    }
+    let lower = key.to_ascii_lowercase();
+    let function_or_media =
+        (lower.starts_with('f') && lower[1..].parse::<u8>().is_ok()) || lower.starts_with("media");
+    let heavy = u8::from(cmd) + u8::from(ctrl) + u8::from(alt);
+    if heavy == 0 && !function_or_media {
+        return Some("it needs Cmd/Ctrl or Alt, or it would capture ordinary typing");
+    }
+    let editing = matches!(
+        lower.as_str(),
+        "left"
+            | "right"
+            | "up"
+            | "down"
+            | "home"
+            | "end"
+            | "pageup"
+            | "pagedown"
+            | "backspace"
+            | "delete"
+            | "enter"
+            | "return"
+            | "tab"
+            | "escape"
+    );
+    // With all three of Cmd, Ctrl and Alt held it is not something anyone types by accident.
+    if editing && heavy < 3 && !function_or_media {
+        return Some("arrow, Home/End and delete keys with these modifiers move or select text");
+    }
+    if (cmd || ctrl) && !alt && matches!(lower.as_str(), "a" | "c" | "v" | "x" | "z" | "y") {
+        return Some("it is the select-all, copy, paste, cut or undo shortcut");
+    }
+    None
+}
+
+/// Refuse settings that contain a shortcut `conflict` rejects, with a message the UI can show.
+pub fn validate(shortcuts: &Shortcuts) -> Result<(), String> {
+    let all = [
+        &shortcuts.play_pause,
+        &shortcuts.next,
+        &shortcuts.previous,
+        &shortcuts.volume_up,
+        &shortcuts.volume_down,
+        &shortcuts.mute,
+        &shortcuts.show_hide,
+    ];
+    for combo in all.into_iter().flatten().filter(|c| !c.trim().is_empty()) {
+        if let Some(why) = conflict(combo) {
+            return Err(format!("{combo} can't be a global shortcut: {why}."));
+        }
+    }
+    Ok(())
+}
+
 pub fn apply<R: Runtime>(app: &AppHandle<R>, shortcuts: &Shortcuts) -> tauri::Result<()> {
     let gs = app.global_shortcut();
     gs.unregister_all()
@@ -35,6 +112,11 @@ pub fn apply<R: Runtime>(app: &AppHandle<R>, shortcuts: &Shortcuts) -> tauri::Re
         let Some(combo) = combo.as_deref().filter(|c| !c.trim().is_empty()) else {
             continue;
         };
+        if let Some(why) = conflict(combo) {
+            // Hand-edited settings can still contain one; never register it.
+            eprintln!("[shortcuts] ignoring {combo}: {why}");
+            continue;
+        }
         let result = gs.on_shortcut(combo, move |app, _shortcut, event| {
             if event.state() != ShortcutState::Pressed {
                 return;
@@ -59,4 +141,57 @@ pub fn apply<R: Runtime>(app: &AppHandle<R>, shortcuts: &Shortcuts) -> tauri::Re
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn text_selection_and_editing_combos_are_refused() {
+        for combo in [
+            "CommandOrControl+Shift+Right",
+            "CommandOrControl+Shift+Left",
+            "CommandOrControl+Right",
+            "Alt+Left",
+            "Alt+Shift+Right",
+            "Control+Up",
+            "CommandOrControl+Backspace",
+            "CommandOrControl+C",
+            "CommandOrControl+Shift+Z",
+            "CommandOrControl+Alt+Up",
+            "CommandOrControl+A",
+            "Shift+Space",
+            "M",
+            "",
+        ] {
+            assert!(conflict(combo).is_some(), "{combo} should be refused");
+        }
+    }
+
+    #[test]
+    fn ordinary_global_shortcuts_are_allowed() {
+        for combo in [
+            "CommandOrControl+Alt+M",
+            "CommandOrControl+Shift+Space",
+            "Control+Alt+P",
+            "Control+Alt+Command+Right",
+            "F8",
+            "MediaPlayPause",
+        ] {
+            assert!(conflict(combo).is_none(), "{combo} should be allowed");
+        }
+    }
+
+    #[test]
+    fn validate_reports_the_first_bad_shortcut() {
+        let ok = Shortcuts::default();
+        assert!(validate(&ok).is_ok());
+        let bad = Shortcuts {
+            next: Some("CommandOrControl+Shift+Right".into()),
+            ..Shortcuts::default()
+        };
+        let err = validate(&bad).unwrap_err();
+        assert!(err.contains("CommandOrControl+Shift+Right"));
+    }
 }
