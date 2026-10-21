@@ -32,24 +32,61 @@ export function saveQueueAsPlaylist(): void {
   openDialog({ type: 'createPlaylist', videoIds: ids });
 }
 
-let sleepTimer: number | null = null;
+/** The last seconds before the timer ends are a fade-out, not a sudden stop. */
+export const FADE_MS = 20_000;
+const FADE_TICK_MS = 500;
 
-/** Pause playback after `minutes` (0 cancels). State is mirrored in the UI store for display. */
+/** The volume `remainingMs` before the end of a fade that started at `before`. */
+export function fadeVolume(before: number, remainingMs: number, fadeMs = FADE_MS): number {
+  return before * Math.min(1, Math.max(0, remainingMs / fadeMs));
+}
+
+let sleepTimer: number | null = null;
+let fadeStart: number | null = null;
+let fadeInterval: number | null = null;
+/** The volume to give back when a fade ends or is cancelled, while one is under way. */
+let volumeBeforeFade: number | null = null;
+
+function endFade(restore: boolean): void {
+  if (fadeStart !== null) window.clearTimeout(fadeStart);
+  fadeStart = null;
+  if (fadeInterval !== null) window.clearInterval(fadeInterval);
+  fadeInterval = null;
+  if (restore && volumeBeforeFade !== null)
+    void sendCommand({ type: 'setVolume', volume: volumeBeforeFade });
+  volumeBeforeFade = null;
+}
+
+/**
+ * Fade out and pause after `minutes` (0 cancels). The volume comes back afterwards, so the next song
+ * is not played silently. State is mirrored in the UI store for display.
+ */
 export function setSleepTimer(minutes: number): void {
   if (sleepTimer !== null) window.clearTimeout(sleepTimer);
   sleepTimer = null;
+  endFade(true);
   if (minutes <= 0) {
     useSleepTimer.getState().setSleepUntil(null);
     toast(t('toast.sleepOff'));
     return;
   }
-  const until = Date.now() + minutes * 60_000;
+  const total = minutes * 60_000;
+  const until = Date.now() + total;
   useSleepTimer.getState().setSleepUntil(until);
+  const startFade = (): void => {
+    volumeBeforeFade = usePlayerStore.getState().state?.volume ?? 1;
+    const before = volumeBeforeFade;
+    fadeInterval = window.setInterval(() => {
+      void sendCommand({ type: 'setVolume', volume: fadeVolume(before, until - Date.now()) });
+    }, FADE_TICK_MS);
+  };
+  fadeStart = window.setTimeout(startFade, Math.max(0, total - FADE_MS));
   sleepTimer = window.setTimeout(() => {
     void sendCommand({ type: 'pause' });
+    endFade(true);
     useSleepTimer.getState().setSleepUntil(null);
     toast(t('toast.sleepPaused'));
-  }, minutes * 60_000);
+  }, total);
   toast(t('toast.sleepIn', { minutes }));
 }
 

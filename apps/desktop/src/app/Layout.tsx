@@ -1,10 +1,11 @@
 import { IconButton, cn } from '@melodesk/ui';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { Outlet, useNavigate } from 'react-router';
+import { Outlet, useLocation, useNavigate } from 'react-router';
 import { AppProviders, FeatureBoundary, Slot, useContribution } from '../core';
 import { useT } from '../i18n';
 import { usePlayerStore } from '../player/store';
 import { HealthBanner } from './HealthBanner';
+import { PageCrashed } from './PageCrashed';
 import { PlayerBar } from './PlayerBar';
 import { DialogHost } from './dialogs/DialogHost';
 import { BottomNav, Sidebar } from './Sidebar';
@@ -19,6 +20,7 @@ import { useUiStore } from './uiStore';
 export function Layout() {
   const t = useT();
   const navigate = useNavigate();
+  const location = useLocation();
   const panels = useContribution('panels');
   const overlays = useContribution('overlays');
   const openPanel = useUiStore((s) => s.rightPanel);
@@ -73,7 +75,11 @@ export function Layout() {
           </div>
           <HealthBanner />
           <main className={cn('min-h-0 flex-1 overflow-y-auto', !ready && 'opacity-80')}>
-            <Outlet />
+            {/* A page that throws shows an apology and a way out instead of a blank window; the
+                key gives the next page a fresh start. */}
+            <FeatureBoundary key={location.pathname} featureId="page" fallback={<PageCrashed />}>
+              <Outlet />
+            </FeatureBoundary>
           </main>
         </div>
         {active && (
