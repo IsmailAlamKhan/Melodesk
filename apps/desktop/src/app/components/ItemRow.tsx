@@ -72,12 +72,12 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
           if (e.key === 'Enter') activate();
         }}
         className={cn(
-          'group grid cursor-default items-center gap-3 rounded-md px-2 outline-none hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-accent',
+          'group grid cursor-default items-center gap-3 rounded-lg px-2 outline-none hover:bg-bg-overlay focus-visible:ring-2 focus-visible:ring-accent',
           dense ? 'h-[calc(var(--row-h)-0.5rem)]' : 'h-(--row-h)',
           showAlbum
             ? 'grid-cols-[2rem_auto_minmax(0,3fr)_minmax(0,2fr)_auto_2.5rem]'
             : 'grid-cols-[2rem_auto_minmax(0,1fr)_auto_2.5rem]',
-          isCurrent && 'text-accent',
+          isCurrent && 'bg-accent-soft text-accent',
         )}
       >
         <div className="flex w-8 items-center justify-center text-xs tabular-nums text-fg-subtle">

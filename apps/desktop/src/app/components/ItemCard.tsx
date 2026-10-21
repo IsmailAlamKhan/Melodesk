@@ -38,10 +38,15 @@ export function ItemCard({ item, width }: { item: Item; width?: number }) {
         onKeyDown={(e) => {
           if (e.key === 'Enter') open();
         }}
-        className="group box-content flex shrink-0 cursor-pointer flex-col gap-2 rounded-lg p-2 outline-none transition-colors duration-(--duration-fast) hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-accent"
+        className="group box-content flex shrink-0 cursor-pointer flex-col gap-3 rounded-xl p-2 outline-none transition-colors duration-(--duration-fast) hover:bg-bg-overlay focus-visible:ring-2 focus-visible:ring-accent"
         style={{ width: isVideo ? tile * 1.6 : tile }}
       >
-        <div className="relative">
+        <div
+          className={cn(
+            'relative overflow-hidden shadow-md transition-shadow duration-300 group-hover:shadow-xl [&_img]:transition-transform [&_img]:duration-500 group-hover:[&_img]:scale-105',
+            round ? 'rounded-full' : 'rounded-xl',
+          )}
+        >
           <Artwork
             thumbnails={item.thumbnails}
             size={isVideo ? Math.round(tile * 1.6) : tile}
@@ -58,7 +63,7 @@ export function ItemCard({ item, width }: { item: Item; width?: number }) {
                   e.stopPropagation();
                   void playItem(item);
                 }}
-                className="absolute end-2 bottom-2 flex size-10 items-center justify-center rounded-full bg-bg/90 text-fg opacity-0 shadow-lg transition-all duration-(--duration-fast) group-hover:opacity-100 hover:scale-105 focus-visible:opacity-100"
+                className="absolute end-2.5 bottom-2.5 flex size-11 translate-y-2 items-center justify-center rounded-full bg-accent text-accent-fg opacity-0 shadow-xl transition-all duration-200 group-hover:translate-y-0 group-hover:opacity-100 hover:scale-105 focus-visible:translate-y-0 focus-visible:opacity-100"
               >
                 <Play className="size-5 translate-x-px" />
               </button>
@@ -70,10 +75,10 @@ export function ItemCard({ item, width }: { item: Item; width?: number }) {
           />
         </div>
         <div className={cn('min-w-0', round && 'text-center')}>
-          <div className="truncate text-sm font-medium" title={item.title}>
+          <div className="truncate text-sm font-semibold" title={item.title}>
             {item.title}
           </div>
-          <div className="truncate text-xs text-fg-muted" title={item.subtitle}>
+          <div className="truncate text-[13px] text-fg-muted" title={item.subtitle}>
             {item.isExplicit && (
               <span
                 title={t('common.explicit')}

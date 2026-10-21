@@ -143,3 +143,16 @@ test('playlist page', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   await shot(page, 'playlist');
 });
+
+test('card hover', async ({ page }) => {
+  await installTauri(page);
+  await page.goto('/');
+  await startPlayback(page, { positionS: 62, track: SAMPLE });
+  await expect(page.getByRole('heading', { name: 'Indian Music' })).toBeVisible();
+  await page.mouse.move(512, 280, { steps: 6 });
+  await page.waitForTimeout(600);
+  await page.screenshot({
+    path: join(out, 'card-hover.png'),
+    clip: { x: 220, y: 130, width: 760, height: 300 },
+  });
+});

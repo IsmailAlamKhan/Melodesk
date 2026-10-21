@@ -127,7 +127,7 @@ function QueueRow({
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        'group flex h-(--row-h) items-center gap-2 rounded-md px-1 hover:bg-accent-soft',
+        'group flex h-(--row-h) items-center gap-2 rounded-lg px-1 hover:bg-bg-overlay',
         current && 'bg-accent-soft text-accent',
         isDragging && 'z-10 bg-bg-overlay shadow',
       )}
