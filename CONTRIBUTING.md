@@ -46,7 +46,7 @@ buttons in options, and keep text readable in both themes.
 ## Before you push
 
 ```bash
-pnpm typecheck && pnpm test && pnpm test:e2e && pnpm lint && pnpm clippy && pnpm fmt:rust
+pnpm check   # the same as CI: types, lint, i18n, unit and e2e tests, removable features, Rust
 ```
 
 ## End-to-end tests

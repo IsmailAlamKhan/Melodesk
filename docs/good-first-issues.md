@@ -8,12 +8,20 @@ Sizes are rough: **S** is an evening, **M** a weekend.
 
 - **Translate Melodesk into your language (S).** `pnpm i18n:new fr` creates `locales/fr.json` to
   translate; see [translating.md](translating.md). Check with `pnpm i18n:check`.
-- **More end-to-end coverage (S–M).** `apps/desktop/e2e` has home, search, queue, player bar,
-  karaoke and offline covers. Missing: the playlist create/rename/delete dialogs, the Library pages,
-  Settings toggles, the command palette, and the mini player (`/?window=mini`). Each needs a few
-  commands added to `e2e/mock-tauri.ts`.
-- **Accessibility pass with axe (S).** Add `@axe-core/playwright` to the e2e suite, fix what it
-  finds on Home, Settings and karaoke, and keep it in CI.
+- **More end-to-end coverage (S–M).** `apps/desktop/e2e` covers most screens, features, Settings,
+  plugins, lyrics lookup, the visualizer, shortcuts and an accessibility audit. Missing: the playlist
+  create/rename/delete dialogs, the Library sub-pages, and the mini player (`/?window=mini`). Each
+  needs a few commands added to `e2e/mock-tauri.ts`.
+- **More lyrics sources (S–M).** A lyrics source is a plugin with `provides: ['lyrics']` (see
+  `packages/plugins/src/plugins/netease.ts` and [plugins.md](plugins.md)). Good candidates are free,
+  public APIs with timed lyrics. Match carefully: wrong lyrics are worse than none.
+- **Better guesses for covers (S).** `packages/plugins/src/candidates.ts` turns titles like
+  "Song | Film | Uploader" into guesses of the real song. Add titles that fool it as test cases
+  (`tests/candidates.test.ts`) and teach it, for example more tag words in other languages.
+- **Teach the local AI prompt (S).** `packages/plugins/src/plugins/ollama.ts` asks a small model which
+  song a track is. Try other small models, tighten the prompt, and add what works to the plugin's hint.
+- **A new music visual (S).** `features/visualizer/VisualizerTab.tsx` draws bars, a wave and a ring
+  from `core/levels.ts`; add another mode, or a better simulated rhythm in `simulated.ts`.
 - **Cache the playing track's cover first (S).** `artwork/cache.ts` queues covers first come, first
   served, so the current track's cover can wait behind a whole shelf. Add a priority path for the
   player bar and queue.
@@ -27,6 +35,9 @@ Sizes are rough: **S** is an evening, **M** a weekend.
 
 ## Needs Windows or Linux
 
+- **Real audio levels for the visuals (M).** On Windows an `AnalyserNode` on the player's element
+  should give real levels; on macOS and Linux it would take a native audio tap. See "Music visuals" in
+  [architecture.md](architecture.md) and `setLevelSource` in `core/levels.ts`.
 - **Verify the equalizer on Windows (M).** Run `VITE_AUDIO_SELFTEST=1 pnpm dev` on Windows and read
   the bridge log (`audio:` lines). If the signal is real, build the Settings UI (ten sliders,
   presets from `audio/presets.ts`, a leveling switch, an "unavailable" notice driven by

@@ -25,6 +25,7 @@
     "fmt:rust": "rustfmt --edition 2021 --check apps/desktop/src-tauri/src/*.rs apps/desktop/src-tauri/build.rs",
     "test:e2e": "pnpm --filter @melodesk/desktop test:e2e",
     "screenshots": "pnpm --filter @melodesk/desktop screenshots",
+    "check": "pnpm typecheck && pnpm lint && pnpm i18n:check && pnpm test && pnpm features:removable && pnpm test:e2e && pnpm fmt:rust && pnpm clippy && pnpm test:rust",
     "i18n:check": "node scripts/i18n-check.mjs",
     "i18n:new": "node scripts/i18n-check.mjs --new"
   },
