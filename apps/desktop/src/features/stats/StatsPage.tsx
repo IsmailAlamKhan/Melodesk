@@ -33,7 +33,7 @@ export function StatsPage() {
   const navigate = useNavigate();
   const s = q.data;
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 p-6">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 p-4 md:p-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-bold tracking-tight">{t('stats.title')}</h1>

@@ -9,7 +9,7 @@ export function SettingsPage() {
   const t = useT();
   const sections = useContribution('settings');
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 p-6">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 p-4 md:p-6">
       <h1 className="font-display text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
       {sections.map(({ id, featureId, component: Section }) => (
         <FeatureBoundary key={`${featureId}:${id}`} featureId={featureId}>

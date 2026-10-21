@@ -84,10 +84,10 @@ export function PlayerBar() {
     <footer
       aria-label={t('player.region')}
       style={tint}
-      className="player-bar group/bar relative grid h-[88px] grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1fr)] items-center gap-6 bg-bg-elevated/80 bg-[image:linear-gradient(to_right,color-mix(in_srgb,var(--bar-tint)_26%,transparent),transparent_55%)] px-6 shadow-[0_-12px_32px_-12px_rgb(0_0_0/0.35)] backdrop-blur-xl"
+      className="player-bar group/bar relative grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-bg-elevated/80 md:h-[88px] md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1fr)] md:gap-6 bg-[image:linear-gradient(to_right,color-mix(in_srgb,var(--bar-tint)_26%,transparent),transparent_55%)] px-3 shadow-[0_-12px_32px_-12px_rgb(0_0_0/0.35)] backdrop-blur-xl md:px-6"
     >
       <SeekLine disabled={disabled} />
-      <div className="flex min-w-0 items-center gap-4">
+      <div className="flex min-w-0 items-center gap-3 md:gap-4">
         {track?.artworkUrl && canOpenNowPlaying ? (
           <Tooltip label={t('player.openNowPlaying')}>
             <button
@@ -99,7 +99,7 @@ export function PlayerBar() {
               <Img
                 src={track.artworkUrl}
                 alt=""
-                className="size-14 rounded-lg bg-bg-overlay object-cover"
+                className="size-11 rounded-lg bg-bg-overlay object-cover md:size-14"
               />
             </button>
           </Tooltip>
@@ -107,10 +107,10 @@ export function PlayerBar() {
           <Img
             src={track.artworkUrl}
             alt=""
-            className="size-14 shrink-0 rounded-lg bg-bg-overlay object-cover shadow-lg ring-1 ring-white/10"
+            className="size-11 shrink-0 rounded-lg bg-bg-overlay object-cover shadow-lg ring-1 ring-white/10 md:size-14"
           />
         ) : (
-          <div className="size-14 shrink-0 rounded-lg bg-bg-overlay" />
+          <div className="size-11 shrink-0 rounded-lg bg-bg-overlay md:size-14" />
         )}
         <div className="min-w-0">
           <div className="truncate text-[15px] leading-tight font-semibold">
@@ -140,7 +140,7 @@ export function PlayerBar() {
               label={like === 'DISLIKE' ? t('player.removeDislike') : t('player.dislike')}
               size="sm"
               className={cn(
-                'transition-opacity',
+                'transition-opacity max-md:hidden',
                 like !== 'DISLIKE' &&
                   'opacity-0 group-hover/bar:opacity-100 focus-visible:opacity-100',
               )}
@@ -152,15 +152,15 @@ export function PlayerBar() {
         )}
       </div>
 
-      <div dir="ltr" className="flex items-center justify-center gap-3">
-        <TimeLabel kind="elapsed" className="text-right" />
+      <div dir="ltr" className="flex items-center justify-center gap-1 md:gap-3">
+        <TimeLabel kind="elapsed" className="text-right max-md:hidden" />
         <div className="flex items-center gap-1">
           <IconButton
             label={queue?.shuffle ? t('player.shuffleOn') : t('player.shuffle')}
             size="sm"
             disabled={disabled}
             aria-pressed={queue?.shuffle ?? false}
-            className={cn(queue?.shuffle && ['text-accent', dot])}
+            className={cn('max-md:hidden', queue?.shuffle && ['text-accent', dot])}
             onClick={() =>
               void sendCommand({ type: 'setShuffle', enabled: !(queue?.shuffle ?? false) })
             }
@@ -202,7 +202,10 @@ export function PlayerBar() {
             size="sm"
             disabled={disabled}
             aria-pressed={(queue?.repeat ?? 'off') !== 'off'}
-            className={cn(queue?.repeat && queue.repeat !== 'off' && ['text-accent', dot])}
+            className={cn(
+              'max-md:hidden',
+              queue?.repeat && queue.repeat !== 'off' && ['text-accent', dot],
+            )}
             onClick={() =>
               void sendCommand({
                 type: 'setRepeat',
@@ -218,10 +221,10 @@ export function PlayerBar() {
             {queue?.repeat === 'one' ? <Repeat1 /> : <Repeat />}
           </IconButton>
         </div>
-        <TimeLabel kind="total" />
+        <TimeLabel kind="total" className="max-md:hidden" />
       </div>
 
-      <div className="flex items-center justify-end gap-1">
+      <div className="hidden items-center justify-end gap-1 md:flex">
         {track && (
           <IconButton
             label={flags?.isVideo ? t('player.switchToSong') : t('player.switchToVideo')}

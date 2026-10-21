@@ -58,7 +58,7 @@ export function DetailPage({ kind }: { kind: 'artist' | 'album' | 'playlist' }) 
     <div className="flex flex-col gap-6 pb-8">
       {page?.header && <PageHeaderView header={page.header} round={kind === 'artist'} />}
       {kind !== 'artist' && songTracks.length > 0 && (
-        <div className="px-6">
+        <div className="px-4 md:px-6">
           <Slot
             name="playlist.header"
             title={page?.header?.title ?? t('kind.playlist')}

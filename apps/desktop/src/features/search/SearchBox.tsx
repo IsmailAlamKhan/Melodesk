@@ -73,8 +73,8 @@ export function SearchBox() {
   };
 
   return (
-    <div className="relative w-full max-w-xl">
-      <div className="flex h-10 items-center gap-2.5 rounded-full border border-transparent bg-bg-overlay px-4 transition-colors focus-within:border-accent focus-within:bg-bg-elevated focus-within:ring-4 focus-within:ring-accent-soft">
+    <div className="relative w-full min-w-0 max-w-xl">
+      <div className="flex h-10 items-center gap-2.5 rounded-full border border-transparent bg-bg-overlay px-3 md:px-4 transition-colors focus-within:border-accent focus-within:bg-bg-elevated focus-within:ring-4 focus-within:ring-accent-soft">
         <Search className="size-4 shrink-0 text-fg-subtle" />
         <input
           dir="auto"

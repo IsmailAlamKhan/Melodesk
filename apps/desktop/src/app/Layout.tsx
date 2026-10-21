@@ -1,5 +1,5 @@
 import { IconButton, cn } from '@melodesk/ui';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Outlet, useNavigate } from 'react-router';
 import { AppProviders, FeatureBoundary, Slot, useContribution } from '../core';
 import { useT } from '../i18n';
@@ -7,7 +7,7 @@ import { usePlayerStore } from '../player/store';
 import { HealthBanner } from './HealthBanner';
 import { PlayerBar } from './PlayerBar';
 import { DialogHost } from './dialogs/DialogHost';
-import { Sidebar } from './Sidebar';
+import { BottomNav, Sidebar } from './Sidebar';
 import { Toaster } from './components/Toaster';
 import { useUiStore } from './uiStore';
 
@@ -29,20 +29,30 @@ export function Layout() {
     <AppProviders>
       <div
         className={cn(
-          'grid h-full grid-rows-[minmax(0,1fr)_auto]',
-          active ? 'grid-cols-[220px_1fr_320px]' : 'grid-cols-[220px_1fr]',
+          // Wide: sidebar | page | optional panel, player bar underneath. Narrow (< 768px): the page
+          // alone, with the player bar and a tab bar stacked under it; panels open full screen.
+          'grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto_auto] md:grid-rows-[minmax(0,1fr)_auto]',
+          active ? 'md:grid-cols-[220px_1fr_320px]' : 'md:grid-cols-[220px_1fr]',
         )}
       >
         <Sidebar />
         <div data-content className="flex min-h-0 min-w-0 flex-col">
-          <div data-tauri-drag-region className="flex h-14 shrink-0 items-center gap-2 px-3 pt-2">
+          <div
+            data-tauri-drag-region
+            className="topbar-inset flex h-14 shrink-0 items-center gap-1 px-3 pt-2 md:gap-2"
+          >
             <IconButton label={t('nav.back')} size="sm" onClick={() => navigate(-1)}>
               <ChevronLeft className="rtl:-scale-x-100" />
             </IconButton>
-            <IconButton label={t('nav.forward')} size="sm" onClick={() => navigate(1)}>
+            <IconButton
+              label={t('nav.forward')}
+              size="sm"
+              className="max-md:hidden"
+              onClick={() => navigate(1)}
+            >
               <ChevronRight className="rtl:-scale-x-100" />
             </IconButton>
-            <div className="flex flex-1 justify-center">
+            <div className="flex min-w-0 flex-1 justify-center">
               <Slot name="topBar.center" />
             </div>
             {panels.map((p) => (
@@ -52,7 +62,7 @@ export function Layout() {
                 size="sm"
                 aria-pressed={openPanel === p.id}
                 onClick={() => togglePanel(p.id)}
-                className={cn(openPanel === p.id && 'text-accent')}
+                className={cn('shrink-0', openPanel === p.id && 'text-accent')}
               >
                 <p.icon />
               </IconButton>
@@ -67,9 +77,19 @@ export function Layout() {
         {active && (
           <aside
             aria-label={t(active.label)}
-            className="flex min-h-0 flex-col border-s border-border bg-bg-elevated"
+            className="flex min-h-0 flex-col border-s border-border bg-bg-elevated max-md:fixed max-md:inset-0 max-md:z-40 max-md:border-s-0 max-md:bg-bg"
           >
-            <div data-tauri-drag-region className="h-10 shrink-0" />
+            <div data-tauri-drag-region className="h-10 shrink-0 max-md:hidden" />
+            <div className="topbar-inset flex h-14 shrink-0 items-center justify-between px-3 pt-2 md:hidden">
+              <span className="font-semibold">{t(active.label)}</span>
+              <IconButton
+                label={t('common.close')}
+                size="sm"
+                onClick={() => togglePanel(active.id)}
+              >
+                <X />
+              </IconButton>
+            </div>
             <div className="min-h-0 flex-1">
               <FeatureBoundary featureId={active.featureId}>
                 <active.component />
@@ -77,9 +97,10 @@ export function Layout() {
             </div>
           </aside>
         )}
-        <div className={cn(active ? 'col-span-3' : 'col-span-2')}>
+        <div className={cn(active ? 'md:col-span-3' : 'md:col-span-2')}>
           <PlayerBar />
         </div>
+        <BottomNav />
         {overlays.map((o) => (
           <FeatureBoundary key={`${o.featureId}:${o.id}`} featureId={o.featureId}>
             <o.component />

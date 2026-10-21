@@ -27,7 +27,7 @@ export function PageHeaderView({ header, round }: { header: PageHeader; round?: 
   const [expanded, setExpanded] = useState(false);
   const description = header.description ?? '';
   return (
-    <header className="flex flex-col gap-6 bg-linear-to-b from-accent-soft to-transparent p-6 md:flex-row md:items-end">
+    <header className="flex flex-col gap-6 bg-linear-to-b from-accent-soft to-transparent p-4 md:flex-row md:p-6 md:items-end">
       {header.thumbnails.length > 0 && (
         <Artwork thumbnails={header.thumbnails} size={224} round={round} className="shadow-2xl" />
       )}

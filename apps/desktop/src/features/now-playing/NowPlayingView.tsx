@@ -105,7 +105,7 @@ export function NowPlayingView() {
               <ChevronDown />
             </IconButton>
           </div>
-          <div className="relative mx-auto grid h-full max-w-7xl grid-cols-1 items-center gap-10 px-10 py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="relative mx-auto grid h-full max-w-7xl grid-cols-1 items-center gap-6 px-5 py-16 md:gap-10 md:px-10 md:py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <div className="flex flex-col items-center gap-8 lg:items-start">
               <motion.div
                 key={track?.videoId ?? 'none'}

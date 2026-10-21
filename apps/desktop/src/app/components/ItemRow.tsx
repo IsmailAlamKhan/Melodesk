@@ -68,6 +68,11 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
         role="row"
         tabIndex={0}
         onDoubleClick={activate}
+        // Narrow windows are used by touch and as a compact player: one tap plays.
+        onClick={(e) => {
+          if (window.matchMedia('(max-width: 767px)').matches && !isInteractive(e.target))
+            activate();
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') activate();
         }}
@@ -75,7 +80,7 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
           'group grid cursor-default items-center gap-3 rounded-lg px-2 outline-none hover:bg-bg-overlay focus-visible:ring-2 focus-visible:ring-accent',
           dense ? 'h-[calc(var(--row-h)-0.5rem)]' : 'h-(--row-h)',
           showAlbum
-            ? 'grid-cols-[2rem_auto_minmax(0,3fr)_minmax(0,2fr)_auto_2.5rem]'
+            ? 'grid-cols-[2rem_auto_minmax(0,1fr)_auto_2.5rem] md:grid-cols-[2rem_auto_minmax(0,3fr)_minmax(0,2fr)_auto_2.5rem]'
             : 'grid-cols-[2rem_auto_minmax(0,1fr)_auto_2.5rem]',
           isCurrent && 'bg-accent-soft text-accent',
         )}
@@ -141,7 +146,7 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
           </div>
         </div>
         {showAlbum && (
-          <div className="truncate text-xs text-fg-muted">
+          <div className="truncate text-xs text-fg-muted max-md:hidden">
             {album ? (
               <LinkRun name={album.name} route={routeForEndpoint(album.endpoint)} last />
             ) : item.kind === 'song' || item.kind === 'video' ? (
@@ -154,11 +159,16 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
         <div className="text-xs tabular-nums text-fg-subtle">{fmt(duration)}</div>
         <ItemMenuButton
           item={item}
-          className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+          className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 max-md:opacity-100"
         />
       </div>
     </ItemContextMenu>
   );
+}
+
+/** Whether the click landed on something with its own action (a link, the menu button…). */
+function isInteractive(target: EventTarget): boolean {
+  return target instanceof Element && target.closest('a, button, input') !== null;
 }
 
 function LinkRun({ name, route, last }: { name: string; route: string | null; last: boolean }) {

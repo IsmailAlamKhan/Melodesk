@@ -30,6 +30,14 @@ body {
   background: var(--color-bg);
 }
 
+/* macOS draws the window buttons over the top-left corner; with no sidebar under them (narrow
+   windows) the top bar has to start after them. */
+@media (max-width: 767px) {
+  :root[data-platform='macos'] .topbar-inset {
+    padding-inline-start: 5rem;
+  }
+}
+
 /* Native form controls follow the accent color. */
 input[type='checkbox'],
 input[type='radio'],

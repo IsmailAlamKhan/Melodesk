@@ -178,6 +178,15 @@ the website uses.
   with ordinary modifiers, select-all/copy/paste/cut/undo, and bare keys, both when saving and when
   registering. Media keys cover play/pause/next/previous without any of this.
 
+## Narrow windows
+
+Below 768 px (Tailwind's `md`) the shell switches to a phone-style layout with plain responsive
+classes, no separate code path: the sidebar becomes a tab bar under the player bar (`BottomNav`, the
+same `nav` contributions), the player bar shrinks to cover, title and transport, right-hand panels
+open full screen with a close button, track rows drop the album column and play on one tap, and
+macOS leaves room for the window buttons in the top bar. New UI should work at 360 px (the window's
+minimum width): `e2e/responsive.e2e.ts` runs at 375 px and fails on anything that sticks out.
+
 ## Video
 
 Video exists only in the player webview, so the video button switches YouTube's own player out of
