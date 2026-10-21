@@ -13,6 +13,8 @@ export default defineFeature({
   name: 'feature.visualizer.name',
   description: 'feature.visualizer.description',
   icon: AudioLines,
+  // The mini player is its own window and follows the music too.
+  scope: 'all',
   contributes: {
     slots: {
       'nowPlaying.side': [

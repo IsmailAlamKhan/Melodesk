@@ -44,6 +44,36 @@ body {
   }
 }
 
+/* Marquee text (app/components/Marquee.tsx): fades at the end, slides while hovered. */
+.marquee[data-overflow='true'] {
+  mask-image: linear-gradient(to right, #000 calc(100% - 1.75rem), transparent);
+}
+.marquee[data-overflow='true']:hover,
+.marquee[data-overflow='true']:focus-within,
+.group:hover .marquee[data-overflow='true'] {
+  mask-image: none;
+}
+.marquee[data-overflow='true']:hover .marquee-track,
+.marquee[data-overflow='true']:focus-within .marquee-track,
+.group:hover .marquee[data-overflow='true'] .marquee-track {
+  animation: marquee-slide var(--marquee-dur) ease-in-out infinite alternate;
+}
+@keyframes marquee-slide {
+  0%,
+  12% {
+    transform: translateX(0);
+  }
+  88%,
+  100% {
+    transform: translateX(var(--marquee-shift));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none !important;
+  }
+}
+
 /* Native form controls follow the accent color. */
 input[type='checkbox'],
 input[type='radio'],

@@ -17,6 +17,8 @@ import { useEffect, useState } from 'react';
 import { useT } from '../../i18n/index';
 import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
+import { BeatRing } from '../../app/components/BeatRing';
+import { Marquee } from '../../app/components/Marquee';
 import { MiniContextMenu } from '../../app/components/ContextShell';
 import { Img } from '../../core';
 
@@ -95,15 +97,18 @@ function MiniPlayerView() {
       >
         <SkipBack />
       </IconButton>
-      <IconButton
-        label={playing ? t('player.pause') : t('player.play')}
-        variant="solid"
-        size="md"
-        disabled={!ready}
-        onClick={() => void sendCommand({ type: 'toggle' })}
-      >
-        {playing ? <Pause /> : <Play className="translate-x-px" />}
-      </IconButton>
+      <span className="relative">
+        <BeatRing />
+        <IconButton
+          label={playing ? t('player.pause') : t('player.play')}
+          variant="solid"
+          size="md"
+          disabled={!ready}
+          onClick={() => void sendCommand({ type: 'toggle' })}
+        >
+          {playing ? <Pause /> : <Play className="translate-x-px" />}
+        </IconButton>
+      </span>
       <IconButton
         label={t('player.next')}
         size="sm"
@@ -166,9 +171,12 @@ function MiniPlayerView() {
         <div className="absolute top-1 end-1">{windowButtons}</div>
         <div className="absolute inset-x-3 bottom-3 flex flex-col gap-2 text-white">
           <div className="min-w-0">
-            <div className="truncate text-sm font-semibold">
+            <Marquee
+              label={track?.title ?? t('player.nothingPlaying')}
+              className="text-sm font-semibold"
+            >
               {track?.title ?? t('player.nothingPlaying')}
-            </div>
+            </Marquee>
             <div className="truncate text-xs text-white/70">{track?.artist ?? ''}</div>
           </div>
           <div className="flex items-center justify-between">
@@ -191,9 +199,12 @@ function MiniPlayerView() {
           <div className="size-14 shrink-0 rounded-md bg-bg-overlay" />
         )}
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-medium">
+          <Marquee
+            label={track?.title ?? t('player.nothingPlaying')}
+            className="text-sm font-medium"
+          >
             {track?.title ?? t('player.nothingPlaying')}
-          </div>
+          </Marquee>
           <div className="truncate text-xs text-fg-muted">{track?.artist ?? ''}</div>
         </div>
         {controls}

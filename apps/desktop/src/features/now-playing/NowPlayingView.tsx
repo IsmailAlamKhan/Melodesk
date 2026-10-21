@@ -20,6 +20,8 @@ import { useT } from '../../i18n/index';
 import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
 import { ArtistLinks } from '../../app/components/ArtistLinks';
+import { BeatRing } from '../../app/components/BeatRing';
+import { Marquee } from '../../app/components/Marquee';
 import { setLikeStatus } from '../../player/like';
 import { useNowPlaying } from './store';
 import { FeatureBoundary, Img, Slot, useLevelVars, useSlot } from '../../core';
@@ -108,19 +110,6 @@ function BackdropPulse() {
       ref={ref}
       aria-hidden
       className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_60%,color-mix(in_oklch,var(--np-accent)_45%,transparent),transparent_55%)] opacity-[calc(0.1+var(--energy,0)*0.7)] will-change-[opacity]"
-    />
-  );
-}
-
-/** A ring that flares around the play button on every beat. */
-function BeatRing() {
-  const ref = useRef<HTMLSpanElement>(null);
-  useLevelVars(ref);
-  return (
-    <span
-      ref={ref}
-      aria-hidden
-      className="pointer-events-none absolute inset-0 rounded-full bg-[var(--np-accent)] opacity-[calc(var(--beat,0)*0.45)] will-change-[transform,opacity] [transform:scale(calc(1+var(--beat,0)*0.4))]"
     />
   );
 }
@@ -272,8 +261,10 @@ export function NowPlayingView() {
               <div className="w-full shrink-0">
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
-                    <h1 className="truncate font-display text-3xl font-bold tracking-tight">
-                      {track?.title ?? t('player.nothingPlaying')}
+                    <h1 className="font-display text-3xl font-bold tracking-tight">
+                      <Marquee label={track?.title ?? t('player.nothingPlaying')}>
+                        {track?.title ?? t('player.nothingPlaying')}
+                      </Marquee>
                     </h1>
                     <ArtistLinks
                       byline={track?.artist ?? ''}

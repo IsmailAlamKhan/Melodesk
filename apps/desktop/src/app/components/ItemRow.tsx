@@ -7,6 +7,7 @@ import { playItem, routeForEndpoint } from '../../player/actions';
 import { usePlayerStore } from '../../player/store';
 import { Artwork } from './Artwork';
 import { LiveBars } from './LiveBars';
+import { Marquee } from './Marquee';
 import { ItemContextMenu, ItemMenuButton } from './ItemMenu';
 import { subtitleOf } from './ItemCard';
 
@@ -126,7 +127,10 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
           round={item.kind === 'artist'}
         />
         <div className="min-w-0">
-          <div className={cn('truncate text-sm font-medium', !isCurrent && 'text-fg')}>
+          <Marquee
+            label={item.title}
+            className={cn('text-sm font-medium', !isCurrent && 'text-fg')}
+          >
             {route ? (
               <Link to={route} className="hover:underline" onClick={(e) => e.stopPropagation()}>
                 {item.title}
@@ -134,7 +138,7 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
             ) : (
               item.title
             )}
-          </div>
+          </Marquee>
           <div className="truncate text-xs text-fg-muted">
             {item.isExplicit && (
               <span

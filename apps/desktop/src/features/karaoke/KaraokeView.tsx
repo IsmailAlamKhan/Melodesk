@@ -27,6 +27,7 @@ import { usePlayerStore } from '../../player/store';
 import { usePositionMs } from '../../player/usePositionMs';
 import { TimedBanner } from '../lyrics/LyricsPanel';
 import { LyricsToolbar } from '../lyrics/LyricsToolbar';
+import { BeatRing } from '../../app/components/BeatRing';
 import { useKaraoke } from './store';
 import { Img, runAction } from '../../core';
 
@@ -454,16 +455,23 @@ function Stage() {
           >
             <SkipBack />
           </IconButton>
-          <Tooltip label={playing ? t('player.pause') : t('player.play')}>
-            <button
-              type="button"
-              aria-label={playing ? t('player.pause') : t('player.play')}
-              onClick={() => void sendCommand({ type: 'toggle' })}
-              className="flex size-14 items-center justify-center rounded-full bg-accent text-accent-fg shadow-lg transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
-            >
-              {playing ? <Pause className="size-6" /> : <Play className="size-6 translate-x-0.5" />}
-            </button>
-          </Tooltip>
+          <span className="relative">
+            <BeatRing />
+            <Tooltip label={playing ? t('player.pause') : t('player.play')}>
+              <button
+                type="button"
+                aria-label={playing ? t('player.pause') : t('player.play')}
+                onClick={() => void sendCommand({ type: 'toggle' })}
+                className="flex size-14 items-center justify-center rounded-full bg-accent text-accent-fg shadow-lg transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
+              >
+                {playing ? (
+                  <Pause className="size-6" />
+                ) : (
+                  <Play className="size-6 translate-x-0.5" />
+                )}
+              </button>
+            </Tooltip>
+          </span>
           <IconButton
             label={t('player.next')}
             size="lg"

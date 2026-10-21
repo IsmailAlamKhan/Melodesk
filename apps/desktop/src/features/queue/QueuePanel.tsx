@@ -23,6 +23,7 @@ import { useMemo, useState } from 'react';
 import { useT } from '../../i18n/index';
 import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
+import { Marquee } from '../../app/components/Marquee';
 import { Img, Slot } from '../../core';
 
 /** The page's live queue, mirrored from YouTube's own store; drag to reorder, click to jump. */
@@ -162,7 +163,9 @@ function QueueRow({
         className="min-w-0 flex-1 text-start"
         onClick={() => void sendCommand({ type: 'queueSelect', index })}
       >
-        <div className="truncate text-sm font-medium">{item.title}</div>
+        <Marquee label={item.title} className="text-sm font-medium">
+          {item.title}
+        </Marquee>
         <div className="truncate text-xs text-fg-muted">{item.artist}</div>
       </button>
       {!item.isAutomix && (

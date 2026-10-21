@@ -22,7 +22,9 @@ import { sendCommand, setPlayerVisible } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { ArtistLinks } from './components/ArtistLinks';
 import { BeatGlow } from './components/BeatGlow';
+import { BeatRing } from './components/BeatRing';
 import { LiveBars } from './components/LiveBars';
+import { Marquee } from './components/Marquee';
 import { useArtworkColor } from '../appearance/artworkAccent';
 import { usePositionMs } from '../player/usePositionMs';
 
@@ -108,9 +110,12 @@ export function PlayerBar() {
           }}
         >
           <div className="flex items-center gap-2">
-            <div className="truncate text-[15px] leading-tight font-semibold">
+            <Marquee
+              label={track?.title ?? t('player.nothingPlaying')}
+              className="min-w-0 text-[15px] leading-tight font-semibold"
+            >
               {track?.title ?? t('player.nothingPlaying')}
-            </div>
+            </Marquee>
             {playing && <LiveBars bars={4} className="shrink-0 text-accent" />}
           </div>
           <ArtistLinks
@@ -165,16 +170,19 @@ export function PlayerBar() {
           >
             <SkipBack />
           </IconButton>
-          <IconButton
-            label={playing ? t('player.pause') : t('player.play')}
-            variant="solid"
-            size="xl"
-            className="mx-1 shadow-lg hover:scale-105 max-wide:size-12"
-            disabled={disabled}
-            onClick={() => void sendCommand({ type: 'toggle' })}
-          >
-            {playing ? <Pause /> : <Play className="translate-x-px" />}
-          </IconButton>
+          <span className="relative mx-1">
+            <BeatRing />
+            <IconButton
+              label={playing ? t('player.pause') : t('player.play')}
+              variant="solid"
+              size="xl"
+              className="shadow-lg hover:scale-105 max-wide:size-12"
+              disabled={disabled}
+              onClick={() => void sendCommand({ type: 'toggle' })}
+            >
+              {playing ? <Pause /> : <Play className="translate-x-px" />}
+            </IconButton>
+          </span>
           <IconButton
             label={t('player.next')}
             disabled={disabled}
