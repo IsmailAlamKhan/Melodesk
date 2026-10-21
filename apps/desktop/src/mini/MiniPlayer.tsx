@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { useT } from '../i18n';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
+import { MiniContextMenu } from '../app/AppContextMenu';
 import { CachedImg } from '../artwork/CachedImg';
 
 type Mode = 'compact' | 'artwork';
@@ -44,7 +45,7 @@ function usePosition(): number {
 }
 
 /** Always-on-top floating player: compact bar or artwork tile, resizable, in its own window. */
-export function MiniPlayer() {
+function MiniPlayerView() {
   const t = useT();
   const track = usePlayerStore((s) => s.track);
   const state = usePlayerStore((s) => s.state);
@@ -224,4 +225,12 @@ const LogicalSizeLike = LogicalSize;
 async function emitShowMain(): Promise<void> {
   const { emit } = await import('@tauri-apps/api/event');
   await emit('app:show-main');
+}
+
+export function MiniPlayer() {
+  return (
+    <MiniContextMenu>
+      <MiniPlayerView />
+    </MiniContextMenu>
+  );
 }

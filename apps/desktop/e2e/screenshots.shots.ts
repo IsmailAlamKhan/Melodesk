@@ -103,3 +103,21 @@ test('light theme with a custom accent', async ({ page }) => {
   });
   await shot(page, 'light');
 });
+
+test('right-click menus', async ({ page }) => {
+  await installTauri(page);
+  await page.goto('/');
+  await startPlayback(page, { positionS: 62, track: SAMPLE });
+  await expect(page.getByRole('heading', { name: 'Indian Music' })).toBeVisible();
+  await page.mouse.click(1000, 125, { button: 'right' });
+  await expect(page.getByRole('menu')).toBeVisible();
+  await shot(page, 'context-menu');
+  await page.keyboard.press('Escape');
+  await page
+    .getByRole('region', { name: 'Indian Music' })
+    .getByRole('link')
+    .nth(1)
+    .click({ button: 'right' });
+  await expect(page.getByRole('menu')).toBeVisible();
+  await shot(page, 'context-menu-item');
+});

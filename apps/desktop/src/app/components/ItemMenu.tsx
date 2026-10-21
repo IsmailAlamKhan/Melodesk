@@ -9,18 +9,16 @@ import { queueAdd, runAction, runMenuItem, shareUrl } from '../../player/actions
 import { useT } from '../../i18n';
 import { toast } from '../toast';
 import { openDialog } from '../dialogs/store';
+import {
+  ContextEntries,
+  DropdownEntries,
+  entryIcon,
+  isDangerIcon,
+  menuContent,
+  type ActionEntry,
+} from './menu';
 
-const menuClass =
-  'z-50 min-w-56 rounded-lg border border-border bg-bg-elevated p-1 text-sm shadow-xl';
-const itemClass =
-  'flex cursor-default select-none items-center gap-3 rounded-md px-3 py-2 outline-none data-[highlighted]:bg-bg-overlay';
-
-interface Entry {
-  key: string;
-  label: string;
-  icon?: ReactNode;
-  run: () => void | Promise<void>;
-}
+type Entry = ActionEntry;
 
 /** YouTube's own menu entries for the item, plus our extras (queue shortcuts, copy link). */
 export function useItemEntries(item: Item): Entry[] {
@@ -59,6 +57,7 @@ export function useItemEntries(item: Item): Entry[] {
       entries.push({
         key: 'addToPlaylist',
         label,
+        icon: entryIcon('ADD_TO_PLAYLIST'),
         run: () => openDialog({ type: 'addToPlaylist', videoIds: [videoId], label: item.title }),
       });
       continue;
@@ -66,6 +65,8 @@ export function useItemEntries(item: Item): Entry[] {
     entries.push({
       key: `${m.text}:${String(m.icon)}`,
       label,
+      icon: entryIcon(m.icon),
+      danger: isDangerIcon(m.icon),
       run: () => runMenuItem(m, item, (to) => void navigate(to)),
     });
   }
@@ -74,6 +75,7 @@ export function useItemEntries(item: Item): Entry[] {
     entries.push({
       key: 'addToPlaylist',
       label: t('menu.saveToPlaylist'),
+      icon: entryIcon('ADD_TO_PLAYLIST'),
       run: () => openDialog({ type: 'addToPlaylist', videoIds: [videoId], label: item.title }),
     });
   }
@@ -98,13 +100,8 @@ export function ItemContextMenu({ item, children }: { item: Item; children: Reac
     <ContextMenu.Root>
       <ContextMenu.Trigger asChild>{children}</ContextMenu.Trigger>
       <ContextMenu.Portal>
-        <ContextMenu.Content className={menuClass}>
-          {entries.map((e) => (
-            <ContextMenu.Item key={e.key} className={itemClass} onSelect={() => void e.run()}>
-              {e.icon ?? <span className="size-4" />}
-              {e.label}
-            </ContextMenu.Item>
-          ))}
+        <ContextMenu.Content className={menuContent}>
+          <ContextEntries entries={entries} />
         </ContextMenu.Content>
       </ContextMenu.Portal>
     </ContextMenu.Root>
@@ -128,13 +125,8 @@ export function ItemMenuButton({ item, className }: { item: Item; className?: st
         </IconButton>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content align="end" className={menuClass}>
-          {entries.map((e) => (
-            <DropdownMenu.Item key={e.key} className={itemClass} onSelect={() => void e.run()}>
-              {e.icon ?? <span className="size-4" />}
-              {e.label}
-            </DropdownMenu.Item>
-          ))}
+        <DropdownMenu.Content align="end" className={menuContent}>
+          <DropdownEntries entries={entries} />
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>

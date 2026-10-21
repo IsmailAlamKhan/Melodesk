@@ -2,6 +2,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { IconButton } from '@melodesk/ui';
 import { Copy, Gauge, ListPlus, Moon, MoreHorizontal } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { menuContent as menuClass, menuItem as itemClass, menuSeparator } from '../components/menu';
 import { useT } from '../../i18n';
 import { usePlayerStore } from '../../player/store';
 import { useUiStore } from '../uiStore';
@@ -12,11 +13,6 @@ import {
   setPlaybackRate,
   setSleepTimer,
 } from './queueTools';
-
-const menuClass =
-  'z-50 min-w-52 rounded-lg border border-border bg-bg-elevated p-1 text-sm shadow-xl';
-const itemClass =
-  'flex cursor-default select-none items-center gap-3 rounded-md px-3 py-2 outline-none data-[highlighted]:bg-bg-overlay data-[disabled]:opacity-50';
 
 export function QueueToolsMenu() {
   const t = useT();
@@ -46,7 +42,7 @@ export function QueueToolsMenu() {
             <ListPlus className="size-4" />
             {t('queueTools.saveAsPlaylist')}
           </DropdownMenu.Item>
-          <DropdownMenu.Separator className="my-1 h-px bg-border" />
+          <DropdownMenu.Separator className={menuSeparator} />
           <DropdownMenu.Sub>
             <DropdownMenu.SubTrigger className={itemClass}>
               <Moon className="size-4" />

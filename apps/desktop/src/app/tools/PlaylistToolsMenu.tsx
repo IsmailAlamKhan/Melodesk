@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowDownAZ, Copy, Download, GitMerge, Wrench } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { useT, type MessageKey } from '../../i18n';
+import { menuContent as menuClass, menuItem as itemClass, menuSeparator } from '../components/menu';
 import { fetchAddToPlaylistOptions, removeFromPlaylist } from '../dialogs/playlists';
 import { openDialog } from '../dialogs/store';
 import { toast } from '../toast';
@@ -16,11 +17,6 @@ import {
   type SortKey,
   type Track,
 } from './playlistTools';
-
-const menuClass =
-  'z-50 min-w-56 rounded-lg border border-border bg-bg-elevated p-1 text-sm shadow-xl';
-const itemClass =
-  'flex cursor-default select-none items-center gap-3 rounded-md px-3 py-2 outline-none data-[highlighted]:bg-bg-overlay data-[disabled]:opacity-50';
 
 export interface PlaylistToolsProps {
   title: string;
@@ -109,7 +105,7 @@ export function PlaylistToolsMenu({
               {t('tools.applyOrder')}
             </DropdownMenu.Item>
           )}
-          <DropdownMenu.Separator className="my-1 h-px bg-border" />
+          <DropdownMenu.Separator className={menuSeparator} />
           <DropdownMenu.Item
             className={itemClass}
             disabled={!extra.length}
@@ -178,7 +174,7 @@ export function PlaylistToolsMenu({
               </DropdownMenu.SubContent>
             </DropdownMenu.Portal>
           </DropdownMenu.Sub>
-          <DropdownMenu.Separator className="my-1 h-px bg-border" />
+          <DropdownMenu.Separator className={menuSeparator} />
           <DropdownMenu.Item
             className={itemClass}
             onSelect={() =>

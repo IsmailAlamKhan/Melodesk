@@ -2,6 +2,7 @@ import type { PageHeader } from '@melodesk/adapter';
 import { Button, IconButton, cn } from '@melodesk/ui';
 import { Heart, MoreHorizontal, Pencil, Play, Radio, Shuffle, Trash2 } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import { DropdownEntries, entryIcon, isDangerIcon, menuContent } from './menu';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useT } from '../../i18n';
@@ -144,19 +145,16 @@ export function PageHeaderView({ header, round }: { header: PageHeader; round?: 
                 </IconButton>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
-                <DropdownMenu.Content
-                  align="start"
-                  className="z-50 min-w-56 rounded-lg border border-border bg-bg-elevated p-1 text-sm shadow-xl"
-                >
-                  {header.menu.map((m) => (
-                    <DropdownMenu.Item
-                      key={`${m.text}-${String(m.icon)}`}
-                      className="flex cursor-default items-center gap-3 rounded-md px-3 py-2 outline-none data-[highlighted]:bg-bg-overlay"
-                      onSelect={() => void runMenuItem(m, undefined, (to) => void navigate(to))}
-                    >
-                      {m.toggled?.isToggled ? m.toggled.text : m.text}
-                    </DropdownMenu.Item>
-                  ))}
+                <DropdownMenu.Content align="start" className={menuContent}>
+                  <DropdownEntries
+                    entries={header.menu.map((m) => ({
+                      key: `${m.text}-${String(m.icon)}`,
+                      label: m.toggled?.isToggled ? m.toggled.text : m.text,
+                      icon: entryIcon(m.icon),
+                      danger: isDangerIcon(m.icon),
+                      run: () => runMenuItem(m, undefined, (to) => void navigate(to)),
+                    }))}
+                  />
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>

@@ -47,3 +47,27 @@ input[type='range'] {
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
 }
+
+/* Menus (right-click and dropdown) grow out of the point they were opened from. */
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.menu-surface[data-state='open'] {
+  animation: menu-in 120ms var(--ease-out);
+  transform-origin: var(
+    --radix-context-menu-content-transform-origin,
+    var(--radix-dropdown-menu-content-transform-origin, center)
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-surface[data-state='open'] {
+    animation: none;
+  }
+}
