@@ -183,9 +183,9 @@ export function NowPlayingView() {
               <ChevronDown />
             </IconButton>
           </div>
-          <div className="relative mx-auto flex h-full max-w-7xl flex-col gap-4 px-5 pt-16 pb-6 md:px-10 md:pb-10 lg:grid lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-14 lg:pt-20">
+          <div className="relative mx-auto flex h-full max-w-[96rem] flex-col gap-4 px-5 pt-16 pb-6 md:px-10 md:pb-10 md:grid md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] md:gap-8 md:pt-20 lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] lg:gap-14">
             {tabs.length > 0 && (
-              <div className="flex justify-center lg:hidden">
+              <div className="flex justify-center md:hidden">
                 <Tabs
                   name="narrow"
                   tabs={[{ id: 'player', label: t('nowPlaying.region') }, ...tabItems]}
@@ -196,30 +196,33 @@ export function NowPlayingView() {
             )}
             <div
               className={cn(
-                'min-h-0 flex-1 flex-col items-center justify-center gap-6 overflow-y-auto lg:flex lg:items-stretch lg:overflow-visible',
+                'min-h-0 flex-1 flex-col gap-5 overflow-y-auto md:flex',
                 showPlayer ? 'flex' : 'hidden',
               )}
             >
               {queue?.title && (
-                <div className="w-full text-center text-xs font-medium tracking-widest text-fg-subtle uppercase lg:text-start">
+                <div className="w-full shrink-0 text-center text-xs font-medium tracking-widest text-fg-subtle uppercase md:text-start">
                   {t('nowPlaying.playingFrom')}
                   <span className="mt-0.5 block truncate text-sm tracking-normal text-fg normal-case">
                     {queue.title}
                   </span>
                 </div>
               )}
-              <motion.div
-                key={track?.videoId ?? 'none'}
-                initial={{ opacity: 0, scale: 0.94 }}
-                animate={{ opacity: 1, scale: playing ? 1 : 0.9 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="aspect-square w-[min(100%,28rem,max(12rem,calc(100dvh-27rem)))] shrink-0 self-center overflow-hidden rounded-3xl bg-bg-overlay shadow-[0_30px_80px_-24px_var(--np-accent)]"
-              >
-                {track?.artworkUrl && (
-                  <Img src={track.artworkUrl} alt="" className="size-full object-cover" />
-                )}
-              </motion.div>
-              <div className="w-full max-w-md self-center lg:max-w-none">
+              {/* The artwork takes all the height the controls leave and stays square. */}
+              <div className="flex min-h-32 flex-1 items-center justify-center [container-type:size]">
+                <motion.div
+                  key={track?.videoId ?? 'none'}
+                  initial={{ opacity: 0, scale: 0.94 }}
+                  animate={{ opacity: 1, scale: playing ? 1 : 0.9 }}
+                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                  className="aspect-square w-[min(100cqw,100cqh)] overflow-hidden rounded-3xl bg-bg-overlay shadow-[0_30px_80px_-24px_var(--np-accent)]"
+                >
+                  {track?.artworkUrl && (
+                    <Img src={track.artworkUrl} alt="" className="size-full object-cover" />
+                  )}
+                </motion.div>
+              </div>
+              <div className="w-full shrink-0">
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
                     <h1 className="truncate font-display text-3xl font-bold tracking-tight">
@@ -344,11 +347,11 @@ export function NowPlayingView() {
             {activeSide && (
               <div
                 className={cn(
-                  'min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-border/40 bg-bg-elevated/55 shadow-2xl backdrop-blur-2xl lg:flex',
+                  'min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-border/40 bg-bg-elevated/55 shadow-2xl backdrop-blur-2xl md:flex',
                   showPlayer ? 'hidden' : 'flex',
                 )}
               >
-                <div className="hidden shrink-0 justify-center px-4 pt-4 lg:flex">
+                <div className="hidden shrink-0 justify-center px-4 pt-4 md:flex">
                   <Tabs name="wide" tabs={tabItems} active={activeSide.id} onChange={choose} />
                 </div>
                 <div className="min-h-0 flex-1 pt-2">
