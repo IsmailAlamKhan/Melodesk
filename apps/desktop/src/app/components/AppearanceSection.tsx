@@ -88,7 +88,7 @@ export function AppearanceSection() {
   const customHex = a.accent.kind === 'custom' ? a.accent.hex : '#7c5cff';
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="section-title font-semibold">{t('settings.appearance')}</h2>
+      <h2 className="font-semibold">{t('settings.appearance')}</h2>
 
       <div className="flex flex-col gap-2">
         <span className="text-sm text-fg-muted">{t('settings.theme')}</span>

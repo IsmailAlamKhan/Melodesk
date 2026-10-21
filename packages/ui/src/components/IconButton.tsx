@@ -20,7 +20,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       aria-label={label}
       className={cn(
         'inline-flex shrink-0 items-center justify-center rounded-full select-none',
-        'transition-colors duration-(--duration-fast) ease-(--ease-out)',
+        'transition-[color,background-color,transform] duration-(--duration-fast) ease-(--ease-out) active:scale-90',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
         'disabled:pointer-events-none disabled:opacity-40',
         size === 'sm' && 'size-8 [&>svg]:size-4',

@@ -136,15 +136,3 @@ input[type='range'] {
 * {
   scrollbar-color: color-mix(in oklch, var(--color-accent) 40%, transparent) transparent;
 }
-
-/* Section titles carry a short bar in the accent colour. */
-.section-title::before {
-  content: '';
-  display: inline-block;
-  width: 3px;
-  height: 1em;
-  margin-inline-end: 0.55rem;
-  border-radius: 9999px;
-  background: var(--color-accent);
-  vertical-align: -0.12em;
-}

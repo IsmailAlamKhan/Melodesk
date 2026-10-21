@@ -24,14 +24,14 @@ export function ShelfView({ shelf }: { shelf: Shelf }) {
   return (
     <section aria-label={shelf.title || undefined} className="flex flex-col gap-2">
       {(shelf.title || more) && (
-        <header className="flex items-end justify-between px-2">
+        <header className="flex items-end justify-between px-2 pb-1">
           <div className="min-w-0">
             {shelf.subtitle && (
               <div className="text-xs font-medium tracking-wide text-fg-subtle uppercase">
                 {shelf.subtitle}
               </div>
             )}
-            <h2 className="section-title truncate font-display text-xl font-semibold tracking-tight">
+            <h2 className="truncate font-display text-[22px] leading-8 font-bold tracking-tight">
               {more ? (
                 <Link to={more} className="hover:underline">
                   {shelf.title}
@@ -45,7 +45,7 @@ export function ShelfView({ shelf }: { shelf: Shelf }) {
             {more && (
               <Link
                 to={more}
-                className="me-2 rounded-full border border-border px-3 py-1 text-xs font-medium text-fg-muted hover:bg-bg-overlay hover:text-fg"
+                className="me-2 px-2 text-sm font-semibold text-fg-muted hover:text-fg hover:underline"
               >
                 {t('common.more')}
               </Link>

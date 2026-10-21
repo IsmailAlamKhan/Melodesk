@@ -17,7 +17,7 @@ export function PluginsSection() {
   const plugins = usePluginHost((s) => s.plugins);
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="section-title font-semibold">{t('plugins.title')}</h2>
+      <h2 className="font-semibold">{t('plugins.title')}</h2>
       <p className="text-sm text-fg-muted">{t('plugins.intro')}</p>
       {plugins.map((p) => (
         <PluginCard key={p.manifest.id} plugin={p} />

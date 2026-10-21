@@ -134,3 +134,12 @@ test('settings', async ({ page }) => {
   await page.getByRole('heading', { name: 'Appearance' }).scrollIntoViewIfNeeded();
   await shot(page, 'settings');
 });
+
+test('playlist page', async ({ page }) => {
+  await installTauri(page);
+  await page.goto('/');
+  await startPlayback(page, { positionS: 62, track: SAMPLE });
+  await page.getByRole('region', { name: 'Indian Music' }).getByRole('link').first().click();
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await shot(page, 'playlist');
+});

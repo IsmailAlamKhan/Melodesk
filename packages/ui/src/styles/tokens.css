@@ -343,9 +343,11 @@
   --color-warning: oklch(0.8 0.15 80);
   --color-success: oklch(0.75 0.15 150);
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
   --radius-full: 9999px;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
