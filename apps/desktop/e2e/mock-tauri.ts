@@ -107,6 +107,20 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
     const listeners = new Map<string, { id: number; handler: number }[]>();
     const sent: Record<string, unknown>[] = [];
     const kv = new Map<string, string>();
+    let settings = {
+      closeToTray: true,
+      launchAtLogin: false,
+      notifyOnTrackChange: false,
+      shortcuts: {
+        playPause: null as string | null,
+        next: null as string | null,
+        previous: null as string | null,
+        volumeUp: null as string | null,
+        volumeDown: null as string | null,
+        mute: null as string | null,
+        showHide: null as string | null,
+      },
+    };
     const bodies = new Map<number, number[]>();
     const urls = new Map<number, string>();
     const replies = new Map<number, { status: number; body: string }>();
@@ -161,25 +175,10 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
           return [];
         }
         case 'get_settings':
-          return {
-            closeToTray: true,
-            launchAtLogin: false,
-            notifyOnTrackChange: false,
-            shortcuts: {
-              playPause: null,
-              next: null,
-              previous: null,
-              volumeUp: null,
-              volumeDown: null,
-              mute: null,
-              showHide: null,
-            },
-          };
-        case 'plugin:opener|open_url':
-          sent.push({ type: 'open_url', url: args['url'] });
-          return null;
+          return settings;
         case 'set_settings':
-          sent.push({ type: 'set_settings', settings: args['settings'] });
+          settings = args['settings'] as typeof settings;
+          sent.push({ type: 'set_settings', settings });
           return null;
         case 'player_command': {
           const command = args['command'] as Record<string, unknown>;

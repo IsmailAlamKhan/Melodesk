@@ -332,7 +332,7 @@
   "settings.notify": "Notify when the track changes",
   "settings.notifyHint": "Only while Melodesk is not the focused window.",
   "settings.shortcuts": "Global shortcuts",
-  "settings.shortcutsHint": "Work in every app while Melodesk is in the background, so avoid combinations you type or select text with. Media keys are handled by the system and need no setup.",
+  "settings.shortcutsHint": "Work in every app while Melodesk is in the background, so avoid combinations you type or select text with. Click a field and press the keys; Esc cancels and Backspace clears. Media keys are handled by the system and need no setup.",
   "settings.showPlayer": "Show player window",
   "settings.signIn": "Sign in",
   "settings.signInHint": "Sign in happens on Google’s own page inside the player window.",
