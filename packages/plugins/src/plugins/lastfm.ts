@@ -105,7 +105,10 @@ export const lastfm = definePlugin({
     });
 
     return {
-      status: () => status,
+      status: () =>
+        !sessionKey && !pendingToken && (!key() || !secret())
+          ? 'Enter your API key and secret first'
+          : status,
       actions: [
         {
           label: sessionKey ? 'Disconnect' : 'Connect to Last.fm',
@@ -116,10 +119,8 @@ export const lastfm = definePlugin({
               status = 'Not connected';
               return;
             }
-            if (!key() || !secret()) {
-              status = 'Enter your API key and secret first';
-              return;
-            }
+            // status() already says what is missing.
+            if (!key() || !secret()) return;
             if (!pendingToken) {
               const res = await call('auth.getToken', {});
               const token = res['token'];

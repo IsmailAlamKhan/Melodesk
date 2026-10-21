@@ -206,15 +206,17 @@ export const usePluginHost = create<PluginHostState>((set, get) => ({
   },
   setSettings: async (id, values) => {
     await kvSet(`plugin:${id}:settings`, JSON.stringify(values));
-    set((s) => ({
-      plugins: s.plugins.map((p) => (p.manifest.id === id ? { ...p, settings: values } : p)),
-    }));
     const rec = get().plugins.find((p) => p.manifest.id === id);
-    if (rec?.instance) {
-      // The context object is shared by reference; update it in place and notify.
-      Object.assign(rec.settings, values);
-      for (const cb of listenerSets.get(id) ?? []) cb(values);
-    }
+    if (!rec) return;
+    // A running plugin holds `rec.settings` by reference (its context was built from it), so update
+    // that very object in place. Replacing it would leave the plugin reading the old values until
+    // the app restarts.
+    for (const key of Object.keys(rec.settings)) Reflect.deleteProperty(rec.settings, key);
+    Object.assign(rec.settings, values);
+    // New record objects make the UI re-render; `settings` keeps its identity.
+    set((s) => ({ plugins: s.plugins.map((p) => (p.manifest.id === id ? { ...p } : p)) }));
+    if (rec.instance) for (const cb of listenerSets.get(id) ?? []) cb(values);
+    get().refreshStatus();
   },
   refreshStatus: () => {
     set((s) => ({
