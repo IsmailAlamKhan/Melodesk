@@ -25,6 +25,13 @@ let unlisten: (() => void) | null = null;
 /** Subscribe once to the bridge event stream and fold validated events into the store. */
 export function subscribeToPlayer(): void {
   if (unlisten) return;
+  // The player window was closed (it hides rather than quits). Video is only decoded for a window
+  // that can be seen, so go back to audio instead of decoding frames nobody watches.
+  void listen<boolean>('player:visible', ({ payload }) => {
+    usePlayerStore.setState({ playerVisible: payload });
+    if (!payload && usePlayerStore.getState().flags?.isVideo)
+      void sendCommand({ type: 'setVideoMode', video: false }).catch(() => undefined);
+  });
   void listen<unknown>(BRIDGE_EVENT_CHANNEL, ({ payload }) => {
     const parsed = BridgeEventSchema.safeParse(payload);
     if (!parsed.success) {

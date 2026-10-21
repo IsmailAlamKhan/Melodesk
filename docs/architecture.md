@@ -178,6 +178,16 @@ the website uses.
   with ordinary modifiers, select-all/copy/paste/cut/undo, and bare keys, both when saving and when
   registering. Media keys cover play/pause/next/previous without any of this.
 
+## Video
+
+Video exists only in the player webview, so the video button switches YouTube's own player out of
+audio-only mode and shows that window. While video is on, the bridge adds a constructed stylesheet
+(`inject/video-layout.ts`) that sizes YouTube's player element to fill the window, so the window
+shows the picture and not the whole page. It only lays out the official player: the stream, its
+controls and any ads are untouched. Closing the window hides it, and the UI switches back to audio
+so frames are not decoded for a window nobody can see. The selectors it depends on are in
+`selectors.v1.ts`; if YouTube changes its markup the window shows the normal page, which still plays.
+
 ## Gotchas learned the hard way
 
 - `app.security.freezePrototype` must stay **false**: Tauri injects the prototype freeze into

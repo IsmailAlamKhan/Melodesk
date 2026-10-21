@@ -274,6 +274,8 @@ pub fn create_player_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()>
         if let WindowEvent::CloseRequested { api, .. } = event {
             api.prevent_close();
             let _ = handle.hide();
+            // Tell the UI, so a video that is no longer on screen stops being decoded.
+            let _ = handle.emit("player:visible", false);
         }
     });
     Ok(())

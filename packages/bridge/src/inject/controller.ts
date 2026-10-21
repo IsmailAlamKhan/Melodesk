@@ -20,6 +20,7 @@ import {
   propNames,
 } from './page-api';
 import { AudioEngine } from './audio';
+import { setVideoLayout } from './video-layout';
 import { selectors } from './selectors.v1';
 import { emit, log } from './transport';
 
@@ -273,6 +274,10 @@ export class BridgeController {
         break;
       case 'setVideoMode':
         getStore()?.dispatch({ type: 'SET_PLAYER_AUDIO_ONLY', payload: !cmd.video });
+        // The video lives in the player page, which the page only lays out while it is open.
+        if (cmd.video)
+          getStore()?.dispatch({ type: 'SET_PLAYER_PAGE_INFO', payload: { open: true } });
+        setVideoLayout(cmd.video);
         break;
       case 'setAudio':
         this.audio.apply(cmd.config);
