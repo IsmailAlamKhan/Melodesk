@@ -31,15 +31,17 @@ export function Layout() {
         className={cn(
           // Wide: sidebar | page | optional panel, player bar underneath. Narrow (< 768px): the page
           // alone, with the player bar and a tab bar stacked under it; panels open full screen.
-          'grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto_auto] md:grid-rows-[minmax(0,1fr)_auto]',
-          active ? 'md:grid-cols-[220px_1fr_320px]' : 'md:grid-cols-[220px_1fr]',
+          'grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto_auto] rail:grid-rows-[minmax(0,1fr)_auto]',
+          active
+            ? 'rail:grid-cols-[80px_1fr] wide:grid-cols-[220px_1fr_320px]'
+            : 'rail:grid-cols-[80px_1fr] wide:grid-cols-[220px_1fr]',
         )}
       >
         <Sidebar />
         <div data-content className="flex min-h-0 min-w-0 flex-col">
           <div
             data-tauri-drag-region
-            className="topbar-inset flex h-14 shrink-0 items-center gap-1 px-3 pt-2 md:gap-2"
+            className="topbar-inset flex h-14 shrink-0 items-center gap-1 px-3 pt-2 rail:gap-2"
           >
             <IconButton label={t('nav.back')} size="sm" onClick={() => navigate(-1)}>
               <ChevronLeft className="rtl:-scale-x-100" />
@@ -47,7 +49,7 @@ export function Layout() {
             <IconButton
               label={t('nav.forward')}
               size="sm"
-              className="max-md:hidden"
+              className="max-rail:hidden"
               onClick={() => navigate(1)}
             >
               <ChevronRight className="rtl:-scale-x-100" />
@@ -77,10 +79,10 @@ export function Layout() {
         {active && (
           <aside
             aria-label={t(active.label)}
-            className="flex min-h-0 flex-col border-s border-border bg-bg-elevated max-md:fixed max-md:inset-0 max-md:z-40 max-md:border-s-0 max-md:bg-bg"
+            className="flex min-h-0 flex-col border-s border-border bg-bg-elevated max-wide:fixed max-wide:inset-0 max-wide:z-40 max-wide:border-s-0 max-wide:bg-bg"
           >
-            <div data-tauri-drag-region className="h-10 shrink-0 max-md:hidden" />
-            <div className="topbar-inset flex h-14 shrink-0 items-center justify-between px-3 pt-2 md:hidden">
+            <div data-tauri-drag-region className="h-10 shrink-0 max-wide:hidden" />
+            <div className="panel-inset flex h-14 shrink-0 items-center justify-between px-3 pt-2 wide:hidden">
               <span className="font-semibold">{t(active.label)}</span>
               <IconButton
                 label={t('common.close')}
@@ -97,7 +99,12 @@ export function Layout() {
             </div>
           </aside>
         )}
-        <div className={cn(active ? 'md:col-span-3' : 'md:col-span-2')}>
+        <div
+          className={cn(
+            'max-rail:px-2',
+            active ? 'rail:col-span-2 wide:col-span-3' : 'rail:col-span-2',
+          )}
+        >
           <PlayerBar />
         </div>
         <BottomNav />

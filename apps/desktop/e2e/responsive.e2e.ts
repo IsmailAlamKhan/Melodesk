@@ -146,3 +146,23 @@ test('a playlist page fits and lists tracks in one column set', async ({ page })
   });
   expect(await overflowing(page), 'playlist').toEqual([]);
 });
+
+test.describe('in between: a navigation rail', () => {
+  test.use({ viewport: { width: 700, height: 800 } });
+
+  test('shows the rail with labels instead of the tab bar, and pages still fit', async ({
+    page,
+  }) => {
+    const rail = page.getByRole('navigation', { name: 'Primary' });
+    await expect(rail).toBeVisible();
+    await expect(rail.getByRole('link', { name: 'Library' })).toBeVisible();
+    const box = await rail.boundingBox();
+    expect(box?.width).toBe(80);
+    expect(box?.x).toBe(0);
+    for (const name of ['Home', 'Explore', 'Library', 'Stats', 'Settings']) {
+      await rail.getByRole('link', { name }).click();
+      await page.waitForTimeout(300);
+      expect(await overflowing(page), name).toEqual([]);
+    }
+  });
+});

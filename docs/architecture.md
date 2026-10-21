@@ -178,14 +178,20 @@ the website uses.
   with ordinary modifiers, select-all/copy/paste/cut/undo, and bare keys, both when saving and when
   registering. Media keys cover play/pause/next/previous without any of this.
 
-## Narrow windows
+## Window sizes
 
-Below 768 px (Tailwind's `md`) the shell switches to a phone-style layout with plain responsive
-classes, no separate code path: the sidebar becomes a tab bar under the player bar (`BottomNav`, the
-same `nav` contributions), the player bar shrinks to cover, title and transport, right-hand panels
-open full screen with a close button, track rows drop the album column and play on one tap, and
-macOS leaves room for the window buttons in the top bar. New UI should work at 360 px (the window's
-minimum width): `e2e/responsive.e2e.ts` runs at 375 px and fails on anything that sticks out.
+The shell follows Material's window size classes, with plain responsive classes and no separate code
+path (breakpoints `rail` = 600 px and `wide` = 840 px in `tokens.css`):
+
+- **Below 600 px:** one column. The sidebar entries become a floating tab bar under a floating
+  player card (cover, title, transport); macOS leaves room for the window buttons in the top bar.
+- **600 to 839 px:** an 80 px navigation rail (icon in a pill, label underneath) and a compact
+  player bar. Right-hand panels open full screen.
+- **840 px and up:** the full sidebar, the three-column player bar and side panels.
+
+Rows drop the album column below 600 px and play on one tap there. New UI should work at 360 px (the
+window's minimum width): `e2e/responsive.e2e.ts` runs at 375 and 700 px and fails on anything that
+sticks out.
 
 ## Video
 

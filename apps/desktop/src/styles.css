@@ -32,8 +32,14 @@ body {
 
 /* macOS draws the window buttons over the top-left corner; with no sidebar under them (narrow
    windows) the top bar has to start after them. */
-@media (max-width: 767px) {
+@media (max-width: 599px) {
   :root[data-platform='macos'] .topbar-inset {
+    padding-inline-start: 5rem;
+  }
+}
+/* The same for a panel that covers the window (below the full-sidebar width). */
+@media (max-width: 839px) {
+  :root[data-platform='macos'] .panel-inset {
     padding-inline-start: 5rem;
   }
 }

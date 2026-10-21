@@ -283,6 +283,10 @@
 }
 
 @theme {
+  /* Window widths, after Material's window size classes: below `rail` a tab bar, from `rail` a
+     navigation rail, from `wide` the full sidebar. */
+  --breakpoint-rail: 37.5rem;
+  --breakpoint-wide: 52.5rem;
   --font-sans:
     -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text', 'Segoe UI',
     system-ui, sans-serif;

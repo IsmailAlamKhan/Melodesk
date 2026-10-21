@@ -84,10 +84,10 @@ export function PlayerBar() {
     <footer
       aria-label={t('player.region')}
       style={tint}
-      className="player-bar group/bar relative grid h-16 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-bg-elevated/80 md:h-[88px] md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1fr)] md:gap-6 bg-[image:linear-gradient(to_right,color-mix(in_srgb,var(--bar-tint)_26%,transparent),transparent_55%)] px-3 shadow-[0_-12px_32px_-12px_rgb(0_0_0/0.35)] backdrop-blur-xl md:px-6"
+      className="player-bar group/bar relative grid h-16 max-rail:rounded-2xl max-rail:border max-rail:border-border/60 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-bg-elevated/80 wide:h-[88px] wide:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1fr)] wide:gap-6 bg-[image:linear-gradient(to_right,color-mix(in_srgb,var(--bar-tint)_26%,transparent),transparent_55%)] px-3 shadow-[0_-12px_32px_-12px_rgb(0_0_0/0.35)] backdrop-blur-xl wide:px-6"
     >
       <SeekLine disabled={disabled} />
-      <div className="flex min-w-0 items-center gap-3 md:gap-4">
+      <div className="flex min-w-0 items-center gap-3 wide:gap-4">
         {track?.artworkUrl && canOpenNowPlaying ? (
           <Tooltip label={t('player.openNowPlaying')}>
             <button
@@ -99,7 +99,7 @@ export function PlayerBar() {
               <Img
                 src={track.artworkUrl}
                 alt=""
-                className="size-11 rounded-lg bg-bg-overlay object-cover md:size-14"
+                className="size-11 rounded-lg bg-bg-overlay object-cover wide:size-14"
               />
             </button>
           </Tooltip>
@@ -107,10 +107,10 @@ export function PlayerBar() {
           <Img
             src={track.artworkUrl}
             alt=""
-            className="size-11 shrink-0 rounded-lg bg-bg-overlay object-cover shadow-lg ring-1 ring-white/10 md:size-14"
+            className="size-11 shrink-0 rounded-lg bg-bg-overlay object-cover shadow-lg ring-1 ring-white/10 wide:size-14"
           />
         ) : (
-          <div className="size-11 shrink-0 rounded-lg bg-bg-overlay md:size-14" />
+          <div className="size-11 shrink-0 rounded-lg bg-bg-overlay wide:size-14" />
         )}
         <div className="min-w-0">
           <div className="truncate text-[15px] leading-tight font-semibold">
@@ -128,7 +128,7 @@ export function PlayerBar() {
           </button>
         </div>
         {track && (
-          <div className="ms-1 flex shrink-0 items-center">
+          <div className="ms-1 flex shrink-0 items-center max-rail:hidden">
             <IconButton
               label={like === 'LIKE' ? t('player.removeLike') : t('player.like')}
               size="sm"
@@ -140,7 +140,7 @@ export function PlayerBar() {
               label={like === 'DISLIKE' ? t('player.removeDislike') : t('player.dislike')}
               size="sm"
               className={cn(
-                'transition-opacity max-md:hidden',
+                'transition-opacity max-wide:hidden',
                 like !== 'DISLIKE' &&
                   'opacity-0 group-hover/bar:opacity-100 focus-visible:opacity-100',
               )}
@@ -152,15 +152,15 @@ export function PlayerBar() {
         )}
       </div>
 
-      <div dir="ltr" className="flex items-center justify-center gap-1 md:gap-3">
-        <TimeLabel kind="elapsed" className="text-right max-md:hidden" />
+      <div dir="ltr" className="flex items-center justify-center gap-1 wide:gap-3">
+        <TimeLabel kind="elapsed" className="text-right max-wide:hidden" />
         <div className="flex items-center gap-1">
           <IconButton
             label={queue?.shuffle ? t('player.shuffleOn') : t('player.shuffle')}
             size="sm"
             disabled={disabled}
             aria-pressed={queue?.shuffle ?? false}
-            className={cn('max-md:hidden', queue?.shuffle && ['text-accent', dot])}
+            className={cn('max-wide:hidden', queue?.shuffle && ['text-accent', dot])}
             onClick={() =>
               void sendCommand({ type: 'setShuffle', enabled: !(queue?.shuffle ?? false) })
             }
@@ -178,7 +178,7 @@ export function PlayerBar() {
             label={playing ? t('player.pause') : t('player.play')}
             variant="solid"
             size="xl"
-            className="mx-1 shadow-lg hover:scale-105"
+            className="mx-1 shadow-lg hover:scale-105 max-wide:size-12"
             disabled={disabled}
             onClick={() => void sendCommand({ type: 'toggle' })}
           >
@@ -203,7 +203,7 @@ export function PlayerBar() {
             disabled={disabled}
             aria-pressed={(queue?.repeat ?? 'off') !== 'off'}
             className={cn(
-              'max-md:hidden',
+              'max-wide:hidden',
               queue?.repeat && queue.repeat !== 'off' && ['text-accent', dot],
             )}
             onClick={() =>
@@ -221,10 +221,10 @@ export function PlayerBar() {
             {queue?.repeat === 'one' ? <Repeat1 /> : <Repeat />}
           </IconButton>
         </div>
-        <TimeLabel kind="total" className="max-md:hidden" />
+        <TimeLabel kind="total" className="max-wide:hidden" />
       </div>
 
-      <div className="hidden items-center justify-end gap-1 md:flex">
+      <div className="hidden items-center justify-end gap-1 wide:flex">
         {track && (
           <IconButton
             label={flags?.isVideo ? t('player.switchToSong') : t('player.switchToVideo')}
