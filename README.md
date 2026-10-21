@@ -62,7 +62,11 @@ Planned and in progress; ticked items work today.
 - [x] Material 3 Expressive colour: a full tonal scheme generated from your accent (or the album art), light / dark / AMOLED themes, three contrast levels, and smooth colour transitions
 - [x] Density and right-to-left layout
 - [x] Translation framework with English strings; see [docs/translating.md](docs/translating.md)
-- [x] Listening stats, command palette, plugins, lyrics romanization and translation
+- [x] Listening stats (with a streak, favourite time of day, new artists and a copyable summary), command palette, plugins, lyrics romanization and translation
+- [x] Lyrics for covers and unusual titles: guesses of the real song, more sources (LRCLIB, NetEase, lyrics.ovh), an optional local AI helper (Ollama) and a "look up another song" box
+- [x] Music visuals that move with playback (a Visualizer tab, glows and bars; on macOS and Linux they follow the rhythm rather than the sound, see docs/architecture.md)
+- [x] Continue listening, a sleep timer that fades out, an offline banner, and a Reload player button when the page gets stuck
+- [x] Responsive layout from phone-sized windows up, a modular feature system (docs/extending.md) and an accessibility audit in the tests
 
 ## What it can't do, and why
 
