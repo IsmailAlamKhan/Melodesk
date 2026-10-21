@@ -114,6 +114,13 @@ have Premium; background playback works because the player runs in an app window
 
 **Why Tauri and not Electron?** Smaller installer, less memory, and native webviews.
 
+## Plug and play
+
+Almost everything in the UI is a self-contained feature in `apps/desktop/src/features/`. Add a folder
+and it is part of the app; delete it and it is gone; switch parts on and off in Settings → Features.
+The Discord and global-shortcut code in the Rust shell is optional too (Cargo features). See
+[docs/extending.md](docs/extending.md).
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Good first issues are labelled on the issue tracker; a

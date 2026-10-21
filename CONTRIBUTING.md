@@ -27,7 +27,14 @@ pnpm dev
 | `packages/adapter` | Parsers and selectors for YouTube's responses (versioned, tested) |
 | `packages/ui`      | Design tokens and React components                                |
 | `packages/plugins` | Plugin SDK and first-party plugins                                |
-| `docs`             | Architecture, this guide's longer form, plugin guide              |
+| `docs`             | Architecture, adding features, plugin guide                       |
+
+### Adding a feature
+
+New UI belongs in a feature folder: `apps/desktop/src/features/<id>/`. Copy `features/_template`,
+and read [docs/extending.md](docs/extending.md) for what a feature can add, how features may (and may
+not) depend on each other, and how to make part of it optional. `pnpm features:removable` checks that
+every feature folder can be deleted without breaking the build.
 
 ## Before you push
 

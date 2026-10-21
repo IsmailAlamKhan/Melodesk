@@ -53,7 +53,28 @@ to the player through a small bridge. If you remember one diagram, remember this
   fixture-tested in CI. The only place that knows YouTube's response shapes.
 - **packages/ui** – design tokens (`tokens.css`) and React components.
 - **packages/plugins** – plugin SDK (manifest, permissions) and first-party plugins.
-- **apps/desktop** – the Tauri shell and the React application that composes the above.
+- **apps/desktop** – the Tauri shell and the React application that composes the above. Its UI is
+  `src/core` (feature framework), `src/app` (shell) and `src/features/*` (everything else).
+
+## The app is assembled from features
+
+The React app is a thin shell (`src/app`: layout, sidebar, player bar) plus a framework (`src/core`)
+plus **features** (`src/features/<id>/`). Each feature default-exports `defineFeature({...})` and
+contributes to named extension points: routes, sidebar links, right-hand panels, overlays,
+providers, slots, palette commands, right-click entries, settings sections and extra windows.
+`import.meta.glob` finds the folders at build time, so adding a folder plugs a feature in and
+deleting it removes it. Users can switch non-core features off in Settings → Features; the
+registry recomputes what is active (dependencies, missing native modules), the UI follows, and
+each feature's `start()` is cleaned up.
+
+Features are trusted first-party code. The permission-gated plugin SDK (`packages/plugins`) is a
+separate layer for anything that handles the user's data on the way to an outside service; the
+Integrations feature hosts it. Rules that keep features independent (no imports between features
+except through `dependsOn`, nothing outside reaching in) are tests; see
+[extending.md](extending.md).
+
+On the Rust side the optional parts (Discord presence, global shortcuts) are Cargo features with
+stubs, and the UI asks which exist (`native_modules`) before offering the features that need them.
 
 ## Why a second window instead of a child webview
 

@@ -4,6 +4,48 @@ Plugins extend Melodesk without touching playback internals. The SDK lives in
 `packages/plugins` and the four first-party plugins (LRCLIB lyrics, Last.fm, ListenBrainz,
 Discord Rich Presence) are built on it, so the SDK is exercised by shipping code.
 
+## Add a plugin
+
+A plugin is one file plus one line. About ten minutes for a first one.
+
+1. **Copy the template.** `packages/plugins/src/plugins/_template.ts` is a working plugin that
+   needs no network access. Copy it to `packages/plugins/src/plugins/<your-id>.ts` and rename the
+   export and the manifest `id`.
+2. **Declare what it needs** in the manifest (see the permission table below). Ask only for what
+   you use. If it talks to a server, list the exact hostnames in `hosts` and describe in
+   `description` what is sent where; users read that text before turning the plugin on.
+3. **Register it** in `packages/plugins/src/index.ts`: export it, import it, and add it to
+   `firstPartyPlugins` (the order is the order in Settings → Plugins).
+4. **Allow its hosts in the shell.** For every entry in `hosts`, add `{ "url": "https://host/*" }`
+   to the `http:default` list in `apps/desktop/src-tauri/capabilities/main.json`. A test fails if
+   you forget (`features/integrations/capabilities.test.ts`), so this cannot slip through.
+5. **Run it.** `pnpm dev`, open Settings → Plugins, switch your plugin on. Its settings fields,
+   action buttons and status line show up on its card with no UI work.
+
+Then check it with `pnpm typecheck && pnpm lint && pnpm test`. For logic that does not need the
+app (parsing a response, deciding when to scrobble) put the function in the plugin's file or a
+small module next to it and unit-test it in `packages/plugins/tests`, as `parseLrc` and
+`createScrobbleTracker` are. For behaviour inside the app, see `apps/desktop/e2e/plugins.e2e.ts`;
+the mocked backend answers `plugin:http` requests so no test touches the network.
+
+Things plugins cannot do on purpose: read cookies or credentials, touch playback internals, call
+arbitrary native commands, or reach hosts they did not declare. A plugin that needs something new
+from the app is a request for a new, narrowly scoped permission, not a workaround.
+
+### A plugin that needs Rust code
+
+If the plugin needs a native command (Discord presence does), it is a bigger change: add the command
+to the shell, behind an optional Cargo feature with a stub so builds without it still work (see
+"Native modules" in [extending.md](extending.md)), add a permission such as `native:<name>` to the
+manifest schema, and map the plugin to its native module in `PLUGIN_NEEDS` in
+`apps/desktop/src/features/integrations/host.ts` so builds without the module do not offer it.
+
+### Plugin or feature?
+
+If it is part of how Melodesk looks or behaves (a page, a panel, a menu), it is a **feature**:
+[extending.md](extending.md). If it sends the user's listening data or fetches from an outside
+service, it is a **plugin**, so its access is declared and visible.
+
 ## Shape of a plugin
 
 ```ts
@@ -51,8 +93,9 @@ permission is not declared, so there is nothing to "escape" from.
 
 ## Settings and lifecycle
 
-Plugins are off by default (`enabledByDefault: false`) and toggled from Settings → Plugins,
-which also renders `settingsFields` and the instance's `actions` and `status()`. Enable
+Plugins are off by default (`enabledByDefault: false`) and toggled from Settings → Plugins (that
+section belongs to the Integrations feature, so switching that feature off hides all plugins and
+stops the host), which also renders `settingsFields` and the instance's `actions` and `status()`. Enable
 state and settings persist in the local database. `dispose()` runs when a plugin is turned
 off.
 
