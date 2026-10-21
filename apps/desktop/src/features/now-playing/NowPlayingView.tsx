@@ -172,8 +172,10 @@ export function NowPlayingView() {
         void sendCommand({ type: 'toggle' });
       }
     };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    // On the document, which hears a key before the window does, so the app-wide keys (Space…) see
+    // that this already handled the press. Karaoke's capture-phase handler still comes first.
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
   }, [open, close]);
 
   const playing = state?.playing ?? false;

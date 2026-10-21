@@ -1,3 +1,4 @@
+import { runAction, useHasAction } from '../../core';
 import { useT } from '../../i18n/index';
 import { SHORTCUT_ACTIONS, useSettings } from '../../settings/store';
 import { ShortcutField } from './ShortcutField';
@@ -6,10 +7,20 @@ export function ShortcutsSection() {
   const t = useT();
   const settings = useSettings((s) => s.settings);
   const update = useSettings((s) => s.update);
+  const hasKeyList = useHasAction('keyboard.help');
   return (
     <section className="flex flex-col gap-3">
       <h2 className="font-semibold">{t('settings.shortcuts')}</h2>
       <p className="text-sm text-fg-muted">{t('settings.shortcutsHint')}</p>
+      {hasKeyList && (
+        <button
+          type="button"
+          onClick={() => runAction('keyboard.help')}
+          className="self-start text-sm text-accent hover:underline"
+        >
+          {t('settings.shortcutsInApp')}
+        </button>
+      )}
       {settings && (
         <div className="flex flex-col divide-y divide-border rounded-2xl border border-border/50 bg-bg-elevated">
           {SHORTCUT_ACTIONS.map((a) => (

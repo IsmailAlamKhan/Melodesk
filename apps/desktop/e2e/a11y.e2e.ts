@@ -83,6 +83,10 @@ test('the main screens have no accessibility violations (dark)', async ({ page }
   await page.keyboard.press('ControlOrMeta+K');
   await audit(page, 'command palette', found);
   await page.keyboard.press('Escape');
+  await page.locator('body').click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press('?');
+  await audit(page, 'keyboard shortcuts', found);
+  await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Queue' }).first().click();
   await audit(page, 'queue panel', found);
   await page.getByRole('button', { name: 'Queue' }).first().click();
