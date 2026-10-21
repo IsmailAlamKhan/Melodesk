@@ -21,6 +21,8 @@ import type { Track, ViewSort } from '../app/components/trackSort';
 
 /** Named places in the UI that features can add components to, with the props each one passes. */
 export interface SlotMap {
+  /** Cards at the top of the Home page, above the shelves (continue listening, tips…). */
+  'home.top': object;
   /** Buttons on the right of the top bar, after the panel toggles. */
   'topBar.end': object;
   /** The search field in the middle of the top bar. */

@@ -139,7 +139,11 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
     let nextId = 1;
     const listeners = new Map<string, { id: number; handler: number }[]>();
     const sent: Record<string, unknown>[] = [];
-    const kv = new Map<string, string>();
+    // Kept in localStorage so a reload keeps it, as the real database does.
+    const kv = new Map<string, string>(
+      JSON.parse(localStorage.getItem('__mockKv') ?? '[]') as [string, string][],
+    );
+    const persistKv = (): void => localStorage.setItem('__mockKv', JSON.stringify([...kv]));
     let settings = {
       closeToTray: true,
       launchAtLogin: false,
@@ -196,6 +200,7 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
           const v = args['values'] as unknown[];
           if (/INSERT INTO settings/iu.test(q)) kv.set(String(v[0]), String(v[1]));
           if (/DELETE FROM settings/iu.test(q)) kv.delete(String(v[0]));
+          persistKv();
           return [1, 0];
         }
         case 'plugin:sql|select': {

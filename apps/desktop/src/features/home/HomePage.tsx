@@ -7,6 +7,7 @@ import { ChipBar } from '../../app/components/ChipBar';
 import { ErrorState } from '../../app/components/ErrorState';
 import { PageSkeleton, ShelfSkeleton } from '../../app/components/PageSkeleton';
 import { ShelfView } from '../../app/components/ShelfView';
+import { Slot } from '../../core';
 import { usePlayerStore } from '../../player/store';
 import { Welcome } from '../../app/Welcome';
 
@@ -41,6 +42,9 @@ export function HomePage() {
   const shelves = q.data.pages.flatMap((p) => p.shelves);
   return (
     <div className="flex flex-col gap-8 pb-8">
+      <div className="flex flex-col gap-3 px-2 pt-4 empty:hidden">
+        <Slot name="home.top" />
+      </div>
       <div className="sticky top-0 z-10 px-2 pt-4 pb-2 backdrop-blur-xl">
         <ChipBar
           chips={first?.chips ?? []}

@@ -6,6 +6,9 @@ import { loadStats, type StatsRange, type TopEntry } from './queries';
 import { playEndpoint } from '../../player/actions';
 import { useNavigate } from 'react-router';
 import { Img } from '../../core';
+import { toast } from '../../app/toast';
+import type { DayPart } from './recap';
+import type { StatsSummary } from './queries';
 
 const RANGES: { key: StatsRange; labelKey: MessageKey }[] = [
   { key: 'week', labelKey: 'stats.range.week' },
@@ -70,6 +73,34 @@ export function StatsPage() {
             <Stat label={t('stats.differentArtists')} value={String(s.uniqueArtists)} />
           </section>
 
+          <section
+            aria-label={t('stats.highlights')}
+            className="grid grid-cols-2 gap-3 md:grid-cols-4"
+          >
+            <Stat
+              label={t('stats.streak')}
+              value={t('stats.days', { count: s.streak.current })}
+              hint={t('stats.streak.best', { count: s.streak.longest })}
+            />
+            <Stat
+              label={t('stats.favoriteTime')}
+              value={s.dayPart ? t(DAY_PART_KEY[s.dayPart]) : '—'}
+            />
+            {range !== 'all' && <Stat label={t('stats.newArtists')} value={String(s.newArtists)} />}
+            <button
+              type="button"
+              onClick={() => {
+                void navigator.clipboard
+                  .writeText(summaryText(s, range, t, fd))
+                  .then(() => toast(t('stats.summaryCopied')))
+                  .catch(() => undefined);
+              }}
+              className="flex items-center justify-center rounded-2xl border border-dashed border-border bg-transparent p-4 text-sm text-fg-muted hover:bg-bg-overlay hover:text-fg"
+            >
+              {t('stats.copySummary')}
+            </button>
+          </section>
+
           {range === 'week' && s.totalSeconds > 0 && (
             <section className="rounded-xl border border-border bg-gradient-to-br from-accent/20 to-bg-elevated p-6">
               <div className="text-xs font-medium tracking-wide text-fg-subtle uppercase">
@@ -123,13 +154,42 @@ export function StatsPage() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="rounded-2xl border border-border/50 bg-bg-elevated p-4">
       <div className="text-xs text-fg-subtle">{label}</div>
       <div className="mt-1 font-display text-2xl font-semibold tabular-nums">{value}</div>
+      {hint && <div className="mt-0.5 text-xs text-fg-subtle">{hint}</div>}
     </div>
   );
+}
+
+const DAY_PART_KEY: Record<DayPart, MessageKey> = {
+  morning: 'stats.dayPart.morning',
+  afternoon: 'stats.dayPart.afternoon',
+  evening: 'stats.dayPart.evening',
+  night: 'stats.dayPart.night',
+};
+
+/** A few lines to paste somewhere: the numbers, no account details. */
+function summaryText(
+  s: StatsSummary,
+  range: StatsRange,
+  t: ReturnType<typeof useT>,
+  fd: (seconds: number) => string,
+): string {
+  const lines = [
+    t('stats.summary.head', {
+      range: t(RANGES.find((r) => r.key === range)?.labelKey ?? 'stats.range.week'),
+      time: fd(s.totalSeconds),
+    }),
+  ];
+  const artist = s.topArtists[0];
+  if (artist) lines.push(t('stats.summary.artist', { artist: artist.label }));
+  const track = s.topTracks[0];
+  if (track) lines.push(t('stats.summary.track', { track: track.label }));
+  if (s.streak.current > 1) lines.push(t('stats.summary.streak', { count: s.streak.current }));
+  return lines.join('\n');
 }
 
 function TopList({

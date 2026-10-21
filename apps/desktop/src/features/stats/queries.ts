@@ -1,4 +1,20 @@
 import { db } from '../../data/persister';
+import { dayPart, localDay, streaks, type DayPart } from './recap';
+
+/** What loadStats needs from the database: the SQL plugin's `select`, or a stand-in in tests. */
+export interface StatsDb {
+  select: <T>(sql: string, bindings?: unknown[]) => Promise<T>;
+}
+
+/**
+ * The artist alone: the player reports "Artist • Album • Year", so grouping on the raw text split one
+ * artist into a row per album.
+ */
+const ARTIST =
+  "(CASE WHEN instr(artist, ' • ') > 0 THEN substr(artist, 1, instr(artist, ' • ') - 1) ELSE artist END)";
+/** A play counts once it has been listened to for 30 seconds or half the song, as for scrobbling. */
+const COUNTED =
+  '(listened_seconds >= 30 OR (duration_seconds > 0 AND listened_seconds * 2 >= duration_seconds))';
 
 export interface TopEntry {
   key: string;
@@ -23,6 +39,11 @@ export interface StatsSummary {
   days: DayBucket[];
   /** Hour-of-day histogram (0..23) in seconds. */
   hours: number[];
+  /** Days in a row with listening, counted over all time, and the best run ever. */
+  streak: { current: number; longest: number };
+  /** Artists first heard in this range (not meaningful for `all`). */
+  newArtists: number;
+  dayPart: DayPart | null;
 }
 
 export type StatsRange = 'week' | 'month' | 'year' | 'all';
@@ -37,16 +58,26 @@ export function rangeBounds(range: StatsRange, now = Date.now()): { from: number
   return { from: d.getTime(), to };
 }
 
-export async function loadStats(range: StatsRange): Promise<StatsSummary> {
-  const { from, to } = rangeBounds(range);
-  const conn = await db();
-  const [totals] = await conn.select<
-    { seconds: number | null; plays: number; tracks: number; artists: number }[]
+export async function loadStats(
+  range: StatsRange,
+  conn: StatsDb | null = null,
+  now = Date.now(),
+): Promise<StatsSummary> {
+  const { from, to } = rangeBounds(range, now);
+  const c = conn ?? (await db());
+  const between = 'played_at BETWEEN $1 AND $2';
+  const args = [from, to];
+  const [totals] = await c.select<
+    { seconds: number | null; plays: number | null; tracks: number; artists: number }[]
   >(
-    'SELECT COALESCE(SUM(listened_seconds),0) AS seconds, COUNT(*) AS plays, COUNT(DISTINCT video_id) AS tracks, COUNT(DISTINCT artist) AS artists FROM history WHERE played_at BETWEEN $1 AND $2',
-    [from, to],
+    `SELECT COALESCE(SUM(listened_seconds), 0) AS seconds,
+            SUM(CASE WHEN ${COUNTED} THEN 1 ELSE 0 END) AS plays,
+            COUNT(DISTINCT CASE WHEN ${COUNTED} THEN video_id END) AS tracks,
+            COUNT(DISTINCT CASE WHEN ${COUNTED} AND artist <> '' THEN ${ARTIST} END) AS artists
+       FROM history WHERE ${between}`,
+    args,
   );
-  const topTracks = await conn.select<
+  const topTracks = await c.select<
     {
       video_id: string;
       title: string;
@@ -56,25 +87,47 @@ export async function loadStats(range: StatsRange): Promise<StatsSummary> {
       seconds: number;
     }[]
   >(
-    'SELECT video_id, MAX(title) AS title, MAX(artist) AS artist, MAX(artwork_url) AS artwork_url, COUNT(*) AS plays, SUM(listened_seconds) AS seconds FROM history WHERE played_at BETWEEN $1 AND $2 GROUP BY video_id ORDER BY seconds DESC, plays DESC LIMIT 10',
-    [from, to],
+    `SELECT video_id, MAX(title) AS title, MAX(artist) AS artist, MAX(artwork_url) AS artwork_url,
+            SUM(CASE WHEN ${COUNTED} THEN 1 ELSE 0 END) AS plays, SUM(listened_seconds) AS seconds
+       FROM history WHERE ${between} GROUP BY video_id
+      HAVING plays > 0 ORDER BY seconds DESC, plays DESC LIMIT 10`,
+    args,
   );
-  const topArtists = await conn.select<
-    { artist: string; artwork_url: string | null; plays: number; seconds: number }[]
+  const topArtists = await c.select<
+    { name: string; artwork_url: string | null; plays: number; seconds: number }[]
   >(
-    "SELECT artist, MAX(artwork_url) AS artwork_url, COUNT(*) AS plays, SUM(listened_seconds) AS seconds FROM history WHERE played_at BETWEEN $1 AND $2 AND artist <> '' GROUP BY artist ORDER BY seconds DESC, plays DESC LIMIT 10",
-    [from, to],
+    `SELECT ${ARTIST} AS name, MAX(artwork_url) AS artwork_url,
+            SUM(CASE WHEN ${COUNTED} THEN 1 ELSE 0 END) AS plays, SUM(listened_seconds) AS seconds
+       FROM history WHERE ${between} AND artist <> '' GROUP BY name
+      HAVING plays > 0 ORDER BY seconds DESC, plays DESC LIMIT 10`,
+    args,
   );
-  const days = await conn.select<{ day: string; seconds: number }[]>(
-    "SELECT date(played_at / 1000, 'unixepoch', 'localtime') AS day, SUM(listened_seconds) AS seconds FROM history WHERE played_at BETWEEN $1 AND $2 GROUP BY day ORDER BY day",
-    [from, to],
+  const days = await c.select<{ day: string; seconds: number }[]>(
+    `SELECT date(played_at / 1000, 'unixepoch', 'localtime') AS day, SUM(listened_seconds) AS seconds
+       FROM history WHERE ${between} GROUP BY day ORDER BY day`,
+    args,
   );
-  const hourRows = await conn.select<{ hour: number; seconds: number }[]>(
-    "SELECT CAST(strftime('%H', played_at / 1000, 'unixepoch', 'localtime') AS INTEGER) AS hour, SUM(listened_seconds) AS seconds FROM history WHERE played_at BETWEEN $1 AND $2 GROUP BY hour",
-    [from, to],
+  const hourRows = await c.select<{ hour: number; seconds: number }[]>(
+    `SELECT CAST(strftime('%H', played_at / 1000, 'unixepoch', 'localtime') AS INTEGER) AS hour,
+            SUM(listened_seconds) AS seconds
+       FROM history WHERE ${between} GROUP BY hour`,
+    args,
   );
   const hours = Array.from({ length: 24 }, () => 0);
   for (const h of hourRows) hours[h.hour] = h.seconds;
+
+  // Streaks are about all of the listening, whatever range is shown.
+  const everyDay = await c.select<{ day: string }[]>(
+    `SELECT DISTINCT date(played_at / 1000, 'unixepoch', 'localtime') AS day
+       FROM history WHERE listened_seconds >= 30 ORDER BY day`,
+  );
+  const [fresh] = await c.select<{ n: number }[]>(
+    `SELECT COUNT(*) AS n FROM (
+       SELECT ${ARTIST} AS name, MIN(played_at) AS first
+         FROM history WHERE artist <> '' AND ${COUNTED} GROUP BY name
+     ) WHERE first BETWEEN $1 AND $2`,
+    args,
+  );
   return {
     range: { from, to },
     totalSeconds: totals?.seconds ?? 0,
@@ -90,8 +143,8 @@ export async function loadStats(range: StatsRange): Promise<StatsSummary> {
       seconds: t.seconds,
     })),
     topArtists: topArtists.map((a) => ({
-      key: a.artist,
-      label: a.artist.split(' • ')[0] ?? a.artist,
+      key: a.name,
+      label: a.name,
       sublabel: null,
       artworkUrl: a.artwork_url,
       plays: a.plays,
@@ -99,6 +152,12 @@ export async function loadStats(range: StatsRange): Promise<StatsSummary> {
     })),
     days,
     hours,
+    streak: streaks(
+      everyDay.map((r) => r.day),
+      localDay(now),
+    ),
+    newArtists: fresh?.n ?? 0,
+    dayPart: dayPart(hours),
   };
 }
 
