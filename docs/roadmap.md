@@ -27,4 +27,7 @@ command palette, smart queue tools, playlist power tools, themes, plugin system,
   untested on Windows; a Settings UI is worth building once someone confirms it works there
   with `VITE_AUDIO_SELFTEST=1`.
 - **Crossfade.** Not feasible through the single page-owned player.
-- Offline artwork caching, Playwright end-to-end tests, README screenshots.
+- **Karaoke mode** is done (sing-along lyrics only; no vocal removal, see architecture notes).
+- Done since: offline cover art, Playwright end-to-end tests, README screenshots.
+- Still open: native account switching, checking the mini player and the opt-in plugins on real
+  accounts, and verifying Windows and Linux. See [good-first-issues.md](good-first-issues.md).

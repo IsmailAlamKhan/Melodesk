@@ -32,8 +32,17 @@ pnpm dev
 ## Before you push
 
 ```bash
-pnpm typecheck && pnpm test && pnpm lint && pnpm clippy && pnpm fmt:rust
+pnpm typecheck && pnpm test && pnpm test:e2e && pnpm lint && pnpm clippy && pnpm fmt:rust
 ```
+
+## End-to-end tests
+
+`apps/desktop/e2e` runs the real UI in headless Chromium. `mock-tauri.ts` stands in for Tauri's IPC
+and answers InnerTube calls from `packages/adapter/tests/fixtures`; tests push bridge events with
+`emit()` and read what the UI sent with `sentCommands()`. If a new feature calls a backend command
+the mock doesn't know, the "no unexpected backend calls" test fails: add the command to the mock
+deliberately. Every cover is replaced by a generated gradient, so tests never touch the network.
+Specs are `*.e2e.ts`; `*.shots.ts` files regenerate the README screenshots (`pnpm screenshots`).
 
 ## When YouTube changes something
 

@@ -113,8 +113,22 @@ the website uses.
   seconds of silence, before the WebKit gate existed).
   **Windows (WebView2, Chromium) should work but is untested**, and there is no Settings UI yet;
   the protocol (`setAudio`/`audio`), the engine and the saved-settings plumbing are in place.
-  `VITE_AUDIO_SELFTEST=1 pnpm tauri dev` plays a song quietly and steps through EQ and leveling so
+  `VITE_AUDIO_SELFTEST=1 pnpm dev` plays a song quietly and steps through EQ and leveling so
   someone on Windows can check the result in the bridge log.
+- **Karaoke mode** (`app/KaraokeView.tsx`, `lyrics/karaoke.ts`) is pure UI over the lyrics we
+  already have. LRCLIB only has line start times, so words are timed by spreading each line over its
+  words by length, and a line's sung length is estimated whenever its "end" is just the next line's
+  start (otherwise pauses vanish and the fill creeps across them). YouTube's own timed lyrics carry
+  real end times and are honoured. Gaps of 5 s or more, and the intro, show a countdown. It cannot
+  remove vocals: that needs audio processing, which is not possible here and not something we do.
+- **Offline covers** (`artwork/`): `CachedImg` stores each cover as a blob in IndexedDB after it loads
+  and shows the stored copy if the network one fails. 100 MB cap, least-recently-used eviction, a
+  Storage section in Settings. The CSP allows `blob:` images and `fetch` to the artwork hosts (they
+  send `Access-Control-Allow-Origin: *`; a host that doesn't simply isn't cached). The fetch uses
+  `force-cache` to reuse the copy the `<img>` just downloaded.
+- **End-to-end tests** run the real UI against `e2e/mock-tauri.ts` (see CONTRIBUTING). They do not
+  cover the injected bridge or the native shell; those are covered by unit/Rust tests and by running
+  the app.
 - **Crossfade** is not attempted: it needs two simultaneous streams or processed audio, and the
   page owns the single player element.
 
