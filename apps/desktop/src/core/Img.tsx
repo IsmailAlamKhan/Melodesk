@@ -17,6 +17,20 @@ export const ImgComponentContext = createContext<ComponentType<ImgProps> | null>
 export function Img(props: ImgProps) {
   const Custom = useContext(ImgComponentContext);
   if (Custom) return createElement(Custom, props);
-  const { src, ...rest } = props;
-  return <img {...rest} src={src ?? undefined} />;
+  const { src, onError, onLoad, ...rest } = props;
+  return (
+    <img
+      {...rest}
+      src={src ?? undefined}
+      // A cover that cannot load leaves the tile's plain background, not the browser's broken-image icon.
+      onError={(e) => {
+        e.currentTarget.style.visibility = 'hidden';
+        onError?.(e);
+      }}
+      onLoad={(e) => {
+        e.currentTarget.style.visibility = '';
+        onLoad?.(e);
+      }}
+    />
+  );
 }

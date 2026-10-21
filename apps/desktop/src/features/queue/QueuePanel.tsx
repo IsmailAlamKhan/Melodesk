@@ -130,7 +130,12 @@ function QueueRow({
         current && 'bg-accent-soft text-accent',
         isDragging && 'z-10 bg-bg-overlay shadow',
       )}
-      onDoubleClick={() => void sendCommand({ type: 'queueSelect', index })}
+      onClick={(e) => {
+        // One click plays it; the buttons inside (drag handle, remove…) keep their own action.
+        if (!(e.target instanceof Element && e.target.closest('button, a, input'))) {
+          void sendCommand({ type: 'queueSelect', index });
+        }
+      }}
     >
       {!item.isAutomix ? (
         <Tooltip label={t('queue.dragToReorder')}>

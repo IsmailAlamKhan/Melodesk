@@ -14,6 +14,22 @@ test('searching shows results for the query', async ({ page }) => {
   await expect(page.getByText('Instant Crush (feat. Julian Casablancas)').first()).toBeVisible();
 });
 
+test('a search result plays or opens with one click anywhere on its row', async ({ page }) => {
+  const box = page.getByRole('combobox', { name: /Search/u });
+  await box.fill('daft punk');
+  await box.press('Enter');
+  const row = page.getByRole('row', { name: /Instant Crush/u }).first();
+  await expect(row).toBeVisible();
+  // Click the empty space at the right of the row, away from every link and button.
+  const bounds = await row.boundingBox();
+  if (!bounds) throw new Error('row has no box');
+  await page.mouse.click(bounds.x + bounds.width - 120, bounds.y + bounds.height / 2);
+  const sent = await page.evaluate(
+    () => (window as unknown as { __sent: { type: string }[] }).__sent,
+  );
+  expect(sent.filter((c) => c.type === 'endpoint')).toHaveLength(1);
+});
+
 test('the queue panel lists the page queue and double-click jumps to an item', async ({ page }) => {
   await startPlayback(page);
   await emit(page, {

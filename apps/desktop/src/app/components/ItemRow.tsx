@@ -67,17 +67,16 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
       <div
         role="row"
         tabIndex={0}
-        onDoubleClick={activate}
-        // Narrow windows are used by touch and as a compact player: one tap plays.
+        // The whole row is the target: one click plays a song or opens an album, artist or playlist.
+        // Links and buttons inside it keep their own action.
         onClick={(e) => {
-          if (window.matchMedia('(max-width: 599px)').matches && !isInteractive(e.target))
-            activate();
+          if (!isInteractive(e.target)) activate();
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') activate();
         }}
         className={cn(
-          'group grid cursor-default items-center gap-3 rounded-lg px-2 outline-none hover:bg-bg-overlay focus-visible:ring-2 focus-visible:ring-accent',
+          'group grid cursor-pointer items-center gap-3 rounded-lg px-2 outline-none hover:bg-bg-overlay focus-visible:ring-2 focus-visible:ring-accent',
           dense ? 'h-[calc(var(--row-h)-0.5rem)]' : 'h-(--row-h)',
           showAlbum
             ? 'grid-cols-[2rem_auto_minmax(0,1fr)_auto_2.5rem] rail:grid-cols-[2rem_auto_minmax(0,3fr)_minmax(0,2fr)_auto_2.5rem]'
