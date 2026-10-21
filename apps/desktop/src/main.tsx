@@ -50,6 +50,10 @@ if (import.meta.env.DEV && import.meta.env.VITE_CAPTURE_FIXTURES === '1') {
   });
 }
 
+if (import.meta.env.DEV && import.meta.env.VITE_AUDIO_SELFTEST === '1') {
+  void import('./dev/capture').then((m) => m.startAudioSelfTest());
+}
+
 const root = document.getElementById('root');
 if (!root) throw new Error('missing #root');
 const isMiniWindow = isMiniWindowEarly();

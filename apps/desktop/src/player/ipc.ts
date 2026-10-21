@@ -72,6 +72,9 @@ export function subscribeToPlayer(): void {
       case 'flags':
         usePlayerStore.setState({ flags: ev.flags });
         break;
+      case 'audio':
+        usePlayerStore.setState({ audio: ev.audio });
+        break;
       case 'health':
         usePlayerStore.setState({ health: { status: ev.status, reason: ev.reason } });
         break;

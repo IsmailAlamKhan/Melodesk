@@ -11,6 +11,7 @@ import { CommandPalette } from './CommandPalette';
 import { QueuePanel } from './QueuePanel';
 import { DialogHost } from './dialogs/DialogHost';
 import { SearchBox } from './SearchBox';
+import { useAudioSync } from '../audio/useAudioSync';
 import { Sidebar } from './Sidebar';
 import { Toaster } from './components/Toaster';
 import { useUiStore } from './uiStore';
@@ -21,6 +22,7 @@ export function Layout() {
   const panel = useUiStore((s) => s.rightPanel);
   const togglePanel = useUiStore((s) => s.toggleRightPanel);
   const ready = usePlayerStore((s) => s.ready);
+  useAudioSync();
   return (
     <div
       className={cn(

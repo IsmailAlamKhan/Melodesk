@@ -5,6 +5,7 @@ import type {
   PlayerFlags,
   QueueState,
   Track,
+  AudioStatus,
 } from '@melodesk/bridge/protocol';
 
 export interface PlayerStore {
@@ -22,6 +23,7 @@ export interface PlayerStore {
   capabilities: Record<string, boolean>;
   queue: QueueState | null;
   flags: PlayerFlags | null;
+  audio: AudioStatus;
 }
 
 export const usePlayerStore = create<PlayerStore>(() => ({
@@ -37,4 +39,5 @@ export const usePlayerStore = create<PlayerStore>(() => ({
   capabilities: {},
   queue: null,
   flags: null,
+  audio: { status: 'off', reason: null },
 }));

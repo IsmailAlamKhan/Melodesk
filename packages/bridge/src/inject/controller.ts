@@ -19,6 +19,7 @@ import {
   methodNames,
   propNames,
 } from './page-api';
+import { AudioEngine } from './audio';
 import { selectors } from './selectors.v1';
 import { emit, log } from './transport';
 
@@ -45,6 +46,7 @@ export class BridgeController {
   private lastFlagsJson = '';
   private storeTimer = 0;
   private seenActions = new Set<string>();
+  private audio = new AudioEngine();
 
   start(): void {
     if (this.started) return;
@@ -99,6 +101,7 @@ export class BridgeController {
   private attach(player: YtPlayerElement, video: HTMLVideoElement): void {
     this.player = player;
     this.video = video;
+    this.audio.setVideo(video);
 
     const missing = REQUIRED_PLAYER_METHODS.filter((m) => typeof player[m] !== 'function');
     if (missing.length > 0) {
@@ -262,6 +265,9 @@ export class BridgeController {
         break;
       case 'setVideoMode':
         getStore()?.dispatch({ type: 'SET_PLAYER_AUDIO_ONLY', payload: !cmd.video });
+        break;
+      case 'setAudio':
+        this.audio.apply(cmd.config);
         break;
     }
   }
@@ -564,6 +570,7 @@ export class BridgeController {
       protocolVersion: 1,
       loggedIn: isLoggedIn(),
     });
+    this.audio.report();
   }
 
   private emitState(): void {

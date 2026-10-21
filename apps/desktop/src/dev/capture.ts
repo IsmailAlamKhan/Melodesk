@@ -123,3 +123,56 @@ export function startFixtureCapture(): void {
     })();
   });
 }
+
+/**
+ * Dev-only audio check (`VITE_AUDIO_SELFTEST=1`): plays one song quietly, switches the equalizer and
+ * leveling on and off, and restores the previous volume. Results appear in the bridge log
+ * ("audio: ..." lines) on the Rust side's stderr.
+ */
+export async function startAudioSelfTest(): Promise<void> {
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  while (!usePlayerStore.getState().ready) await wait(500);
+  await wait(3000);
+  const previous = usePlayerStore.getState().state?.volume ?? 1;
+  const flat = new Array<number>(10).fill(0);
+  const say = (m: string) => console.warn('[audio-selftest]', m);
+  await sendCommand({ type: 'setVolume', volume: 0.12 });
+  await sendCommand({
+    type: 'endpoint',
+    endpoint: { watchEndpoint: { videoId: 'dQw4w9WgXcQ' } },
+    mode: 'navigate',
+  });
+  await wait(8000);
+  say(`baseline playing=${String(usePlayerStore.getState().state?.playing)}`);
+  say('eq on (bass +8)');
+  await sendCommand({
+    type: 'setAudio',
+    config: {
+      eq: { enabled: true, preampDb: 0, gainsDb: [8, 8, 6, 3, 0, 0, 0, 0, 0, 0] },
+      normalize: false,
+    },
+  });
+  await wait(8000);
+  say(
+    `status=${JSON.stringify(usePlayerStore.getState().audio)} playing=${String(usePlayerStore.getState().state?.playing)}`,
+  );
+  say('leveling on, eq flat');
+  await sendCommand({
+    type: 'setAudio',
+    config: { eq: { enabled: false, preampDb: 0, gainsDb: flat }, normalize: true },
+  });
+  await wait(8000);
+  say(`status=${JSON.stringify(usePlayerStore.getState().audio)}`);
+  say('volume 0.06, check level follows the element volume');
+  await sendCommand({ type: 'setVolume', volume: 0.06 });
+  await wait(4000);
+  say('all off');
+  await sendCommand({
+    type: 'setAudio',
+    config: { eq: { enabled: false, preampDb: 0, gainsDb: flat }, normalize: false },
+  });
+  await wait(3000);
+  await sendCommand({ type: 'pause' });
+  await sendCommand({ type: 'setVolume', volume: previous });
+  say(`done; volume restored to ${previous.toFixed(2)}`);
+}

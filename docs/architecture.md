@@ -98,6 +98,26 @@ the website uses.
   thumbnail buttons and jump lists need Win32 code outside Tauri's surface; deferred.
   Handoff needs Apple entitlements and an iOS counterpart; deferred.
 
+- **Equalizer and volume normalization: not available on macOS or Linux.** The only way to
+  process the audio without extracting streams (which we never do) is Web Audio on the page's own
+  `<video>` via `createMediaElementSource`. Measured in WKWebView on macOS: the context starts
+  without a gesture, an oscillator through the same `AnalyserNode` reads full scale, the track
+  advances (`readyState` 4), and the element's output is exactly zero. WebKit gives media
+  elements fed by Media Source Extensions, which is how YouTube Music streams, digital silence
+  when routed through Web Audio. Linux's WebKitGTK shares the engine, so the engine refuses on
+  any WebKit (`navigator.vendor` starts with "Apple") before touching the element.
+  Re-routing cannot be undone per element, so `inject/audio.ts` is built to fail safe: it never
+  routes until asked, only routes once the context is running, refuses DRM media, and if audible
+  playback goes silent after routing it records that (localStorage flag) and reloads the player
+  once, which restores the plain element. That recovery was exercised on macOS (it cost about five
+  seconds of silence, before the WebKit gate existed).
+  **Windows (WebView2, Chromium) should work but is untested**, and there is no Settings UI yet;
+  the protocol (`setAudio`/`audio`), the engine and the saved-settings plumbing are in place.
+  `VITE_AUDIO_SELFTEST=1 pnpm tauri dev` plays a song quietly and steps through EQ and leveling so
+  someone on Windows can check the result in the bridge log.
+- **Crossfade** is not attempted: it needs two simultaneous streams or processed audio, and the
+  page owns the single player element.
+
 ## Gotchas learned the hard way
 
 - `app.security.freezePrototype` must stay **false**: Tauri injects the prototype freeze into

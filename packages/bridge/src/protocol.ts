@@ -11,6 +11,9 @@
  * with `z.any()` / passthrough.
  */
 import { z } from 'zod';
+import { EQ_BAND_COUNT, EQ_MAX_DB } from './bands';
+
+export { EQ_BAND_COUNT, EQ_BAND_HZ, EQ_MAX_DB } from './bands';
 
 export const PROTOCOL_VERSION = 1 as const;
 
@@ -20,6 +23,23 @@ export type RepeatMode = z.infer<typeof RepeatModeSchema>;
 // ---------------------------------------------------------------------------
 // Commands (UI → player)
 // ---------------------------------------------------------------------------
+
+const dbValue = z.number().min(-EQ_MAX_DB).max(EQ_MAX_DB);
+
+/**
+ * Audio processing applied to the page's own media element through Web Audio. The whole
+ * configuration is sent each time (idempotent), so the engine never has to merge state.
+ */
+export const AudioConfigSchema = z.object({
+  eq: z.object({
+    enabled: z.boolean(),
+    preampDb: dbValue,
+    gainsDb: z.array(dbValue).length(EQ_BAND_COUNT),
+  }),
+  /** Volume leveling: evens out loudness between tracks and tames peaks. */
+  normalize: z.boolean(),
+});
+export type AudioConfig = z.infer<typeof AudioConfigSchema>;
 
 export const PlayerCommandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('play') }),
@@ -83,6 +103,7 @@ export const PlayerCommandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('setPlaybackRate'), rate: z.number().min(0.25).max(3) }),
   /** Toggle between the song and the music video version of the current item. */
   z.object({ type: z.literal('setVideoMode'), video: z.boolean() }),
+  z.object({ type: z.literal('setAudio'), config: AudioConfigSchema }),
 ]);
 export type PlayerCommand = z.infer<typeof PlayerCommandSchema>;
 
@@ -153,6 +174,16 @@ export const PlaybackStateSchema = z.object({
 });
 export type PlaybackState = z.infer<typeof PlaybackStateSchema>;
 
+/**
+ * `off`: the engine has not touched the media element. `active`: processing is applied.
+ * `unavailable`: it could not be applied safely; playback is unaffected (see `reason`).
+ */
+export const AudioStatusSchema = z.object({
+  status: z.enum(['off', 'active', 'unavailable']),
+  reason: z.string().max(128).nullable(),
+});
+export type AudioStatus = z.infer<typeof AudioStatusSchema>;
+
 export const HealthStatusSchema = z.enum(['ok', 'degraded', 'broken']);
 export type HealthStatus = z.infer<typeof HealthStatusSchema>;
 
@@ -173,6 +204,7 @@ export const BridgeEventSchema = z.discriminatedUnion('type', [
     /** Machine-readable reason, e.g. "player-element-missing". */
     reason: z.string().max(128).nullable(),
   }),
+  z.object({ type: z.literal('audio'), audio: AudioStatusSchema }),
   z.object({ type: z.literal('navigation'), path: z.string().max(2048) }),
   z.object({
     type: z.literal('dataResponse'),

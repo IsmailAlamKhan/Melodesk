@@ -104,7 +104,29 @@ pub enum PlayerCommand {
         delta: f64,
     },
     ToggleMute,
+    SetAudio {
+        config: AudioConfig,
+    },
 }
+
+/// Mirrors `AudioConfigSchema` in the bridge protocol.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AudioConfig {
+    pub eq: EqConfig,
+    pub normalize: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct EqConfig {
+    pub enabled: bool,
+    pub preamp_db: f64,
+    pub gains_db: Vec<f64>,
+}
+
+const EQ_BANDS: usize = 10;
+const EQ_MAX_DB: f64 = 12.0;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -170,6 +192,16 @@ impl PlayerCommand {
             {
                 Err(PlayerError::InvalidCommand(
                     "playback rate must be within 0.25..=3",
+                ))
+            }
+            PlayerCommand::SetAudio { config }
+                if config.eq.gains_db.len() != EQ_BANDS
+                    || !std::iter::once(&config.eq.preamp_db)
+                        .chain(config.eq.gains_db.iter())
+                        .all(|g| g.is_finite() && g.abs() <= EQ_MAX_DB) =>
+            {
+                Err(PlayerError::InvalidCommand(
+                    "equalizer needs 10 finite gains within -12..=12 dB",
                 ))
             }
             PlayerCommand::VolumeStep { delta }
@@ -324,7 +356,7 @@ mod dev {
     pub fn observe(event: &serde_json::Value, bytes: &[u8]) {
         let kind = event.get("type").and_then(|t| t.as_str()).unwrap_or("?");
         match kind {
-            "log" | "health" | "ready" | "navigation" | "track" | "flags" => {
+            "log" | "health" | "ready" | "navigation" | "track" | "flags" | "audio" => {
                 eprintln!("[bridge] {event}")
             }
             "queue" => {
@@ -397,6 +429,30 @@ mod tests {
         // that nothing unknown survives into the JSON we eval in the player webview.
         let cmd: PlayerCommand = serde_json::from_str(r#"{"type":"play","extra":1}"#).unwrap();
         assert_eq!(serde_json::to_string(&cmd).unwrap(), r#"{"type":"play"}"#);
+    }
+
+    #[test]
+    fn validates_audio_config() {
+        let json = |gains: &str, pre: &str| {
+            format!(
+                r#"{{"type":"setAudio","config":{{"eq":{{"enabled":true,"preampDb":{pre},"gainsDb":{gains}}},"normalize":false}}}}"#
+            )
+        };
+        let ok: PlayerCommand =
+            serde_json::from_str(&json("[0,1,2,3,4,5,6,7,8,-12]", "0")).unwrap();
+        assert!(ok.validate().is_ok());
+        let short: PlayerCommand = serde_json::from_str(&json("[0,1]", "0")).unwrap();
+        assert!(short.validate().is_err());
+        let loud: PlayerCommand =
+            serde_json::from_str(&json("[0,0,0,0,0,0,0,0,0,13]", "0")).unwrap();
+        assert!(loud.validate().is_err());
+        let pre: PlayerCommand =
+            serde_json::from_str(&json("[0,0,0,0,0,0,0,0,0,0]", "-20")).unwrap();
+        assert!(pre.validate().is_err());
+        assert!(serde_json::from_str::<PlayerCommand>(
+            r#"{"type":"setAudio","config":{"eq":{"enabled":true,"preampDb":0,"gainsDb":[],"x":1},"normalize":false}}"#
+        )
+        .is_err());
     }
 
     #[test]
