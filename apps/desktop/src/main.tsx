@@ -10,7 +10,6 @@ import { shouldPersistQuery, sqlitePersister } from './data/persister';
 import { subscribeToPlayer } from './player/ipc';
 import { useSettings } from './settings/store';
 import { useLyricsPrefs } from './lyrics/prefs';
-import { startPluginHost } from './plugins/host';
 import { handleIncomingUrl } from './app/openUrl';
 import { router } from './app/router';
 import { listen } from '@tauri-apps/api/event';
@@ -34,9 +33,6 @@ void useFeatures.getState().load();
 subscribeToPlayer();
 void useSettings.getState().load();
 void useLyricsPrefs.getState().load();
-void startPluginHost().catch((err: unknown) => {
-  console.error('plugin host failed', err);
-});
 // Deep links: cold start (getCurrent) and while running (onOpenUrl / the Rust forwarder).
 void getCurrent()
   .then((urls) => urls?.forEach(handleIncomingUrl))

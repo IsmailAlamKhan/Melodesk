@@ -1,6 +1,6 @@
 import { EQ_BAND_COUNT, type AudioConfig } from '@melodesk/bridge/protocol';
 import { create } from 'zustand';
-import { kvGet, kvSet } from '../data/kv';
+import { kvGet, kvSet } from '../../data/kv';
 import { FLAT, clampDb } from './presets';
 
 export interface AudioPrefs {

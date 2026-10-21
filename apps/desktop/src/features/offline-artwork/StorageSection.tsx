@@ -1,8 +1,8 @@
 import { Button } from '@melodesk/ui';
 import { useCallback, useEffect, useState } from 'react';
-import { MAX_CACHE_BYTES, cacheStats, clearArtworkCache } from '../../artwork/cache';
-import { intlLocale, useI18n, useT } from '../../i18n';
-import { toast } from '../toast';
+import { MAX_CACHE_BYTES, cacheStats, clearArtworkCache } from './cache';
+import { intlLocale, useI18n, useT } from '../../i18n/index';
+import { toast } from '../../app/toast';
 
 function megabytes(bytes: number, locale: string, digits = 1): string {
   return new Intl.NumberFormat(intlLocale(locale), {

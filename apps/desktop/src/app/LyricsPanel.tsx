@@ -7,7 +7,7 @@ import { useT } from '../i18n';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { usePositionMs } from '../player/usePositionMs';
-import { enablePlugin } from '../plugins/host';
+import { enablePlugin } from '../features/integrations/host';
 import { LyricsToolbar } from './LyricsToolbar';
 
 /** Fills the active line left to right in step with the song, without re-rendering the list. */

@@ -9,11 +9,11 @@ import { sendCommand, setPlayerVisible } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
 import { SHORTCUT_ACTIONS, useSettings } from '../../settings/store';
 import { ShortcutField } from './ShortcutField';
-import { PluginsSection } from '../../app/components/PluginsSection';
+import { PluginsSection } from '../integrations/PluginsSection';
 import { AppearanceSection } from './AppearanceSection';
-import { StorageSection } from '../../app/components/StorageSection';
+import { StorageSection } from '../offline-artwork/StorageSection';
 import { toast } from '../../app/toast';
-import { CachedImg } from '../../artwork/CachedImg';
+import { Img } from '../../core';
 
 function Toggle({
   label,
@@ -92,7 +92,7 @@ export function SettingsPage() {
         <h2 className="font-semibold">{t('settings.account')}</h2>
         <div className="flex items-center gap-3 rounded-2xl border border-border/50 bg-bg-elevated p-4">
           {account.data?.avatarUrl && (
-            <CachedImg src={account.data.avatarUrl} alt="" className="size-10 rounded-full" />
+            <Img src={account.data.avatarUrl} alt="" className="size-10 rounded-full" />
           )}
           <div className="min-w-0 flex-1">
             <div className="font-medium">

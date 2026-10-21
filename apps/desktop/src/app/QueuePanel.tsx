@@ -24,7 +24,7 @@ import { useT } from '../i18n';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { QueueToolsMenu } from './tools/QueueToolsMenu';
-import { CachedImg } from '../artwork/CachedImg';
+import { Img } from '../core';
 
 /** The page's live queue, mirrored from YouTube's own store; drag to reorder, click to jump. */
 export function QueuePanel() {
@@ -149,7 +149,7 @@ function QueueRow({
         <span className="w-4" />
       )}
       {item.artworkUrl ? (
-        <CachedImg src={item.artworkUrl} alt="" className="size-10 rounded-sm object-cover" />
+        <Img src={item.artworkUrl} alt="" className="size-10 rounded-sm object-cover" />
       ) : (
         <div className="size-10 rounded-sm bg-bg-overlay" />
       )}

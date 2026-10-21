@@ -19,7 +19,7 @@ import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { LyricsPanel } from './LyricsPanel';
 import { useUiStore } from './uiStore';
-import { CachedImg } from '../artwork/CachedImg';
+import { Img } from '../core';
 
 function fmt(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
@@ -91,7 +91,7 @@ export function NowPlayingView() {
           style={{ ['--np-accent' as string]: accent ?? 'var(--color-accent)' }}
         >
           {track?.artworkUrl && (
-            <CachedImg
+            <Img
               src={track.artworkUrl}
               alt=""
               aria-hidden
@@ -120,7 +120,7 @@ export function NowPlayingView() {
                 className="aspect-square w-full max-w-md overflow-hidden rounded-2xl bg-bg-overlay shadow-2xl"
               >
                 {track?.artworkUrl && (
-                  <CachedImg src={track.artworkUrl} alt="" className="size-full object-cover" />
+                  <Img src={track.artworkUrl} alt="" className="size-full object-cover" />
                 )}
               </motion.div>
               <div className="w-full max-w-md">

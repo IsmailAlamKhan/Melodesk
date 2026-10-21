@@ -2,7 +2,7 @@ import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-q
 import { useMemo } from 'react';
 import { fetchLyrics, fetchNext } from '../data/innertube';
 import { usePlayerStore } from '../player/store';
-import { isPluginEnabled, lyricsFromPlugins, usePluginHost } from '../plugins/host';
+import { isPluginEnabled, lyricsFromPlugins, usePluginHost } from '../features/integrations/host';
 import { loadOffset, saveOffset, useLyricsPrefs, type LyricsPrefs } from './prefs';
 import { activeIndex, rowsFromLyrics, type LyricsData, type LyricsRow } from './rows';
 import { transliterationCaveat, type Caveat } from './transliterate';

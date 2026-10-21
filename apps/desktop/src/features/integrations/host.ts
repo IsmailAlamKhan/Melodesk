@@ -18,10 +18,10 @@ import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { invoke } from '@tauri-apps/api/core';
 import { create } from 'zustand';
-import { kvDel, kvGet, kvSet } from '../data/kv';
-import { sendCommand } from '../player/ipc';
-import { usePlayerStore } from '../player/store';
-import { toast } from '../app/toast';
+import { kvDel, kvGet, kvSet } from '../../data/kv';
+import { sendCommand } from '../../player/ipc';
+import { usePlayerStore } from '../../player/store';
+import { toast } from '../../app/toast';
 
 type SettingsValues = Record<string, string | number | boolean>;
 
@@ -237,27 +237,44 @@ export const usePluginHost = create<PluginHostState>((set, get) => ({
   },
 }));
 
-/** Load persisted enable/settings state and start enabled plugins. Call once at startup. */
-export async function startPluginHost(): Promise<void> {
-  const records: PluginRecord[] = [];
-  for (const def of firstPartyPlugins) {
-    const manifest = PluginManifestSchema.parse(def.manifest);
-    const enabledRaw = await kvGet(`plugin:${manifest.id}:enabled`);
-    const enabled = enabledRaw === null ? manifest.enabledByDefault : enabledRaw === '1';
-    const defaults: SettingsValues = {};
-    for (const f of def.settingsFields ?? [])
-      if (f.default !== undefined) defaults[f.key] = f.default;
-    const stored = await kvGet(`plugin:${manifest.id}:settings`);
-    const settings: SettingsValues = {
-      ...defaults,
-      ...(stored ? (JSON.parse(stored) as SettingsValues) : {}),
-    };
-    records.push({ def, manifest, enabled, settings, instance: null, status: null, error: null });
-  }
-  usePluginHost.setState({ plugins: records });
-  for (const rec of records)
-    if (rec.enabled) await usePluginHost.getState().setEnabled(rec.manifest.id, true);
-  window.setInterval(() => usePluginHost.getState().refreshStatus(), 2000);
+/**
+ * Load persisted enable/settings state and start enabled plugins. Returns a function that stops the
+ * host: it halts the status timer and disposes every running plugin.
+ */
+export function startPluginHost(): () => void {
+  let stopped = false;
+  let timer = 0;
+  void (async () => {
+    const records: PluginRecord[] = [];
+    for (const def of firstPartyPlugins) {
+      const manifest = PluginManifestSchema.parse(def.manifest);
+      const enabledRaw = await kvGet(`plugin:${manifest.id}:enabled`);
+      const enabled = enabledRaw === null ? manifest.enabledByDefault : enabledRaw === '1';
+      const defaults: SettingsValues = {};
+      for (const f of def.settingsFields ?? [])
+        if (f.default !== undefined) defaults[f.key] = f.default;
+      const stored = await kvGet(`plugin:${manifest.id}:settings`);
+      const settings: SettingsValues = {
+        ...defaults,
+        ...(stored ? (JSON.parse(stored) as SettingsValues) : {}),
+      };
+      records.push({ def, manifest, enabled, settings, instance: null, status: null, error: null });
+    }
+    if (stopped) return;
+    usePluginHost.setState({ plugins: records });
+    for (const rec of records)
+      if (rec.enabled && !stopped) await usePluginHost.getState().setEnabled(rec.manifest.id, true);
+    if (stopped) return;
+    timer = window.setInterval(() => usePluginHost.getState().refreshStatus(), 2000);
+  })().catch((err: unknown) => {
+    console.error('plugin host failed', err);
+  });
+  return () => {
+    stopped = true;
+    window.clearInterval(timer);
+    for (const p of usePluginHost.getState().plugins) p.instance?.dispose?.();
+    usePluginHost.setState({ plugins: [] });
+  };
 }
 
 /** Lyrics providers from enabled plugins, in settings order. Each gets a time limit. */

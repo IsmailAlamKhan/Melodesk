@@ -18,7 +18,7 @@ import { useT } from '../i18n';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { MiniContextMenu } from '../app/AppContextMenu';
-import { CachedImg } from '../artwork/CachedImg';
+import { Img } from '../core';
 
 type Mode = 'compact' | 'artwork';
 
@@ -156,7 +156,7 @@ function MiniPlayerView() {
         className="group relative h-screen w-screen overflow-hidden rounded-xl bg-bg"
       >
         {track?.artworkUrl && (
-          <CachedImg
+          <Img
             src={track.artworkUrl}
             alt=""
             className="pointer-events-none absolute inset-0 size-full object-cover"
@@ -186,11 +186,7 @@ function MiniPlayerView() {
     >
       <div className="flex items-center gap-3">
         {track?.artworkUrl ? (
-          <CachedImg
-            src={track.artworkUrl}
-            alt=""
-            className="size-14 shrink-0 rounded-md object-cover"
-          />
+          <Img src={track.artworkUrl} alt="" className="size-14 shrink-0 rounded-md object-cover" />
         ) : (
           <div className="size-14 shrink-0 rounded-md bg-bg-overlay" />
         )}

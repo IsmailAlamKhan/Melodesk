@@ -1,6 +1,6 @@
 import { Button, inputClass } from '@melodesk/ui';
-import { useT, useTDynamic, type MessageKey } from '../../i18n';
-import { usePluginHost, type PluginRecord } from '../../plugins/host';
+import { useT, useTDynamic, type MessageKey } from '../../i18n/index';
+import { usePluginHost, type PluginRecord } from './host';
 
 const PERMISSION_KEYS: Record<string, MessageKey> = {
   'playback:read': 'plugin.perm.playbackRead',

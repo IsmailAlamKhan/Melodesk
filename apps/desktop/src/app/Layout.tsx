@@ -11,7 +11,7 @@ import { CommandPalette } from './CommandPalette';
 import { QueuePanel } from './QueuePanel';
 import { DialogHost } from './dialogs/DialogHost';
 import { SearchBox } from '../features/search/SearchBox';
-import { useAudioSync } from '../audio/useAudioSync';
+import { useAudioSync } from '../features/audio-engine/useAudioSync';
 import { AppContextMenu } from './AppContextMenu';
 import { KaraokeView } from './KaraokeView';
 import { Sidebar } from './Sidebar';

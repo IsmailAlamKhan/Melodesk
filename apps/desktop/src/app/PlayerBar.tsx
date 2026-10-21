@@ -26,7 +26,7 @@ import { usePlayerStore } from '../player/store';
 import { toast } from './toast';
 import { useUiStore } from './uiStore';
 import { invoke } from '@tauri-apps/api/core';
-import { CachedImg } from '../artwork/CachedImg';
+import { Img } from '../core';
 import { useArtworkColor } from '../appearance/artworkAccent';
 import { usePositionMs } from '../player/usePositionMs';
 
@@ -100,7 +100,7 @@ export function PlayerBar() {
               onClick={() => openNowPlaying(true)}
               className="shrink-0 rounded-lg shadow-lg ring-1 ring-white/10 transition-transform duration-200 hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
             >
-              <CachedImg
+              <Img
                 src={track.artworkUrl}
                 alt=""
                 className="size-14 rounded-lg bg-bg-overlay object-cover"

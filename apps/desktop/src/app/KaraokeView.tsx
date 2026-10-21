@@ -28,7 +28,7 @@ import { usePositionMs } from '../player/usePositionMs';
 import { TimedBanner } from './LyricsPanel';
 import { LyricsToolbar } from './LyricsToolbar';
 import { useUiStore } from './uiStore';
-import { CachedImg } from '../artwork/CachedImg';
+import { Img } from '../core';
 
 type Size = 'm' | 'l' | 'xl';
 const SIZES: Size[] = ['m', 'l', 'xl'];
@@ -364,7 +364,7 @@ function Stage() {
       style={{ ['--np-accent' as string]: accent ?? 'var(--color-accent)' }}
     >
       {track?.artworkUrl && (
-        <CachedImg
+        <Img
           src={track.artworkUrl}
           alt=""
           aria-hidden
