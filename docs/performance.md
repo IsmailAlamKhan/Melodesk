@@ -57,6 +57,17 @@ debug build with the dev server, too). Next step: sample each webview separately
 shown with `MELODESK_DEV_SHOW_PLAYER=1`, then hidden) with Safari's Web Inspector timeline, and compare
 with a release build.
 
+### Update, 2026-10-22
+
+Sampling the same dev build over several one-second intervals with nothing playing (Home page, window
+open): the shell 1.5%, our interface's WebContent 0.0%, the player's WebContent 0.0%. The 27-29% above
+did not come back after the interface was reworked, so it is probably gone; it is left here as a
+reminder to re-check on a release build. With music playing, the page's own main-thread CPU in the e2e
+mock was about 3.3% for the interface alone and about 4.5% with the music visuals on (they run only
+while music plays, in a window that can be seen, and change a few CSS variables on small elements).
+Physical footprints at that point: our interface 188 MB (dev build, 20 minutes in), the player page
+240 MB.
+
 ## Not measured yet
 
 - **Cold start**: needs a time-to-interactive probe that works in release builds (the dev logging that
