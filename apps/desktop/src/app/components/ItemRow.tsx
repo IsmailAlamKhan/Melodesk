@@ -40,10 +40,16 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
     !!item.playEndpoint ||
     item.endpoint?.type === 'watch' ||
     item.endpoint?.type === 'watchPlaylist';
-  const activate = (): void => {
+  const play = (): void => {
     if (onPlay) onPlay();
     else if (playable) void playItem(item);
-    else if (route) void navigate(route);
+  };
+  // Clicking a song plays it. Clicking an artist, album or playlist opens its page (its play
+  // button, shown on hover, plays or shuffles it); only a result with no page falls back to play.
+  const isTrack = item.kind === 'song' || item.kind === 'video' || item.kind === 'episode';
+  const activate = (): void => {
+    if (!isTrack && route) void navigate(route);
+    else play();
   };
   if (item.kind === 'action') {
     return (
@@ -94,7 +100,7 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
                 <button
                   type="button"
                   aria-label={t('media.playItem', { title: item.title })}
-                  onClick={activate}
+                  onClick={play}
                   className={cn(
                     'hidden size-8 items-center justify-center rounded-full text-fg group-hover:flex',
                     isCurrent && playing && 'flex',

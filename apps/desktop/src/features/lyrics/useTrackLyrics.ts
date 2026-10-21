@@ -1,7 +1,8 @@
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import type { PluginTrack } from '@melodesk/plugins';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
-import { fetchLyrics, fetchNext } from '../../data/innertube';
+import { fetchLyrics } from '../../data/innertube';
+import { nextQuery } from '../../player/nextInfo';
 import { usePlayerStore } from '../../player/store';
 import { lyricsSources, type LyricsSource } from '../../core';
 import { loadOffset, saveOffset, useLyricsPrefs, type LyricsPrefs } from './prefs';
@@ -65,7 +66,7 @@ export function useTrackLyrics(): TrackLyrics {
     enabled: ready && videoId !== null,
     staleTime: 1000 * 60 * 60,
     queryFn: async () => {
-      const next = await fetchNext({ videoId: videoId ?? '' });
+      const next = await qc.query(nextQuery(videoId));
       const own = next.lyricsBrowseId
         ? await fetchLyrics(next.lyricsBrowseId)
         : { text: null, source: null, synced: null };

@@ -16,6 +16,7 @@ import { useArtworkColor } from '../../appearance/artworkAccent';
 import { useT } from '../../i18n/index';
 import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
+import { ArtistLinks } from '../../app/components/ArtistLinks';
 import { useNowPlaying } from './store';
 import { Img, Slot } from '../../core';
 
@@ -122,7 +123,11 @@ export function NowPlayingView() {
                 <h1 className="truncate font-display text-3xl font-bold tracking-tight">
                   {track?.title ?? t('player.nothingPlaying')}
                 </h1>
-                <p className="truncate text-lg text-fg-muted">{track?.artist ?? ''}</p>
+                <ArtistLinks
+                  byline={track?.artist ?? ''}
+                  className="block truncate text-lg text-fg-muted"
+                  onNavigate={() => close(false)}
+                />
                 <div
                   dir="ltr"
                   className="mt-6 flex items-center gap-3 text-xs tabular-nums text-fg-subtle"

@@ -16,13 +16,13 @@ import {
 } from 'lucide-react';
 import { create } from 'zustand';
 import type { CSSProperties } from 'react';
-import { useNavigate } from 'react-router';
 import { run } from '../data/innertube';
 import { queryClient } from '../data/queryClient';
 import { useT } from '../i18n';
 import { sendCommand, setPlayerVisible } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { toast } from './toast';
+import { ArtistLinks } from './components/ArtistLinks';
 import { useArtworkColor } from '../appearance/artworkAccent';
 import { usePositionMs } from '../player/usePositionMs';
 
@@ -36,7 +36,6 @@ function fmt(seconds: number): string {
 
 export function PlayerBar() {
   const t = useT();
-  const navigate = useNavigate();
   const ready = usePlayerStore((s) => s.ready);
   const state = usePlayerStore((s) => s.state);
   const track = usePlayerStore((s) => s.track);
@@ -116,16 +115,10 @@ export function PlayerBar() {
           <div className="truncate text-[15px] leading-tight font-semibold">
             {track?.title ?? t('player.nothingPlaying')}
           </div>
-          <button
-            type="button"
-            className="mt-0.5 max-w-full truncate text-[13px] text-fg-muted hover:text-fg hover:underline"
-            onClick={() =>
-              track &&
-              navigate(`/search?q=${encodeURIComponent(track.artist.split(' • ')[0] ?? '')}`)
-            }
-          >
-            {track?.artist ?? ''}
-          </button>
+          <ArtistLinks
+            byline={track?.artist ?? ''}
+            className="mt-0.5 block max-w-full truncate text-[13px] text-fg-muted"
+          />
         </div>
         {track && (
           <div className="ms-1 flex shrink-0 items-center max-rail:hidden">
