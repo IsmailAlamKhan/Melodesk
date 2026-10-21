@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Contributions, Feature } from './feature';
-import { computeActive, dependentsOf, useFeatures, validateFeatures } from './registry';
+import {
+  computeActive,
+  dependenciesOf,
+  dependentsOf,
+  useFeatures,
+  validateFeatures,
+} from './registry';
 
 const f = (id: string, extra: Partial<Feature> = {}): Feature => ({
   id,
@@ -35,6 +41,14 @@ describe('computeActive', () => {
     expect(ids(computeActive(all, {}, new Set()))).toEqual(['plain']);
     expect(ids(computeActive(all, {}, new Set(['discord'])))).toEqual(['discord', 'plain']);
     expect(ids(computeActive(all, {}, null))).toEqual(['discord', 'plain']);
+  });
+});
+
+describe('dependenciesOf', () => {
+  it('lists everything a feature needs, all the way down', () => {
+    const all = [f('a'), f('b', { dependsOn: ['a'] }), f('c', { dependsOn: ['b'] }), f('d')];
+    expect(ids(dependenciesOf('c', all))).toEqual(['a', 'b']);
+    expect(dependenciesOf('a', all)).toEqual([]);
   });
 });
 
@@ -102,6 +116,18 @@ describe('the registry store', () => {
     expect(useFeatures.getState().active).toEqual([]);
     expect(stopB).toHaveBeenCalledTimes(1);
     useFeatures.getState().setEnabled('a', true);
+    expect(ids(useFeatures.getState().active)).toEqual(['a', 'b']);
+  });
+
+  it('switching a feature on also switches on what it needs', () => {
+    useFeatures
+      .getState()
+      .register([
+        f('a', { defaultEnabled: false }),
+        f('b', { defaultEnabled: false, dependsOn: ['a'] }),
+      ]);
+    expect(useFeatures.getState().active).toEqual([]);
+    useFeatures.getState().setEnabled('b', true);
     expect(ids(useFeatures.getState().active)).toEqual(['a', 'b']);
   });
 

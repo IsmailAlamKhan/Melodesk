@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('a plugin sees the settings you type as soon as you type them', async ({ page }) => {
-  await page.getByRole('switch', { name: /Last\.fm/u }).check();
+  await page.getByRole('switch', { name: 'Enable Last.fm' }).check();
   const hint = 'Enter your API key and secret first';
   await expect(page.getByText(hint)).toBeVisible();
 
@@ -27,7 +27,7 @@ test('a plugin sees the settings you type as soon as you type them', async ({ pa
 });
 
 test('clearing a field brings the hint back', async ({ page }) => {
-  await page.getByRole('switch', { name: /Last\.fm/u }).check();
+  await page.getByRole('switch', { name: 'Enable Last.fm' }).check();
   await page.getByLabel('API key').fill('k');
   await page.getByLabel('Shared secret').fill('s');
   await expect(page.getByText('Enter your API key and secret first')).toBeHidden();
@@ -38,7 +38,7 @@ test('clearing a field brings the hint back', async ({ page }) => {
 test('Last.fm opens its approval page in the real browser, not a webview window', async ({
   page,
 }) => {
-  await page.getByRole('switch', { name: /Last\.fm/u }).check();
+  await page.getByRole('switch', { name: 'Enable Last.fm' }).check();
   await expect(page.getByText('opens links in your browser: www.last.fm')).toBeVisible();
   await page.getByLabel('API key').fill('test-key');
   await page.getByLabel('Shared secret').fill('test-secret');

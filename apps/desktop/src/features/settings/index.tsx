@@ -1,7 +1,15 @@
 import { Settings } from 'lucide-react';
 import { defineFeature, navigateTo } from '../../core';
 import { t } from '../../i18n';
+import { AppearanceSection } from './AppearanceSection';
 import { SettingsPage } from './SettingsPage';
+import { AboutSection } from './sections/AboutSection';
+import { AccountSection } from './sections/AccountSection';
+import { DesktopSection } from './sections/DesktopSection';
+import { DiagnosticsSection } from './sections/DiagnosticsSection';
+import { FeaturesSection } from './sections/FeaturesSection';
+import { ShortcutsSection } from './sections/ShortcutsSection';
+import { UpdatesSection } from './sections/UpdatesSection';
 
 export default defineFeature({
   id: 'settings',
@@ -10,6 +18,17 @@ export default defineFeature({
   icon: Settings,
   core: true,
   contributes: {
+    // Other features add their own sections (Storage at 50, Plugins at 60) between these.
+    settings: [
+      { id: 'account', order: 10, component: AccountSection },
+      { id: 'appearance', order: 20, component: AppearanceSection },
+      { id: 'desktop', order: 30, component: DesktopSection },
+      { id: 'shortcuts', order: 40, component: ShortcutsSection },
+      { id: 'features', order: 45, component: FeaturesSection },
+      { id: 'updates', order: 70, component: UpdatesSection },
+      { id: 'diagnostics', order: 80, component: DiagnosticsSection },
+      { id: 'about', order: 90, component: AboutSection },
+    ],
     routes: [{ path: '/settings', element: <SettingsPage /> }],
     commands: () => [
       {

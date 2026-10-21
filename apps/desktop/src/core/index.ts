@@ -24,7 +24,13 @@ export {
   useWindowComponent,
 } from './hooks';
 export { discoverFeatures } from './discover';
-export { computeActive, dependentsOf, useFeatures, validateFeatures } from './registry';
+export {
+  computeActive,
+  dependenciesOf,
+  dependentsOf,
+  useFeatures,
+  validateFeatures,
+} from './registry';
 export { Slot } from './Slot';
 export { registerAction, runAction, useHasAction } from './actions';
 export { navigateTo, setNavigator } from './navigation';

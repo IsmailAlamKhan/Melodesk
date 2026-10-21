@@ -50,6 +50,21 @@ export function computeActive(
   return features.filter((f) => active.has(f.id));
 }
 
+/** Every feature `id` (transitively) depends on. */
+export function dependenciesOf(id: string, features: readonly Feature[]): Feature[] {
+  const byId = new Map(features.map((f) => [f.id, f]));
+  const out = new Set<string>();
+  const visit = (x: string): void => {
+    for (const d of byId.get(x)?.dependsOn ?? [])
+      if (!out.has(d)) {
+        out.add(d);
+        visit(d);
+      }
+  };
+  visit(id);
+  return features.filter((f) => out.has(f.id));
+}
+
 /** Every feature that (transitively) depends on `id`. */
 export function dependentsOf(id: string, features: readonly Feature[]): Feature[] {
   const out = new Set<string>();
@@ -193,6 +208,9 @@ export const useFeatures = create<FeatureState>((set, get) => ({
     const f = get().features.find((x) => x.id === id);
     if (!f || f.core) return;
     const overrides = { ...get().overrides, [id]: enabled };
+    // Turning a feature on brings what it needs along; turning it off leaves the others alone.
+    if (enabled)
+      for (const dep of dependenciesOf(id, get().features)) if (!dep.core) overrides[dep.id] = true;
     const active = computeActive(get().features, overrides, get().native);
     set({ overrides, active });
     try {

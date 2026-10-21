@@ -76,7 +76,6 @@
   "feature.settings.name": "Settings",
   "feature.stats.description": "Your listening history, top songs and top artists.",
   "feature.stats.name": "Listening stats",
-  "features.core": "Always on",
   "features.dependents": "Turning this off also turns off {names}.",
   "features.needs": "Needs {names}",
   "features.unavailable": "Not available in this build",
