@@ -134,7 +134,7 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
       {/* The lines fade out at the top and bottom edges instead of being cut off. */}
       <div
         ref={listRef}
-        className="min-h-0 flex-1 overflow-y-auto px-4 pb-24 [mask-image:linear-gradient(to_bottom,transparent,black_2rem,black_calc(100%-4rem),transparent)]"
+        className="min-h-0 flex-1 overflow-y-auto px-4 pt-8 pb-24 [mask-image:linear-gradient(to_bottom,transparent,black_2rem,black_calc(100%-4rem),transparent)]"
       >
         {!hasTimed && !lrclibOn && <TimedBanner />}
         {!hasTimed && lrclibOn && (
