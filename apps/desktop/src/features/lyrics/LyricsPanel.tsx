@@ -1,13 +1,13 @@
 import { cn } from '@melodesk/ui';
 import { useEffect, useRef } from 'react';
-import { lineProgress, type LyricsRow } from '../lyrics/rows';
-import { describeTranslateError } from '../lyrics/describeError';
-import { useTrackLyrics } from '../lyrics/useTrackLyrics';
-import { useT } from '../i18n';
-import { sendCommand } from '../player/ipc';
-import { usePlayerStore } from '../player/store';
-import { usePositionMs } from '../player/usePositionMs';
-import { enablePlugin } from '../features/integrations/host';
+import { lineProgress, type LyricsRow } from './rows';
+import { describeTranslateError } from './describeError';
+import { useTrackLyrics } from './useTrackLyrics';
+import { useT } from '../../i18n/index';
+import { sendCommand } from '../../player/ipc';
+import { usePlayerStore } from '../../player/store';
+import { usePositionMs } from '../../player/usePositionMs';
+import { lyricsSources } from '../../core';
 import { LyricsToolbar } from './LyricsToolbar';
 
 /** Fills the active line left to right in step with the song, without re-rendering the list. */
@@ -192,15 +192,17 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
   );
 }
 
-/** Offer timed lyrics from LRCLIB (opt-in: it receives the title, artist and length). */
+/** Offer timed lyrics from a source the user can switch on (LRCLIB; it receives the song's title, artist and length). */
 export function TimedBanner() {
   const t = useT();
+  const source = lyricsSources.useAll().find((s) => s.id === 'lrclib');
+  if (!source) return null;
   return (
     <div className="mb-3 flex flex-col gap-2 rounded-md bg-bg-overlay px-3 py-2 text-xs text-fg-muted">
       <span>{t('lyrics.timedBanner')}</span>
       <button
         type="button"
-        onClick={() => void enablePlugin('lrclib')}
+        onClick={() => source.activate()}
         className="h-8 self-start rounded-md bg-fg px-3 text-xs font-medium text-bg hover:opacity-90"
       >
         {t('lyrics.getTimed')}

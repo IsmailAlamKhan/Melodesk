@@ -1,5 +1,6 @@
 import { Settings } from 'lucide-react';
-import { defineFeature } from '../../core';
+import { defineFeature, navigateTo } from '../../core';
+import { t } from '../../i18n';
 import { SettingsPage } from './SettingsPage';
 
 export default defineFeature({
@@ -10,6 +11,15 @@ export default defineFeature({
   core: true,
   contributes: {
     routes: [{ path: '/settings', element: <SettingsPage /> }],
+    commands: () => [
+      {
+        id: 'settings',
+        label: t('nav.settings'),
+        icon: <Settings className="size-4" />,
+        keywords: t('palette.keywords.settings'),
+        run: () => navigateTo('/settings'),
+      },
+    ],
     nav: [
       {
         id: 'settings',

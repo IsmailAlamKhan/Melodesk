@@ -1,10 +1,10 @@
 /** Smart queue tools, all built on the bridge's queue commands (the page keeps the real queue). */
 import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
-import { openDialog } from '../dialogs/store';
-import { t } from '../../i18n';
-import { toast } from '../toast';
-import { useUiStore } from '../uiStore';
+import { openDialog } from '../../app/dialogs/store';
+import { t } from '../../i18n/index';
+import { toast } from '../../app/toast';
+import { useSleepTimer } from './store';
 
 /** Remove later duplicates of the same video from the user's part of the queue. */
 export async function dedupeQueue(): Promise<void> {
@@ -39,15 +39,15 @@ export function setSleepTimer(minutes: number): void {
   if (sleepTimer !== null) window.clearTimeout(sleepTimer);
   sleepTimer = null;
   if (minutes <= 0) {
-    useUiStore.getState().setSleepUntil(null);
+    useSleepTimer.getState().setSleepUntil(null);
     toast(t('toast.sleepOff'));
     return;
   }
   const until = Date.now() + minutes * 60_000;
-  useUiStore.getState().setSleepUntil(until);
+  useSleepTimer.getState().setSleepUntil(until);
   sleepTimer = window.setTimeout(() => {
     void sendCommand({ type: 'pause' });
-    useUiStore.getState().setSleepUntil(null);
+    useSleepTimer.getState().setSleepUntil(null);
     toast(t('toast.sleepPaused'));
   }, minutes * 60_000);
   toast(t('toast.sleepIn', { minutes }));

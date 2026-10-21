@@ -1,6 +1,7 @@
 import { BROWSE_IDS } from '@melodesk/adapter';
 import { Compass } from 'lucide-react';
-import { defineFeature } from '../../core';
+import { defineFeature, navigateTo } from '../../core';
+import { t } from '../../i18n';
 import { BrowsePage } from './BrowsePage';
 
 export default defineFeature({
@@ -28,6 +29,14 @@ export default defineFeature({
         element: <BrowsePage browseId={BROWSE_IDS.newReleases} titleKey="browse.newReleases" />,
       },
       { path: '/browse/:browseId', element: <BrowsePage /> },
+    ],
+    commands: () => [
+      {
+        id: 'explore',
+        label: t('palette.cmd.explore'),
+        icon: <Compass className="size-4" />,
+        run: () => navigateTo('/explore'),
+      },
     ],
     nav: [{ id: 'explore', to: '/explore', label: 'nav.explore', icon: Compass, order: 20 }],
   },

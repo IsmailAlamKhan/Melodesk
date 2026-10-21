@@ -1,68 +1,37 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { cn } from '@melodesk/ui';
-import { invoke } from '@tauri-apps/api/core';
-import {
-  BarChart3,
-  Compass,
-  Home,
-  Library,
-  ListMusic,
-  Maximize2,
-  Mic,
-  MicVocal,
-  Pause,
-  PictureInPicture2,
-  Play,
-  Plus,
-  Repeat,
-  Search,
-  Settings,
-  Shuffle,
-  SkipBack,
-  SkipForward,
-} from 'lucide-react';
+import { Pause, Play, Repeat, Search, Shuffle, SkipBack, SkipForward } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useNavigate } from 'react-router';
-import { useSuggestions } from '../data/hooks';
-import { useI18n, useT } from '../i18n';
-import { playItem, routeForEndpoint } from '../player/actions';
-import { sendCommand } from '../player/ipc';
-import { usePlayerStore } from '../player/store';
-import { Artwork } from './components/Artwork';
-import { KIND_KEY } from './components/kinds';
-import { openDialog } from './dialogs/store';
-import { useUiStore } from './uiStore';
+import { useSuggestions } from '../../data/hooks';
+import { useI18n, useT } from '../../i18n/index';
+import { playItem, routeForEndpoint } from '../../player/actions';
+import { sendCommand } from '../../player/ipc';
+import { usePlayerStore } from '../../player/store';
+import { Artwork } from '../../app/components/Artwork';
+import { KIND_KEY } from '../../app/components/kinds';
+import { navigateTo, useCommands, type PaletteCommand } from '../../core';
+import { usePalette } from './store';
 
-interface Command {
-  id: string;
-  label: string;
-  hint?: string;
-  icon: ReactNode;
-  keywords?: string;
-  run: () => void;
-}
+type Command = PaletteCommand;
 
 /** Cmd/Ctrl+K: navigate, control playback, and search from the keyboard. */
 export function CommandPalette() {
   const t = useT();
   const locale = useI18n((s) => s.locale);
-  const [open, setOpen] = useState(false);
+  const open = usePalette((st) => st.open);
+  const setOpen = usePalette((st) => st.setOpen);
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const input = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
   const playing = usePlayerStore((s) => s.state?.playing ?? false);
   const queue = usePlayerStore((s) => s.queue);
-  const toggleRightPanel = useUiStore((s) => s.toggleRightPanel);
-  const setNowPlayingOpen = useUiStore((s) => s.setNowPlayingOpen);
-  const setKaraokeOpen = useUiStore((s) => s.setKaraokeOpen);
   const suggestions = useSuggestions(open && query.trim().length > 1 ? query.trim() : '');
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setOpen((o) => !o);
+        usePalette.getState().toggle();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -71,54 +40,11 @@ export function CommandPalette() {
 
   const go = (to: string): void => {
     setOpen(false);
-    void navigate(to);
+    navigateTo(to);
   };
-  const commands = useMemo<Command[]>(
+  const contributed = useCommands();
+  const playback = useMemo<Command[]>(
     () => [
-      {
-        id: 'home',
-        label: t('palette.cmd.home'),
-        icon: <Home className="size-4" />,
-        run: () => go('/'),
-      },
-      {
-        id: 'explore',
-        label: t('palette.cmd.explore'),
-        icon: <Compass className="size-4" />,
-        run: () => go('/explore'),
-      },
-      {
-        id: 'library',
-        label: t('palette.cmd.library'),
-        icon: <Library className="size-4" />,
-        keywords: t('palette.keywords.library'),
-        run: () => go('/library'),
-      },
-      {
-        id: 'history',
-        label: t('palette.cmd.history'),
-        icon: <Library className="size-4" />,
-        run: () => go('/library/history'),
-      },
-      {
-        id: 'liked',
-        label: t('palette.cmd.liked'),
-        icon: <Library className="size-4" />,
-        run: () => go('/playlist/LM'),
-      },
-      {
-        id: 'stats',
-        label: t('palette.cmd.stats'),
-        icon: <BarChart3 className="size-4" />,
-        run: () => go('/stats'),
-      },
-      {
-        id: 'settings',
-        label: t('nav.settings'),
-        icon: <Settings className="size-4" />,
-        keywords: t('palette.keywords.settings'),
-        run: () => go('/settings'),
-      },
       {
         id: 'toggle',
         label: playing ? t('player.pause') : t('player.play'),
@@ -161,46 +87,12 @@ export function CommandPalette() {
             mode: !queue || queue.repeat === 'off' ? 'all' : queue.repeat === 'all' ? 'one' : 'off',
           }),
       },
-      {
-        id: 'queue',
-        label: t('palette.cmd.queue'),
-        icon: <ListMusic className="size-4" />,
-        run: () => toggleRightPanel('queue'),
-      },
-      {
-        id: 'lyrics',
-        label: t('palette.cmd.lyrics'),
-        icon: <MicVocal className="size-4" />,
-        run: () => toggleRightPanel('lyrics'),
-      },
-      {
-        id: 'nowplaying',
-        label: t('palette.cmd.nowPlaying'),
-        icon: <Maximize2 className="size-4" />,
-        run: () => setNowPlayingOpen(true),
-      },
-      {
-        id: 'karaoke',
-        label: t('palette.cmd.karaoke'),
-        icon: <Mic className="size-4" />,
-        run: () => setKaraokeOpen(true),
-      },
-      {
-        id: 'mini',
-        label: t('palette.cmd.mini'),
-        icon: <PictureInPicture2 className="size-4" />,
-        run: () => void invoke('open_mini_player'),
-      },
-      {
-        id: 'newplaylist',
-        label: t('playlist.new'),
-        icon: <Plus className="size-4" />,
-        run: () => openDialog({ type: 'createPlaylist' }),
-      },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `go` is stable enough; commands depend on playback flags
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `t` changes with the locale, which is in the deps
     [playing, queue?.shuffle, queue?.repeat, locale],
   );
+  // Pages and panels first (in the order features were registered), then playback controls.
+  const commands = useMemo<Command[]>(() => [...contributed, ...playback], [contributed, playback]);
 
   const q = query.trim().toLowerCase();
   const matches = q
@@ -219,7 +111,7 @@ export function CommandPalette() {
     if (e?.item) {
       const route = routeForEndpoint(e.item.endpoint);
       setOpen(false);
-      if (route) void navigate(route);
+      if (route) navigateTo(route);
       else void playItem(e.item);
       return;
     }

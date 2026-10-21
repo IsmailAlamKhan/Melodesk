@@ -2,10 +2,14 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { IconButton } from '@melodesk/ui';
 import { Copy, Gauge, ListPlus, Moon, MoreHorizontal } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { menuContent as menuClass, menuItem as itemClass, menuSeparator } from '../components/menu';
-import { useT } from '../../i18n';
+import {
+  menuContent as menuClass,
+  menuItem as itemClass,
+  menuSeparator,
+} from '../../app/components/menu';
+import { useT } from '../../i18n/index';
 import { usePlayerStore } from '../../player/store';
-import { useUiStore } from '../uiStore';
+import { useSleepTimer } from './store';
 import {
   dedupeQueue,
   PLAYBACK_RATES,
@@ -16,7 +20,7 @@ import {
 
 export function QueueToolsMenu() {
   const t = useT();
-  const sleepUntil = useUiStore((s) => s.sleepUntil);
+  const sleepUntil = useSleepTimer((s) => s.sleepUntil);
   const rate = usePlayerStore((s) => s.flags?.playbackRate ?? 1);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {

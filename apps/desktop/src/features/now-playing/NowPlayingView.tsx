@@ -2,7 +2,6 @@ import { IconButton, Slider, Tooltip, cn } from '@melodesk/ui';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronDown,
-  MicVocal,
   Pause,
   Play,
   Repeat,
@@ -12,14 +11,13 @@ import {
   SkipForward,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { toHex } from '../appearance/color';
-import { useArtworkColor } from '../appearance/artworkAccent';
-import { useT } from '../i18n';
-import { sendCommand } from '../player/ipc';
-import { usePlayerStore } from '../player/store';
-import { LyricsPanel } from './LyricsPanel';
-import { useUiStore } from './uiStore';
-import { Img } from '../core';
+import { toHex } from '../../appearance/color';
+import { useArtworkColor } from '../../appearance/artworkAccent';
+import { useT } from '../../i18n/index';
+import { sendCommand } from '../../player/ipc';
+import { usePlayerStore } from '../../player/store';
+import { useNowPlaying } from './store';
+import { Img, Slot } from '../../core';
 
 function fmt(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
@@ -52,9 +50,8 @@ function usePosition(): number {
  */
 export function NowPlayingView() {
   const t = useT();
-  const open = useUiStore((s) => s.nowPlayingOpen);
-  const close = useUiStore((s) => s.setNowPlayingOpen);
-  const openKaraoke = useUiStore((s) => s.setKaraokeOpen);
+  const open = useNowPlaying((s) => s.open);
+  const close = useNowPlaying((s) => s.setOpen);
   const track = usePlayerStore((s) => s.track);
   const state = usePlayerStore((s) => s.state);
   const queue = usePlayerStore((s) => s.queue);
@@ -103,9 +100,7 @@ export function NowPlayingView() {
             data-tauri-drag-region
             className="absolute inset-x-0 top-0 z-10 flex h-14 items-center justify-end gap-1 px-3 pt-2"
           >
-            <IconButton label={t('karaoke.open')} onClick={() => openKaraoke(true)}>
-              <MicVocal />
-            </IconButton>
+            <Slot name="nowPlaying.header" />
             <IconButton label={t('nowPlaying.close')} onClick={() => close(false)}>
               <ChevronDown />
             </IconButton>
@@ -210,9 +205,7 @@ export function NowPlayingView() {
                 </div>
               </div>
             </div>
-            <div className="hidden h-[70vh] min-h-0 lg:block">
-              <LyricsPanel large />
-            </div>
+            <Slot name="nowPlaying.side" />
           </div>
         </motion.section>
       )}

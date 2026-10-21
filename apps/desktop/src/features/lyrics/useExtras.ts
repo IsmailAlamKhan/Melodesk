@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
-import { kvGet, kvSet } from '../data/kv';
+import { kvGet, kvSet } from '../../data/kv';
 import { useLyricsPrefs } from './prefs';
 import { hashLines } from './rows';
 import { transliterateLines } from './transliterate';

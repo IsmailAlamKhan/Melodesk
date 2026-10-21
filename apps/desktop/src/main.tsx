@@ -1,15 +1,13 @@
-import { StrictMode } from 'react';
+import { StrictMode, createElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { AppRouter } from './app/router';
-import { discoverFeatures, useFeatures } from './core';
-import { MiniPlayer } from './mini/MiniPlayer';
+import { discoverFeatures, useFeatures, useWindowComponent } from './core';
 import { AppearanceEffects } from './appearance/Effects';
 import { queryClient } from './data/queryClient';
 import { shouldPersistQuery, sqlitePersister } from './data/persister';
 import { subscribeToPlayer } from './player/ipc';
 import { useSettings } from './settings/store';
-import { useLyricsPrefs } from './lyrics/prefs';
 import { handleIncomingUrl } from './app/openUrl';
 import { router } from './app/router';
 import { listen } from '@tauri-apps/api/event';
@@ -32,7 +30,6 @@ useFeatures.getState().register(discoverFeatures());
 void useFeatures.getState().load();
 subscribeToPlayer();
 void useSettings.getState().load();
-void useLyricsPrefs.getState().load();
 // Deep links: cold start (getCurrent) and while running (onOpenUrl / the Rust forwarder).
 void getCurrent()
   .then((urls) => urls?.forEach(handleIncomingUrl))
@@ -52,6 +49,12 @@ if (import.meta.env.DEV && import.meta.env.VITE_AUDIO_SELFTEST === '1') {
   void import('./dev/capture').then((m) => m.startAudioSelfTest());
 }
 
+/** The content of an extra native window, provided by whichever feature owns it (here: `mini`). */
+function WindowHost({ name }: { name: string }) {
+  const Window = useWindowComponent(name);
+  return Window ? createElement(Window) : null;
+}
+
 const root = document.getElementById('root');
 if (!root) throw new Error('missing #root');
 const isMiniWindow = isMiniWindowEarly();
@@ -61,7 +64,7 @@ createRoot(root).render(
   isMiniWindow ? (
     <StrictMode>
       <AppearanceEffects>
-        <MiniPlayer />
+        <WindowHost name="mini" />
       </AppearanceEffects>
     </StrictMode>
   ) : (

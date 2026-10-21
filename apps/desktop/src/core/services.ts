@@ -20,9 +20,10 @@ export function createRegistry<T extends { id: string }>() {
 export interface LyricsSource {
   id: string;
   label: string;
-  /** Reactive: whether the user has turned this source on. */
-  useActive: () => boolean;
+  /** Whether the user has turned this source on. */
   isActive: () => boolean;
+  /** Be told when that changes (returns an unsubscribe), so views can follow it. */
+  subscribe: (onChange: () => void) => () => void;
   /** Turn it on (the lyrics view offers this when the lyrics it has are not timed). */
   activate: () => void;
   fetch: (track: PluginTrack) => Promise<LyricsResult | null>;

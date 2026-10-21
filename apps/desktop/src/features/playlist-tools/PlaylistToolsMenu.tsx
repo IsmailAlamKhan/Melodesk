@@ -3,30 +3,20 @@ import { Button } from '@melodesk/ui';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowDownAZ, Copy, Download, GitMerge, Wrench } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
-import { useT, type MessageKey } from '../../i18n';
-import { menuContent as menuClass, menuItem as itemClass, menuSeparator } from '../components/menu';
-import { fetchAddToPlaylistOptions, removeFromPlaylist } from '../dialogs/playlists';
-import { openDialog } from '../dialogs/store';
-import { toast } from '../toast';
+import { useT, type MessageKey } from '../../i18n/index';
 import {
-  applyOrder,
-  exportPlaylist,
-  findDuplicates,
-  mergeInto,
-  sortTracks,
-  type SortKey,
-  type Track,
-} from './playlistTools';
+  menuContent as menuClass,
+  menuItem as itemClass,
+  menuSeparator,
+} from '../../app/components/menu';
+import { fetchAddToPlaylistOptions, removeFromPlaylist } from '../../app/dialogs/playlists';
+import { openDialog } from '../../app/dialogs/store';
+import { toast } from '../../app/toast';
+import type { SlotMap } from '../../core';
+import { sortTracks, type SortKey } from '../../app/components/trackSort';
+import { applyOrder, exportPlaylist, findDuplicates, mergeInto } from './playlistTools';
 
-export interface PlaylistToolsProps {
-  title: string;
-  playlistId: string | null;
-  tracks: Track[];
-  editable: boolean;
-  /** View-only sort applied by the page (null = YouTube's order). */
-  viewSort: { key: SortKey; dir: 'asc' | 'desc' } | null;
-  onViewSort: (sort: { key: SortKey; dir: 'asc' | 'desc' } | null) => void;
-}
+export type PlaylistToolsProps = SlotMap['playlist.header'];
 
 /** "Tools" menu on playlist/album pages: sort, duplicates, merge, export. */
 export function PlaylistToolsMenu({

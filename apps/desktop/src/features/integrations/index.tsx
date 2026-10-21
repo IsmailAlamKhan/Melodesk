@@ -13,9 +13,8 @@ import { PluginsSection } from './PluginsSection';
 const lrclib: LyricsSource = {
   id: 'lrclib',
   label: 'LRCLIB',
-  useActive: () =>
-    usePluginHost((s) => s.plugins.some((p) => p.manifest.id === 'lrclib' && p.enabled)),
   isActive: () => isPluginEnabled('lrclib'),
+  subscribe: (onChange) => usePluginHost.subscribe(onChange),
   activate: () => void enablePlugin('lrclib'),
   fetch: lyricsFromPlugins,
 };

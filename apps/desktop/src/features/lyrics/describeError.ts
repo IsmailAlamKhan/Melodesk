@@ -1,4 +1,4 @@
-import type { MessageKey } from '../i18n';
+import type { MessageKey } from '../../i18n/index';
 import { TranslateError } from './translate';
 
 /** A localized, user-facing message for a translation failure. */

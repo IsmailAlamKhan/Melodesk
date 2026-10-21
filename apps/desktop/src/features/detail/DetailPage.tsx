@@ -7,8 +7,8 @@ import { ItemRow } from '../../app/components/ItemRow';
 import { ListSkeleton, PageSkeleton } from '../../app/components/PageSkeleton';
 import { PageHeaderView } from '../../app/components/PageHeaderView';
 import { EditableTrackList } from '../../app/components/EditableTrackList';
-import { PlaylistToolsMenu } from '../../app/tools/PlaylistToolsMenu';
-import { sortTracks, type SortKey, type Track } from '../../app/tools/playlistTools';
+import { sortTracks, type SortKey, type Track } from '../../app/components/trackSort';
+import { Slot } from '../../core';
 import { useState } from 'react';
 import { useT } from '../../i18n/index';
 import { ShelfView } from '../../app/components/ShelfView';
@@ -59,7 +59,8 @@ export function DetailPage({ kind }: { kind: 'artist' | 'album' | 'playlist' }) 
       {page?.header && <PageHeaderView header={page.header} round={kind === 'artist'} />}
       {kind !== 'artist' && songTracks.length > 0 && (
         <div className="px-6">
-          <PlaylistToolsMenu
+          <Slot
+            name="playlist.header"
             title={page?.header?.title ?? t('kind.playlist')}
             playlistId={playlistId}
             tracks={songTracks}

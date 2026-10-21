@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { kvGet, kvSet } from '../data/kv';
+import { kvGet, kvSet } from '../../data/kv';
 import type { Provider } from './translate';
 
 export interface LyricsPrefs {

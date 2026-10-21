@@ -27,6 +27,7 @@ export { discoverFeatures } from './discover';
 export { computeActive, dependentsOf, useFeatures, validateFeatures } from './registry';
 export { Slot } from './Slot';
 export { registerAction, runAction, useHasAction } from './actions';
+export { navigateTo, setNavigator } from './navigation';
 export { AppProviders } from './AppProviders';
 export { Img, ImgComponentContext } from './Img';
 export type { ImgProps } from './Img';

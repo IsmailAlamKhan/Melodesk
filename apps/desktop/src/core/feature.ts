@@ -17,6 +17,7 @@ import type { ComponentType, ReactNode } from 'react';
 import type { RouteObject } from 'react-router';
 import type { MessageKey } from '../i18n';
 import type { MenuEntry } from '../app/components/menu';
+import type { Track, ViewSort } from '../app/components/trackSort';
 
 /** Named places in the UI that features can add components to, with the props each one passes. */
 export interface SlotMap {
@@ -37,7 +38,14 @@ export interface SlotMap {
   /** Actions in the header of the queue panel. */
   'queue.header': object;
   /** Actions in a playlist's header. */
-  'playlist.header': { tracks: unknown[]; playlistId: string | null; editable: boolean };
+  'playlist.header': {
+    title: string;
+    playlistId: string | null;
+    tracks: Track[];
+    editable: boolean;
+    viewSort: ViewSort | null;
+    onViewSort: (sort: ViewSort | null) => void;
+  };
 }
 export type SlotName = keyof SlotMap;
 

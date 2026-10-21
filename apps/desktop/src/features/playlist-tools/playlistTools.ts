@@ -1,31 +1,10 @@
 /** Playlist power tools: sorting, duplicates, merge and export, on top of the account's own data. */
-import type { Item } from '@melodesk/adapter';
+import type { Track } from '../../app/components/trackSort';
 import { save } from '@tauri-apps/plugin-dialog';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
-import { addToPlaylist, movePlaylistItem } from '../dialogs/playlists';
-import { t } from '../../i18n';
-import { toast } from '../toast';
-
-export type Track = Extract<Item, { kind: 'song' | 'video' }>;
-export type SortKey = 'title' | 'artist' | 'album' | 'duration';
-
-export function sortTracks(tracks: Track[], key: SortKey, dir: 'asc' | 'desc'): Track[] {
-  const value = (t: Track): string | number =>
-    key === 'title'
-      ? t.title
-      : key === 'artist'
-        ? (t.artists[0]?.name ?? '')
-        : key === 'album'
-          ? (t.album?.name ?? '')
-          : (t.durationSeconds ?? 0);
-  const sorted = [...tracks].sort((a, b) => {
-    const va = value(a);
-    const vb = value(b);
-    if (typeof va === 'number' && typeof vb === 'number') return va - vb;
-    return String(va).localeCompare(String(vb), undefined, { sensitivity: 'base', numeric: true });
-  });
-  return dir === 'asc' ? sorted : sorted.reverse();
-}
+import { addToPlaylist, movePlaylistItem } from '../../app/dialogs/playlists';
+import { t } from '../../i18n/index';
+import { toast } from '../../app/toast';
 
 /** Groups of tracks that are the same video or the same title+artist. */
 export function findDuplicates(tracks: Track[]): Track[][] {

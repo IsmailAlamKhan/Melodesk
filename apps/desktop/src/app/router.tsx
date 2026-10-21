@@ -1,5 +1,5 @@
 import { createMemoryRouter, RouterProvider } from 'react-router';
-import { FeatureRoutes } from '../core';
+import { FeatureRoutes, setNavigator } from '../core';
 import { Layout } from './Layout';
 
 // Memory history: a desktop app has no URL bar, and the player webview owns the real URLs.
@@ -25,6 +25,8 @@ export const router = createMemoryRouter(
   ],
   { initialEntries },
 );
+
+setNavigator((to) => void (typeof to === 'number' ? router.navigate(to) : router.navigate(to)));
 
 export function AppRouter() {
   return <RouterProvider router={router} />;

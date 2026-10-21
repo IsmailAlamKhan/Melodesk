@@ -14,11 +14,11 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useT } from '../i18n';
-import { sendCommand } from '../player/ipc';
-import { usePlayerStore } from '../player/store';
-import { MiniContextMenu } from '../app/AppContextMenu';
-import { Img } from '../core';
+import { useT } from '../../i18n/index';
+import { sendCommand } from '../../player/ipc';
+import { usePlayerStore } from '../../player/store';
+import { MiniContextMenu } from '../../app/components/ContextShell';
+import { Img } from '../../core';
 
 type Mode = 'compact' | 'artwork';
 

@@ -3,7 +3,7 @@
  * spreading each line's duration over its words in proportion to their length: it looks right
  * and is honest about being an estimate.
  */
-import type { LyricsRow } from './rows';
+import type { LyricsRow } from '../lyrics/rows';
 
 export interface WordTiming {
   text: string;

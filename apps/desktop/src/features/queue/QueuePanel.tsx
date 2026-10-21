@@ -20,11 +20,10 @@ import type { QueueItem } from '@melodesk/bridge/protocol';
 import { IconButton, Tooltip, cn } from '@melodesk/ui';
 import { GripVertical, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { useT } from '../i18n';
-import { sendCommand } from '../player/ipc';
-import { usePlayerStore } from '../player/store';
-import { QueueToolsMenu } from './tools/QueueToolsMenu';
-import { Img } from '../core';
+import { useT } from '../../i18n/index';
+import { sendCommand } from '../../player/ipc';
+import { usePlayerStore } from '../../player/store';
+import { Img, Slot } from '../../core';
 
 /** The page's live queue, mirrored from YouTube's own store; drag to reorder, click to jump. */
 export function QueuePanel() {
@@ -74,7 +73,7 @@ export function QueuePanel() {
               onChange={(e) => void sendCommand({ type: 'setAutoplay', enabled: e.target.checked })}
             />
           </label>
-          <QueueToolsMenu />
+          <Slot name="queue.header" />
         </div>
       </header>
       <div className="flex-1 overflow-y-auto px-2 pb-4">

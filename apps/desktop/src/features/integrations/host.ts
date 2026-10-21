@@ -242,7 +242,9 @@ export const usePluginHost = create<PluginHostState>((set, get) => ({
  * host: it halts the status timer and disposes every running plugin.
  */
 export function startPluginHost(): () => void {
-  let stopped = false;
+  // An object, not a bare `let`: the async part below must see the change made by the stop function.
+  const run = { stopped: false };
+  const isStopped = (): boolean => run.stopped;
   let timer = 0;
   void (async () => {
     const records: PluginRecord[] = [];
@@ -260,17 +262,18 @@ export function startPluginHost(): () => void {
       };
       records.push({ def, manifest, enabled, settings, instance: null, status: null, error: null });
     }
-    if (stopped) return;
+    if (isStopped()) return;
     usePluginHost.setState({ plugins: records });
     for (const rec of records)
-      if (rec.enabled && !stopped) await usePluginHost.getState().setEnabled(rec.manifest.id, true);
-    if (stopped) return;
+      if (rec.enabled && !isStopped())
+        await usePluginHost.getState().setEnabled(rec.manifest.id, true);
+    if (isStopped()) return;
     timer = window.setInterval(() => usePluginHost.getState().refreshStatus(), 2000);
   })().catch((err: unknown) => {
     console.error('plugin host failed', err);
   });
   return () => {
-    stopped = true;
+    run.stopped = true;
     window.clearInterval(timer);
     for (const p of usePluginHost.getState().plugins) p.instance?.dispose?.();
     usePluginHost.setState({ plugins: [] });

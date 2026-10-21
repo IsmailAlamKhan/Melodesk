@@ -14,21 +14,21 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { toHex } from '../appearance/color';
-import { useArtworkColor } from '../appearance/artworkAccent';
-import { useT } from '../i18n';
+import { toHex } from '../../appearance/color';
+import { useArtworkColor } from '../../appearance/artworkAccent';
+import { useT } from '../../i18n/index';
 import { describeTranslateError } from '../lyrics/describeError';
-import { interlude, wordFills, wordTimings } from '../lyrics/karaoke';
+import { interlude, wordFills, wordTimings } from './karaoke';
 import { useLyricsPrefs } from '../lyrics/prefs';
 import type { LyricsRow } from '../lyrics/rows';
 import { useTrackLyrics } from '../lyrics/useTrackLyrics';
-import { sendCommand } from '../player/ipc';
-import { usePlayerStore } from '../player/store';
-import { usePositionMs } from '../player/usePositionMs';
-import { TimedBanner } from './LyricsPanel';
-import { LyricsToolbar } from './LyricsToolbar';
-import { useUiStore } from './uiStore';
-import { Img } from '../core';
+import { sendCommand } from '../../player/ipc';
+import { usePlayerStore } from '../../player/store';
+import { usePositionMs } from '../../player/usePositionMs';
+import { TimedBanner } from '../lyrics/LyricsPanel';
+import { LyricsToolbar } from '../lyrics/LyricsToolbar';
+import { useKaraoke } from './store';
+import { Img, runAction } from '../../core';
 
 type Size = 'm' | 'l' | 'xl';
 const SIZES: Size[] = ['m', 'l', 'xl'];
@@ -135,8 +135,7 @@ function Countdown({ progress, label }: { progress: number; label: string }) {
 function Stage() {
   const t = useT();
   const navigate = useNavigate();
-  const close = useUiStore((s) => s.setKaraokeOpen);
-  const closeNowPlaying = useUiStore((s) => s.setNowPlayingOpen);
+  const close = useKaraoke((s) => s.setOpen);
   const track = usePlayerStore((s) => s.track);
   const state = usePlayerStore((s) => s.state);
   const positionMs = usePositionMs(100);
@@ -250,7 +249,7 @@ function Stage() {
   const findVersion = (): void => {
     const q = [track?.title, track?.artist, 'karaoke'].filter(Boolean).join(' ');
     close(false);
-    closeNowPlaying(false);
+    runAction('nowPlaying.close');
     void navigate(`/search?q=${encodeURIComponent(q)}`);
   };
 
@@ -490,6 +489,6 @@ function Stage() {
  * the song; without them it shows the plain lyrics and says so.
  */
 export function KaraokeView() {
-  const open = useUiStore((s) => s.karaokeOpen);
+  const open = useKaraoke((s) => s.open);
   return <AnimatePresence>{open && <Stage key="karaoke" />}</AnimatePresence>;
 }

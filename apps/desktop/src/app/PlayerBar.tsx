@@ -1,4 +1,5 @@
 import { IconButton, Slider, Tooltip, cn } from '@melodesk/ui';
+import { Img, Slot, runAction, useHasAction } from '../core';
 import {
   Heart,
   MonitorPlay,
@@ -12,8 +13,6 @@ import {
   ThumbsDown,
   Volume2,
   VolumeX,
-  Maximize2,
-  PictureInPicture2,
 } from 'lucide-react';
 import { create } from 'zustand';
 import type { CSSProperties } from 'react';
@@ -24,9 +23,6 @@ import { useT } from '../i18n';
 import { sendCommand } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { toast } from './toast';
-import { useUiStore } from './uiStore';
-import { invoke } from '@tauri-apps/api/core';
-import { Img } from '../core';
 import { useArtworkColor } from '../appearance/artworkAccent';
 import { usePositionMs } from '../player/usePositionMs';
 
@@ -48,7 +44,7 @@ export function PlayerBar() {
   const flags = usePlayerStore((s) => s.flags);
   const loggedIn = usePlayerStore((s) => s.loggedIn);
   const artRgb = useArtworkColor(track?.artworkUrl ?? null);
-  const openNowPlaying = useUiStore((s) => s.setNowPlayingOpen);
+  const canOpenNowPlaying = useHasAction('nowPlaying.open');
 
   const disabled = !ready || !state || !track;
   const playing = state?.playing ?? false;
@@ -92,12 +88,12 @@ export function PlayerBar() {
     >
       <SeekLine disabled={disabled} />
       <div className="flex min-w-0 items-center gap-4">
-        {track?.artworkUrl ? (
+        {track?.artworkUrl && canOpenNowPlaying ? (
           <Tooltip label={t('player.openNowPlaying')}>
             <button
               type="button"
               aria-label={t('player.openNowPlaying')}
-              onClick={() => openNowPlaying(true)}
+              onClick={() => runAction('nowPlaying.open')}
               className="shrink-0 rounded-lg shadow-lg ring-1 ring-white/10 transition-transform duration-200 hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
             >
               <Img
@@ -107,6 +103,12 @@ export function PlayerBar() {
               />
             </button>
           </Tooltip>
+        ) : track?.artworkUrl ? (
+          <Img
+            src={track.artworkUrl}
+            alt=""
+            className="size-14 shrink-0 rounded-lg bg-bg-overlay object-cover shadow-lg ring-1 ring-white/10"
+          />
         ) : (
           <div className="size-14 shrink-0 rounded-lg bg-bg-overlay" />
         )}
@@ -233,21 +235,7 @@ export function PlayerBar() {
             <MonitorPlay />
           </IconButton>
         )}
-        <IconButton
-          label={t('player.miniPlayer')}
-          size="sm"
-          onClick={() => void invoke('open_mini_player')}
-        >
-          <PictureInPicture2 />
-        </IconButton>
-        <IconButton
-          label={t('player.nowPlaying')}
-          size="sm"
-          disabled={!track}
-          onClick={() => openNowPlaying(true)}
-        >
-          <Maximize2 />
-        </IconButton>
+        <Slot name="playerBar.end" />
         <span aria-hidden className="mx-2 h-5 w-px bg-border" />
         <IconButton
           label={muted ? t('player.unmute') : t('player.mute')}

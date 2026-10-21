@@ -1,8 +1,9 @@
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import { useMemo } from 'react';
-import { fetchLyrics, fetchNext } from '../data/innertube';
-import { usePlayerStore } from '../player/store';
-import { isPluginEnabled, lyricsFromPlugins, usePluginHost } from '../features/integrations/host';
+import type { PluginTrack } from '@melodesk/plugins';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
+import { fetchLyrics, fetchNext } from '../../data/innertube';
+import { usePlayerStore } from '../../player/store';
+import { lyricsSources, type LyricsSource } from '../../core';
 import { loadOffset, saveOffset, useLyricsPrefs, type LyricsPrefs } from './prefs';
 import { activeIndex, rowsFromLyrics, type LyricsData, type LyricsRow } from './rows';
 import { transliterationCaveat, type Caveat } from './transliterate';
@@ -29,14 +30,35 @@ export interface TrackLyrics {
  * Lyrics for the current track and everything that decorates them (timing offset, romanization,
  * translation). Shared by the side panel and karaoke mode so they always agree.
  */
+/** The first lyrics, in registration order, from the sources the user has turned on. */
+async function fromSources(
+  sources: readonly LyricsSource[],
+  track: PluginTrack,
+): Promise<Awaited<ReturnType<LyricsSource['fetch']>>> {
+  for (const source of sources) {
+    if (!source.isActive()) continue;
+    try {
+      const result = await source.fetch(track);
+      if (result) return result;
+    } catch (err) {
+      console.warn(`[lyrics:${source.id}] failed`, err);
+    }
+  }
+  return null;
+}
+
 export function useTrackLyrics(): TrackLyrics {
   const videoId = usePlayerStore((s) => s.track?.videoId ?? null);
   const ready = usePlayerStore((s) => s.ready);
   const qc = useQueryClient();
   const prefs = useLyricsPrefs();
-  const lrclibOn = usePluginHost((s) =>
-    s.plugins.some((p) => p.manifest.id === 'lrclib' && p.enabled),
+  const sources = lyricsSources.useAll();
+  const timedSource = sources.find((s) => s.id === 'lrclib') ?? null;
+  const subscribeTimed = useCallback(
+    (onChange: () => void) => timedSource?.subscribe(onChange) ?? (() => undefined),
+    [timedSource],
   );
+  const lrclibOn = useSyncExternalStore(subscribeTimed, () => timedSource?.isActive() ?? false);
 
   const lyrics = useQuery<LyricsData>({
     queryKey: ['lyrics', videoId, lrclibOn],
@@ -52,8 +74,8 @@ export function useTrackLyrics(): TrackLyrics {
       const t = usePlayerStore.getState().track;
       const st = usePlayerStore.getState().state;
       const plugin =
-        t?.videoId && isPluginEnabled('lrclib')
-          ? await lyricsFromPlugins({
+        t?.videoId && sources.some((s) => s.isActive())
+          ? await fromSources(sources, {
               videoId: t.videoId,
               title: t.title,
               artist: t.artist,
