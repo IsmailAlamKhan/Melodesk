@@ -62,6 +62,8 @@ function innertubeResponse(endpoint: string, body: Record<string, unknown>): unk
 export interface MockOptions {
   /** Body LRCLIB returns, or null to answer 404 (no timed lyrics). */
   lrclib?: { syncedLyrics: string; plainLyrics: string } | null;
+  /** Optional native modules this build has (default: unknown, so all are assumed). */
+  nativeModules?: string[];
 }
 
 /** Every cover is replaced with a generated gradient: hermetic tests, and no third-party artwork in screenshots. */
@@ -97,6 +99,9 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
     return { status: 404, body: '{}' };
   });
 
+  await page.addInitScript((modules) => {
+    (window as unknown as Record<string, unknown>)['__nativeModules'] = modules;
+  }, opts.nativeModules ?? null);
   await page.addInitScript(() => {
     type Handler = (e: { event: string; id: number; payload: unknown }) => void;
     const w = window as unknown as Record<string, unknown> & {
@@ -227,9 +232,10 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
           }
           return [1];
         }
+        case 'native_modules':
+          return w['__nativeModules'] ?? null;
         case 'plugin:http|fetch_cancel':
         case 'plugin:http|fetch_cancel_body':
-        case 'native_modules':
         case 'plugin:deep-link|get_current':
         case 'set_native_labels':
         case 'player_set_visible':

@@ -26,7 +26,7 @@ function isMiniWindowEarly(): boolean {
 }
 
 // Assemble the app from its features (every folder in src/features) before anything renders.
-useFeatures.getState().register(discoverFeatures());
+useFeatures.getState().register(discoverFeatures(), { deferStart: true });
 void useFeatures.getState().load();
 subscribeToPlayer();
 void useSettings.getState().load();

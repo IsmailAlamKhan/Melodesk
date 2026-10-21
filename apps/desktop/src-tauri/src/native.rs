@@ -222,6 +222,8 @@ pub fn show_main<R: Runtime>(app: &AppHandle<R>) {
     }
 }
 
+/// Only the global "show/hide" shortcut uses this.
+#[cfg(feature = "shortcuts")]
 pub fn toggle_main<R: Runtime>(app: &AppHandle<R>) {
     if let Some(w) = app.get_webview_window(MAIN_LABEL) {
         if w.is_visible().unwrap_or(false) && w.is_focused().unwrap_or(false) {

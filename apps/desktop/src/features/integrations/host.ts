@@ -18,6 +18,7 @@ import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { invoke } from '@tauri-apps/api/core';
 import { create } from 'zustand';
+import { useFeatures } from '../../core';
 import { kvDel, kvGet, kvSet } from '../../data/kv';
 import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
@@ -40,6 +41,15 @@ interface PluginHostState {
   setEnabled: (id: string, enabled: boolean) => Promise<void>;
   setSettings: (id: string, values: SettingsValues) => Promise<void>;
   refreshStatus: () => void;
+}
+
+/** Native modules a plugin needs; a build without one does not offer the plugin at all. */
+const PLUGIN_NEEDS: Record<string, string> = { discord: 'discord' };
+
+function available(pluginId: string): boolean {
+  const need = PLUGIN_NEEDS[pluginId];
+  const native = useFeatures.getState().native;
+  return need === undefined || native === null || native.has(need);
 }
 
 const NATIVE_COMMANDS: Record<string, string[]> = {
@@ -249,6 +259,7 @@ export function startPluginHost(): () => void {
   void (async () => {
     const records: PluginRecord[] = [];
     for (const def of firstPartyPlugins) {
+      if (!available(def.manifest.id)) continue;
       const manifest = PluginManifestSchema.parse(def.manifest);
       const enabledRaw = await kvGet(`plugin:${manifest.id}:enabled`);
       const enabled = enabledRaw === null ? manifest.enabledByDefault : enabledRaw === '1';

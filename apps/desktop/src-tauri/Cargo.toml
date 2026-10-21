@@ -14,8 +14,14 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [features]
 # The Tauri CLI passes --no-default-features for `tauri dev` (loads devUrl) and enables
 # custom-protocol for `tauri build` (embeds frontendDist).
-default = ["custom-protocol"]
+default = ["custom-protocol", "discord", "shortcuts"]
 custom-protocol = ["tauri/custom-protocol"]
+# Optional native modules. The web UI asks `native_modules` which ones this build has and turns the
+# features that need the missing ones off. Without a module its commands still exist and answer
+# "not available", so nothing else has to change. `tauri.conf.json` lists them in `build.features`
+# because `tauri dev` passes --no-default-features.
+discord = ["dep:discord-rich-presence"]
+shortcuts = ["dep:tauri-plugin-global-shortcut"]
 
 [build-dependencies]
 tauri-build = { version = "=2.7.3", features = [] }
@@ -31,7 +37,7 @@ tauri-plugin-process = "=2.4.0"
 tauri-plugin-http = "=2.8.3"
 tauri-plugin-dialog = "=2.8.3"
 tauri-plugin-fs = "=2.7.1"
-discord-rich-presence = "=1.1.0"
+discord-rich-presence = { version = "=1.1.0", optional = true }
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.154"
 thiserror = "=2.0.21"
@@ -40,7 +46,7 @@ log = "=0.4.29"
 url = "=2.5.8"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-global-shortcut = "=2.4.1"
+tauri-plugin-global-shortcut = { version = "=2.4.1", optional = true }
 tauri-plugin-autostart = "=2.7.0"
 tauri-plugin-deep-link = "=2.6.2"
 tauri-plugin-single-instance = { version = "=2.5.4", features = ["deep-link"] }

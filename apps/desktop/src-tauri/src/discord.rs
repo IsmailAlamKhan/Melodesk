@@ -5,7 +5,7 @@ use std::sync::Mutex;
 
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 use serde::Deserialize;
-use tauri::State;
+use tauri::{Manager, State};
 
 #[derive(Default)]
 /// The connected client and the application id it was created with.
@@ -48,6 +48,10 @@ fn connect(slot: &mut Option<(String, DiscordIpcClient)>, client_id: &str) -> Re
         .map_err(|e| format!("Discord is not running: {e}"))?;
     *slot = Some((client_id.to_string(), client));
     Ok(())
+}
+
+pub fn setup<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
+    app.manage(DiscordState::default());
 }
 
 #[tauri::command]

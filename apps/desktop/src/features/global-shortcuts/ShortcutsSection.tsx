@@ -1,6 +1,6 @@
-import { useT } from '../../../i18n/index';
-import { SHORTCUT_ACTIONS, useSettings } from '../../../settings/store';
-import { ShortcutField } from '../ShortcutField';
+import { useT } from '../../i18n/index';
+import { SHORTCUT_ACTIONS, useSettings } from '../../settings/store';
+import { ShortcutField } from './ShortcutField';
 
 export function ShortcutsSection() {
   const t = useT();

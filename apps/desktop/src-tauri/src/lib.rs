@@ -5,6 +5,10 @@
 //! runs in its own webview window (see [`player`]).
 
 mod deeplink;
+#[cfg(feature = "discord")]
+mod discord;
+#[cfg(not(feature = "discord"))]
+#[path = "discord_off.rs"]
 mod discord;
 #[cfg(target_os = "linux")]
 mod media;
@@ -13,10 +17,30 @@ mod player;
 mod settings;
 mod shortcuts;
 
+/// The optional native modules compiled into this build. The UI turns off the features that need
+/// a module that is not here (see `requires` in `src/core/feature.ts`).
+#[tauri::command]
+fn native_modules() -> Vec<&'static str> {
+    let mut modules = Vec::new();
+    if cfg!(feature = "discord") {
+        modules.push("discord");
+    }
+    if cfg!(feature = "shortcuts") {
+        modules.push("shortcuts");
+    }
+    if cfg!(target_os = "linux") {
+        modules.push("media-session");
+    }
+    modules
+}
+
 use tauri::Manager;
 
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(feature = "shortcuts")]
+    let builder = builder.plugin(tauri_plugin_global_shortcut::Builder::new().build());
+    builder
         .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
             deeplink::handle_argv(app, &argv);
         }))
@@ -28,7 +52,6 @@ pub fn run() {
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,
@@ -50,6 +73,7 @@ pub fn run() {
             discord::discord_clear,
             native::open_mini_player,
             native::set_native_labels,
+            native_modules,
         ])
         .setup(|app| {
             let handle = app.handle().clone();
@@ -57,7 +81,7 @@ pub fn run() {
             app.manage(settings::SettingsState(std::sync::Mutex::new(
                 settings.clone(),
             )));
-            app.manage(discord::DiscordState::default());
+            discord::setup(&handle);
             player::create_player_window(&handle)?;
             native::setup(&handle)?;
             #[cfg(target_os = "linux")]

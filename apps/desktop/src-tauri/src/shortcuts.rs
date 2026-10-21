@@ -2,11 +2,14 @@
 //! webview's Media Session integration; these are the extra, app-level combos.
 
 use tauri::{AppHandle, Runtime};
+#[cfg(feature = "shortcuts")]
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
+#[cfg(feature = "shortcuts")]
 use crate::player::{self, PlayerCommand};
 use crate::settings::Shortcuts;
 
+#[cfg(feature = "shortcuts")]
 #[derive(Clone, Copy)]
 enum Action {
     PlayPause,
@@ -95,6 +98,13 @@ pub fn validate(shortcuts: &Shortcuts) -> Result<(), String> {
     Ok(())
 }
 
+/// Without the `shortcuts` module there is nothing to register; the UI hides the settings.
+#[cfg(not(feature = "shortcuts"))]
+pub fn apply<R: Runtime>(_app: &AppHandle<R>, _shortcuts: &Shortcuts) -> tauri::Result<()> {
+    Ok(())
+}
+
+#[cfg(feature = "shortcuts")]
 pub fn apply<R: Runtime>(app: &AppHandle<R>, shortcuts: &Shortcuts) -> tauri::Result<()> {
     let gs = app.global_shortcut();
     gs.unregister_all()

@@ -150,7 +150,11 @@ interface FeatureState {
   native: ReadonlySet<string> | null;
   active: Feature[];
   loaded: boolean;
-  register: (features: Feature[]) => void;
+  /**
+   * Set the features. With `deferStart` their `start()` waits for `load()`, so features that need
+   * a native module do not start before the build's modules are known.
+   */
+  register: (features: Feature[], options?: { deferStart?: boolean }) => void;
   setEnabled: (id: string, enabled: boolean) => void;
   load: () => Promise<void>;
 }
@@ -192,7 +196,7 @@ export const useFeatures = create<FeatureState>((set, get) => ({
   native: null,
   active: [],
   loaded: false,
-  register: (list) => {
+  register: (list, options) => {
     const features = [...list].sort(
       (a, b) => Number(b.core ?? false) - Number(a.core ?? false) || a.id.localeCompare(b.id),
     );
@@ -202,7 +206,7 @@ export const useFeatures = create<FeatureState>((set, get) => ({
     const { overrides, native } = get();
     const active = computeActive(features, overrides, native);
     set({ features, active });
-    sync(active);
+    if (options?.deferStart !== true) sync(active);
   },
   setEnabled: (id, enabled) => {
     const f = get().features.find((x) => x.id === id);

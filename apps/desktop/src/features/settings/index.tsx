@@ -8,7 +8,6 @@ import { AccountSection } from './sections/AccountSection';
 import { DesktopSection } from './sections/DesktopSection';
 import { DiagnosticsSection } from './sections/DiagnosticsSection';
 import { FeaturesSection } from './sections/FeaturesSection';
-import { ShortcutsSection } from './sections/ShortcutsSection';
 import { UpdatesSection } from './sections/UpdatesSection';
 
 export default defineFeature({
@@ -18,12 +17,11 @@ export default defineFeature({
   icon: Settings,
   core: true,
   contributes: {
-    // Other features add their own sections (Storage at 50, Plugins at 60) between these.
+    // Other features add their own sections (Shortcuts at 40, Storage at 50, Plugins at 60).
     settings: [
       { id: 'account', order: 10, component: AccountSection },
       { id: 'appearance', order: 20, component: AppearanceSection },
       { id: 'desktop', order: 30, component: DesktopSection },
-      { id: 'shortcuts', order: 40, component: ShortcutsSection },
       { id: 'features', order: 45, component: FeaturesSection },
       { id: 'updates', order: 70, component: UpdatesSection },
       { id: 'diagnostics', order: 80, component: DiagnosticsSection },

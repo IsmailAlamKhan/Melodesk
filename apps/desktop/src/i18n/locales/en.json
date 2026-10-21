@@ -48,6 +48,8 @@
   "feature.context-menu.name": "Right-click menus",
   "feature.detail.description": "Pages for artists, albums and playlists.",
   "feature.detail.name": "Artist, album and playlist pages",
+  "feature.global-shortcuts.description": "Hotkeys that work from any app to play, pause, skip and show the window.",
+  "feature.global-shortcuts.name": "Global shortcuts",
   "feature.home.description": "Your personalised home feed.",
   "feature.home.name": "Home",
   "feature.integrations.description": "Last.fm, ListenBrainz, Discord presence and lyrics providers (opt-in plugins).",
