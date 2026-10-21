@@ -37,5 +37,16 @@ export { navigateTo, setNavigator } from './navigation';
 export { AppProviders } from './AppProviders';
 export { Img, ImgComponentContext, useImageRetry } from './Img';
 export type { ImgProps } from './Img';
+export {
+  BAND_COUNT,
+  bandMean,
+  emptyLevels,
+  getLevelSource,
+  hasLevelSource,
+  setLevelSource,
+  subscribeLevels,
+  useLevelVars,
+} from './levels';
+export type { LevelSource, Levels } from './levels';
 export { createRegistry, lyricsSources } from './services';
 export type { LyricsSource } from './services';

@@ -188,6 +188,26 @@ user's accent, and it fades in and out because `.themed-scope` shares the colour
 `:root`. Grey artwork, an image that cannot be read, or the Settings switch fall back to the app's
 colours.
 
+## Music visuals
+
+`core/levels.ts` is a live reading of the music's loudness (32 bands, energy, bass, beat) that one
+source produces and many small elements follow. Followers (`useLevelVars`) get CSS variables set on
+themselves (`--energy`, `--bass`, `--beat`, `--b0…`), so nothing re-renders in React and only
+those elements are restyled; the glow behind covers, the bars beside the playing song, the ring on
+the Now Playing play button and the backdrop all work that way and cost the compositor, not a repaint
+of their surroundings. The loop runs only while something listens, the window is visible and music is
+playing, and it stays off under "reduce motion". The `visualizer` feature registers the source and
+adds the Visualizer tab (bars, wave, ring on a canvas); switching it off leaves everything static.
+
+**The levels are simulated on macOS and Linux.** The page's audio cannot be measured there: Web Audio
+gets silence for YouTube's streams (see above), and `HTMLMediaElement.captureStream`, the other way
+to tap a media element without re-routing it, is `undefined` in WKWebView (checked in the app's own
+player). So the source follows the rhythm of playback (a tempo fixed per track, a kick on the beat,
+a swell, a wobble per band) and the Visualizer tab says so. A real source can replace it with
+`setLevelSource({ real: true, … })`: on Windows (WebView2) an `AnalyserNode` on the player's element
+should work; on macOS it would take a native audio tap (Core Audio process tap, macOS 14.2+, with a
+permission prompt).
+
 ## Window sizes
 
 The shell follows Material's window size classes, with plain responsive classes and no separate code

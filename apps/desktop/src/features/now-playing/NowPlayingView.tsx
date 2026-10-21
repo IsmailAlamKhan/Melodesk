@@ -13,7 +13,7 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import { createElement, useEffect, useState } from 'react';
+import { createElement, useEffect, useRef, useState } from 'react';
 import { toHex } from '../../appearance/color';
 import { useArtworkColor } from '../../appearance/artworkAccent';
 import { useT } from '../../i18n/index';
@@ -22,7 +22,7 @@ import { usePlayerStore } from '../../player/store';
 import { ArtistLinks } from '../../app/components/ArtistLinks';
 import { setLikeStatus } from '../../player/like';
 import { useNowPlaying } from './store';
-import { FeatureBoundary, Img, Slot, useSlot } from '../../core';
+import { FeatureBoundary, Img, Slot, useLevelVars, useSlot } from '../../core';
 
 function fmt(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
@@ -95,6 +95,47 @@ function Tabs({
           <span className="relative">{tab.label}</span>
         </button>
       ))}
+    </div>
+  );
+}
+
+/** The backdrop breathes: a wash of the cover's colour that brightens with the loudness. */
+function BackdropPulse() {
+  const ref = useRef<HTMLDivElement>(null);
+  useLevelVars(ref);
+  return (
+    <div
+      ref={ref}
+      aria-hidden
+      className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_60%,color-mix(in_oklch,var(--np-accent)_45%,transparent),transparent_55%)] opacity-[calc(0.1+var(--energy,0)*0.7)] will-change-[opacity]"
+    />
+  );
+}
+
+/** A ring that flares around the play button on every beat. */
+function BeatRing() {
+  const ref = useRef<HTMLSpanElement>(null);
+  useLevelVars(ref);
+  return (
+    <span
+      ref={ref}
+      aria-hidden
+      className="pointer-events-none absolute inset-0 rounded-full bg-[var(--np-accent)] opacity-[calc(var(--beat,0)*0.45)] will-change-[transform,opacity] [transform:scale(calc(1+var(--beat,0)*0.4))]"
+    />
+  );
+}
+
+/** The blurred copy of the cover behind it: it swells with the bass and brightens with the music. */
+function AmbientGlow({ src }: { src: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useLevelVars(ref);
+  return (
+    <div
+      ref={ref}
+      aria-hidden
+      className="pointer-events-none absolute inset-0 opacity-[calc(0.45+var(--energy,0.3)*0.5)] will-change-[transform,opacity] [transform:translateY(0.75rem)_scale(calc(0.93+var(--bass,0)*0.12))]"
+    >
+      <Img src={src} alt="" className="size-full rounded-3xl object-cover blur-2xl saturate-150" />
     </div>
   );
 }
@@ -173,6 +214,7 @@ export function NowPlayingView() {
               className="pointer-events-none absolute inset-0 size-full scale-125 object-cover opacity-50 blur-3xl"
             />
           )}
+          <BackdropPulse />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,color-mix(in_oklch,var(--np-accent)_40%,transparent),transparent_60%),radial-gradient(ellipse_at_bottom_right,color-mix(in_oklch,var(--np-accent)_25%,transparent),transparent_55%),linear-gradient(to_bottom,transparent,var(--color-bg)_130%)]" />
           <div
             data-tauri-drag-region
@@ -219,14 +261,7 @@ export function NowPlayingView() {
                 >
                   {/* Ambient light: a blurred copy of the cover behind it, not a box shadow, so it
                       has no hard edge and nothing clips it. */}
-                  {track?.artworkUrl && (
-                    <Img
-                      src={track.artworkUrl}
-                      alt=""
-                      aria-hidden
-                      className="pointer-events-none absolute inset-0 size-full translate-y-3 scale-95 rounded-3xl object-cover opacity-70 blur-2xl saturate-150"
-                    />
-                  )}
+                  {track?.artworkUrl && <AmbientGlow src={track.artworkUrl} />}
                   <div className="relative size-full overflow-hidden rounded-3xl bg-bg-overlay shadow-xl ring-1 ring-white/10">
                     {track?.artworkUrl && (
                       <Img src={track.artworkUrl} alt="" className="size-full object-cover" />
@@ -294,20 +329,23 @@ export function NowPlayingView() {
                   >
                     <SkipBack />
                   </IconButton>
-                  <Tooltip label={playing ? t('player.pause') : t('player.play')}>
-                    <button
-                      type="button"
-                      aria-label={playing ? t('player.pause') : t('player.play')}
-                      onClick={() => void sendCommand({ type: 'toggle' })}
-                      className="flex size-16 items-center justify-center rounded-full bg-accent text-accent-fg shadow-[0_10px_30px_-8px_var(--np-accent)] transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
-                    >
-                      {playing ? (
-                        <Pause className="size-7" />
-                      ) : (
-                        <Play className="size-7 translate-x-0.5" />
-                      )}
-                    </button>
-                  </Tooltip>
+                  <span className="relative">
+                    <BeatRing />
+                    <Tooltip label={playing ? t('player.pause') : t('player.play')}>
+                      <button
+                        type="button"
+                        aria-label={playing ? t('player.pause') : t('player.play')}
+                        onClick={() => void sendCommand({ type: 'toggle' })}
+                        className="flex size-16 items-center justify-center rounded-full bg-accent text-accent-fg shadow-[0_10px_30px_-8px_var(--np-accent)] transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
+                      >
+                        {playing ? (
+                          <Pause className="size-7" />
+                        ) : (
+                          <Play className="size-7 translate-x-0.5" />
+                        )}
+                      </button>
+                    </Tooltip>
+                  </span>
                   <IconButton
                     label={t('player.next')}
                     size="lg"

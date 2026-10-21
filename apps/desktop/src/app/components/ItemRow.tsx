@@ -6,6 +6,7 @@ import { useT } from '../../i18n';
 import { playItem, routeForEndpoint } from '../../player/actions';
 import { usePlayerStore } from '../../player/store';
 import { Artwork } from './Artwork';
+import { LiveBars } from './LiveBars';
 import { ItemContextMenu, ItemMenuButton } from './ItemMenu';
 import { subtitleOf } from './ItemCard';
 
@@ -107,7 +108,11 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
                     isCurrent && playing && 'flex',
                   )}
                 >
-                  {isCurrent && playing ? <EqBars /> : <Play className="size-4 translate-x-px" />}
+                  {isCurrent && playing ? (
+                    <LiveBars bars={3} className="text-accent" />
+                  ) : (
+                    <Play className="size-4 translate-x-px" />
+                  )}
                 </button>
               </Tooltip>
             </>
@@ -189,19 +194,5 @@ function LinkRun({ name, route, last }: { name: string; route: string | null; la
       )}
       {!last && ', '}
     </>
-  );
-}
-
-function EqBars() {
-  return (
-    <span aria-hidden className="flex h-3 items-end gap-px">
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          className="w-0.5 animate-pulse bg-accent"
-          style={{ height: `${String(40 + i * 25)}%`, animationDelay: `${String(i * 120)}ms` }}
-        />
-      ))}
-    </span>
   );
 }

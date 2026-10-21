@@ -21,6 +21,8 @@ import { setLikeStatus } from '../player/like';
 import { sendCommand, setPlayerVisible } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { ArtistLinks } from './components/ArtistLinks';
+import { BeatGlow } from './components/BeatGlow';
+import { LiveBars } from './components/LiveBars';
 import { useArtworkColor } from '../appearance/artworkAccent';
 import { usePositionMs } from '../player/usePositionMs';
 
@@ -66,30 +68,33 @@ export function PlayerBar() {
     >
       <SeekLine disabled={disabled} />
       <div className="flex min-w-0 items-center gap-3 wide:gap-4">
-        {track?.artworkUrl && canOpenNowPlaying ? (
-          <Tooltip label={t('player.openNowPlaying')}>
-            <button
-              type="button"
-              aria-label={t('player.openNowPlaying')}
-              onClick={() => runAction('nowPlaying.open')}
-              className="shrink-0 rounded-lg shadow-lg ring-1 ring-white/10 transition-transform duration-200 hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
-            >
-              <Img
-                src={track.artworkUrl}
-                alt=""
-                className="size-11 rounded-lg bg-bg-overlay object-cover wide:size-14"
-              />
-            </button>
-          </Tooltip>
-        ) : track?.artworkUrl ? (
-          <Img
-            src={track.artworkUrl}
-            alt=""
-            className="size-11 shrink-0 rounded-lg bg-bg-overlay object-cover shadow-lg ring-1 ring-white/10 wide:size-14"
-          />
-        ) : (
-          <div className="size-11 shrink-0 rounded-lg bg-bg-overlay wide:size-14" />
-        )}
+        <div className="relative shrink-0">
+          <BeatGlow />
+          {track?.artworkUrl && canOpenNowPlaying ? (
+            <Tooltip label={t('player.openNowPlaying')}>
+              <button
+                type="button"
+                aria-label={t('player.openNowPlaying')}
+                onClick={() => runAction('nowPlaying.open')}
+                className="shrink-0 rounded-lg shadow-lg ring-1 ring-white/10 transition-transform duration-200 hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
+              >
+                <Img
+                  src={track.artworkUrl}
+                  alt=""
+                  className="size-11 rounded-lg bg-bg-overlay object-cover wide:size-14"
+                />
+              </button>
+            </Tooltip>
+          ) : track?.artworkUrl ? (
+            <Img
+              src={track.artworkUrl}
+              alt=""
+              className="size-11 shrink-0 rounded-lg bg-bg-overlay object-cover shadow-lg ring-1 ring-white/10 wide:size-14"
+            />
+          ) : (
+            <div className="size-11 shrink-0 rounded-lg bg-bg-overlay wide:size-14" />
+          )}
+        </div>
         <div
           className="min-w-0"
           onClick={(e) => {
@@ -102,8 +107,11 @@ export function PlayerBar() {
               runAction('nowPlaying.open');
           }}
         >
-          <div className="truncate text-[15px] leading-tight font-semibold">
-            {track?.title ?? t('player.nothingPlaying')}
+          <div className="flex items-center gap-2">
+            <div className="truncate text-[15px] leading-tight font-semibold">
+              {track?.title ?? t('player.nothingPlaying')}
+            </div>
+            {playing && <LiveBars bars={4} className="shrink-0 text-accent" />}
           </div>
           <ArtistLinks
             byline={track?.artist ?? ''}
