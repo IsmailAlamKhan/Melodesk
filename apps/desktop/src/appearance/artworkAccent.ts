@@ -10,9 +10,11 @@ export function useArtworkColor(url: string | null): Rgb | null {
     const done = (rgb: Rgb | null): void => {
       if (!cancelled) setSampled({ url, rgb });
     };
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
+    // Fetch the bytes and draw them from a local object URL. Reading pixels from a cross-origin
+    // <img> taints the canvas unless the browser's cached copy came from a CORS request, and the
+    // same cover has usually just been shown by a plain <img>, which is exactly that case.
+    let objectUrl: string | null = null;
+    const draw = (img: HTMLImageElement): void => {
       try {
         const canvas = document.createElement('canvas');
         canvas.width = 16;
@@ -38,13 +40,23 @@ export function useArtworkColor(url: string | null): Rgb | null {
         }
         done(n ? [r / n, g / n, b / n] : null);
       } catch {
-        done(null); // tainted canvas: the image host sent no CORS headers
+        done(null);
       }
     };
-    img.onerror = () => done(null);
-    img.src = url;
+    void fetch(url, { mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer' })
+      .then((res) => (res.ok ? res.blob() : Promise.reject(new Error(String(res.status)))))
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => draw(img);
+        img.onerror = () => done(null);
+        img.src = objectUrl;
+      })
+      .catch(() => done(null));
     return () => {
       cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [url]);
   return url && sampled?.url === url ? sampled.rgb : null;

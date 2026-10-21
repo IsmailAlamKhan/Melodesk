@@ -55,3 +55,22 @@ test('covers are kept for offline use and shown when the network copy fails', as
     0,
   );
 });
+
+test('cover requests carry no Referer (Google rejects some, and it is nobody else’s business)', async ({
+  page,
+}) => {
+  const referers: (string | undefined)[] = [];
+  page.on('request', (req) => {
+    if (/googleusercontent|ytimg|ggpht/u.test(req.url())) referers.push(req.headers()['referer']);
+  });
+  await installTauri(page);
+  await page.goto('/');
+  await startPlayback(page, { track: { ...TRACK, artworkUrl: ART } });
+  await page
+    .getByRole('link', { name: /Uncut Bollywood/u })
+    .first()
+    .click();
+  await page.waitForTimeout(800);
+  expect(referers.length).toBeGreaterThan(0);
+  expect(referers.filter(Boolean)).toEqual([]);
+});

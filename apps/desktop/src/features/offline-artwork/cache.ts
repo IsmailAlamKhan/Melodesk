@@ -141,7 +141,12 @@ async function store(url: string): Promise<void> {
   try {
     if (await has(url)) return;
     // force-cache: reuse the copy the <img> just downloaded rather than fetching it again.
-    const res = await fetch(url, { mode: 'cors', credentials: 'omit', cache: 'force-cache' });
+    const res = await fetch(url, {
+      mode: 'cors',
+      credentials: 'omit',
+      cache: 'force-cache',
+      referrerPolicy: 'no-referrer',
+    });
     if (!res.ok) return;
     const blob = await res.blob();
     if (blob.size === 0 || blob.size > MAX_ITEM_BYTES || !blob.type.startsWith('image/')) return;

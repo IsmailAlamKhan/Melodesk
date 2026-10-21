@@ -73,9 +73,17 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
   const active = activeAt(positionMs);
 
   useEffect(() => {
-    const el = listRef.current?.querySelector<HTMLElement>(`[data-line="${String(active)}"]`);
-    el?.scrollIntoView({
-      block: 'center',
+    const list = listRef.current;
+    const el = list?.querySelector<HTMLElement>(`[data-line="${String(active)}"]`);
+    if (!list || !el) return;
+    // Scroll the list itself. scrollIntoView would also scroll every ancestor, and the full-screen
+    // view (overflow hidden, with an oversized blurred backdrop) slid sideways with each line.
+    const delta =
+      el.getBoundingClientRect().top -
+      list.getBoundingClientRect().top -
+      (list.clientHeight - el.offsetHeight) / 2;
+    list.scrollBy({
+      top: delta,
       behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
     });
   }, [active]);
@@ -101,15 +109,20 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
   const sizeExtra = large ? 'text-lg' : 'text-sm';
 
   return (
-    <div ref={listRef} className="flex h-full flex-col overflow-y-auto px-4 pb-24">
+    <div className="flex h-full min-h-0 flex-col">
+      {/* The toolbar sits above the scrolling lines, never over them. */}
       <div
         className={cn(
-          'sticky top-0 z-10 flex items-center justify-between gap-2 py-2',
-          large ? 'bg-transparent' : 'bg-bg-elevated',
+          'z-10 flex shrink-0 items-center justify-between gap-2 px-4 py-2',
+          !large && 'bg-bg-elevated',
         )}
       >
         {!large && <div className="min-w-0 truncate text-xs text-fg-subtle">{title}</div>}
-        <div className={cn(large && 'ms-auto')}>
+        <div
+          className={cn(
+            large && 'ms-auto rounded-full bg-bg-overlay/60 px-2 py-0.5 backdrop-blur-md',
+          )}
+        >
           <LyricsToolbar
             hasTimedLines={hasTimed}
             offsetMs={offsetMs}
@@ -118,76 +131,82 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
           />
         </div>
       </div>
-      {!hasTimed && !lrclibOn && <TimedBanner />}
-      {!hasTimed && lrclibOn && (
-        <div className="mb-2 rounded-md bg-bg-overlay px-3 py-2 text-xs text-fg-muted">
-          {t('lyrics.noTimed')}
-        </div>
-      )}
-      {prefs.translate && translated.isPending && translated.fetchStatus !== 'idle' && (
-        <div className="mb-2 text-xs text-fg-subtle">{t('lyrics.translating')}</div>
-      )}
-      {prefs.translate && translated.isError && (
-        <div role="alert" className="mb-2 rounded-md bg-danger/10 px-3 py-2 text-xs text-danger">
-          {describeTranslateError(translated.error, t)}
-        </div>
-      )}
-      <ol className="flex flex-col gap-1 py-4">
-        {rows.map((row, i) => {
-          const roman = showRoman ? romanized.data[i] : undefined;
-          const trans = showTrans ? translated.data[i] : undefined;
-          if (!row.text.trim()) return <li key={i} aria-hidden className="h-4" />;
-          const timed = row.startMs !== undefined;
-          const content = (
-            <>
-              <span className={sizeOriginal}>
-                {timed && i === active ? (
-                  <KaraokeText row={row} shiftMs={offsetMs}>
-                    {row.text}
-                  </KaraokeText>
-                ) : (
-                  row.text
-                )}
-              </span>
-              {roman && roman !== row.text && (
-                <span className={cn('block font-normal italic text-fg-subtle', sizeExtra)}>
-                  {roman}
-                </span>
-              )}
-              {trans && trans !== row.text && (
-                <span className={cn('block font-normal text-fg-muted', sizeExtra)}>{trans}</span>
-              )}
-            </>
-          );
-          return (
-            <li key={`${String(row.startMs ?? '')}-${String(i)}`} data-line={i}>
-              {timed ? (
-                <button
-                  type="button"
-                  dir="auto"
-                  onClick={() =>
-                    void sendCommand({
-                      type: 'seek',
-                      seconds: Math.max(0, ((row.startMs ?? 0) + offsetMs) / 1000),
-                    })
-                  }
-                  className={cn(
-                    'w-full rounded-md px-2 py-1.5 text-start transition-colors duration-(--duration-slow) ease-(--ease-out) hover:bg-bg-overlay/60',
-                    i === active ? 'text-fg' : i < active ? 'text-fg-subtle' : 'text-fg-muted',
+      {/* The lines fade out at the top and bottom edges instead of being cut off. */}
+      <div
+        ref={listRef}
+        className="min-h-0 flex-1 overflow-y-auto px-4 pb-24 [mask-image:linear-gradient(to_bottom,transparent,black_2rem,black_calc(100%-4rem),transparent)]"
+      >
+        {!hasTimed && !lrclibOn && <TimedBanner />}
+        {!hasTimed && lrclibOn && (
+          <div className="mb-2 rounded-md bg-bg-overlay px-3 py-2 text-xs text-fg-muted">
+            {t('lyrics.noTimed')}
+          </div>
+        )}
+        {prefs.translate && translated.isPending && translated.fetchStatus !== 'idle' && (
+          <div className="mb-2 text-xs text-fg-subtle">{t('lyrics.translating')}</div>
+        )}
+        {prefs.translate && translated.isError && (
+          <div role="alert" className="mb-2 rounded-md bg-danger/10 px-3 py-2 text-xs text-danger">
+            {describeTranslateError(translated.error, t)}
+          </div>
+        )}
+        <ol className="flex flex-col gap-1 py-4">
+          {rows.map((row, i) => {
+            const roman = showRoman ? romanized.data[i] : undefined;
+            const trans = showTrans ? translated.data[i] : undefined;
+            if (!row.text.trim()) return <li key={i} aria-hidden className="h-4" />;
+            const timed = row.startMs !== undefined;
+            const content = (
+              <>
+                <span className={sizeOriginal}>
+                  {timed && i === active ? (
+                    <KaraokeText row={row} shiftMs={offsetMs}>
+                      {row.text}
+                    </KaraokeText>
+                  ) : (
+                    row.text
                   )}
-                >
-                  {content}
-                </button>
-              ) : (
-                <p dir="auto" className="px-2 py-1 text-fg">
-                  {content}
-                </p>
-              )}
-            </li>
-          );
-        })}
-      </ol>
-      {data.source && <div className="pt-2 text-xs text-fg-subtle">{data.source}</div>}
+                </span>
+                {roman && roman !== row.text && (
+                  <span className={cn('block font-normal italic text-fg-subtle', sizeExtra)}>
+                    {roman}
+                  </span>
+                )}
+                {trans && trans !== row.text && (
+                  <span className={cn('block font-normal text-fg-muted', sizeExtra)}>{trans}</span>
+                )}
+              </>
+            );
+            return (
+              <li key={`${String(row.startMs ?? '')}-${String(i)}`} data-line={i}>
+                {timed ? (
+                  <button
+                    type="button"
+                    dir="auto"
+                    onClick={() =>
+                      void sendCommand({
+                        type: 'seek',
+                        seconds: Math.max(0, ((row.startMs ?? 0) + offsetMs) / 1000),
+                      })
+                    }
+                    className={cn(
+                      'w-full rounded-md px-2 py-1.5 text-start transition-colors duration-(--duration-slow) ease-(--ease-out) hover:bg-bg-overlay/60',
+                      i === active ? 'text-fg' : i < active ? 'text-fg-subtle' : 'text-fg-muted',
+                    )}
+                  >
+                    {content}
+                  </button>
+                ) : (
+                  <p dir="auto" className="px-2 py-1 text-fg">
+                    {content}
+                  </p>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+        {data.source && <div className="pt-2 text-xs text-fg-subtle">{data.source}</div>}
+      </div>
     </div>
   );
 }

@@ -85,7 +85,7 @@ export function NowPlayingView() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 24 }}
           transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-0 z-30 overflow-hidden bg-bg text-fg"
+          className="fixed inset-0 z-30 overflow-clip bg-bg text-fg"
           style={{ ['--np-accent' as string]: accent ?? 'var(--color-accent)' }}
         >
           {track?.artworkUrl && (

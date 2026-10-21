@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { installTauri, setPosition, startPlayback } from './mock-tauri';
+import { TRACK, installTauri, setPosition, startPlayback } from './mock-tauri';
 
 const LRCLIB = {
   plainLyrics: 'Hello from the other side\nI must have called a thousand times',
@@ -90,4 +90,29 @@ test.describe('with timed lyrics from LRCLIB', () => {
     const seek = sent.find((c) => c.type === 'seek');
     expect(seek?.seconds).toBeGreaterThan(15);
   });
+});
+
+test('following the lyrics never slides the full-screen view sideways', async ({ page }) => {
+  const lines = Array.from(
+    { length: 24 },
+    (_, i) =>
+      `[${String(Math.floor((i * 4) / 60)).padStart(2, '0')}:${String((i * 4) % 60).padStart(2, '0')}.00] Line ${String(i + 1)} of the sample song`,
+  ).join('\n');
+  await installTauri(page, { lrclib: { plainLyrics: 'x', syncedLyrics: lines } });
+  await page.goto('/');
+  await startPlayback(page, {
+    positionS: 30,
+    track: { ...TRACK, artworkUrl: 'https://i.ytimg.com/vi/sample/hq720.jpg' },
+  });
+  await page.getByRole('button', { name: 'Open now playing' }).click();
+  await page
+    .getByRole('button', { name: /Get timed lyrics from LRCLIB/u })
+    .first()
+    .click();
+  await expect(page.getByText('Line 8 of the sample song').first()).toBeVisible();
+  await page.waitForTimeout(900);
+  const scrolled = await page
+    .getByRole('region', { name: /now playing/iu })
+    .evaluate((el) => el.scrollLeft);
+  expect(scrolled).toBe(0);
 });

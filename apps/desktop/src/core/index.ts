@@ -35,7 +35,7 @@ export { Slot } from './Slot';
 export { registerAction, runAction, useHasAction } from './actions';
 export { navigateTo, setNavigator } from './navigation';
 export { AppProviders } from './AppProviders';
-export { Img, ImgComponentContext } from './Img';
+export { Img, ImgComponentContext, useImageRetry } from './Img';
 export type { ImgProps } from './Img';
 export { createRegistry, lyricsSources } from './services';
 export type { LyricsSource } from './services';
