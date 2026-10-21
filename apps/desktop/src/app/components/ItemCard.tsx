@@ -44,9 +44,10 @@ export function ItemCard({ item, width }: { item: Item; width?: number }) {
         <div className="relative">
           <Artwork
             thumbnails={item.thumbnails}
-            size={tile}
+            size={isVideo ? Math.round(tile * 1.6) : tile}
             round={round}
-            className={cn(isVideo && 'aspect-video h-auto w-full')}
+            fill={isVideo}
+            className={cn(isVideo && 'aspect-video w-full')}
           />
           {playable && (
             <button

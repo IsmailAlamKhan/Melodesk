@@ -6,12 +6,15 @@ export function Artwork({
   thumbnails,
   size,
   round,
+  fill,
   className,
   alt = '',
 }: {
   thumbnails: Thumbnail[];
   size: number;
   round?: boolean | undefined;
+  /** Let `className` size the box (e.g. a 16:9 video tile); `size` then only picks the image resolution. */
+  fill?: boolean | undefined;
   className?: string | undefined;
   alt?: string | undefined;
 }) {
@@ -23,7 +26,7 @@ export function Artwork({
         round ? 'rounded-full' : 'rounded-md',
         className,
       )}
-      style={{ width: size, height: size }}
+      style={fill ? undefined : { width: size, height: size }}
     >
       {url ? (
         <img
