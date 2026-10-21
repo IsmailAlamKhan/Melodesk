@@ -30,9 +30,9 @@
         "default-src": "'self'",
         "script-src": "'self'",
         "style-src": "'self' 'unsafe-inline'",
-        "img-src": "'self' data: https://*.googleusercontent.com https://*.ggpht.com https://i.ytimg.com https://www.gstatic.com",
+        "img-src": "'self' data: blob: https://*.googleusercontent.com https://*.ggpht.com https://i.ytimg.com https://www.gstatic.com",
         "font-src": "'self'",
-        "connect-src": "'self' ipc: http://ipc.localhost"
+        "connect-src": "'self' ipc: http://ipc.localhost https://*.googleusercontent.com https://*.ggpht.com https://i.ytimg.com https://www.gstatic.com"
       },
       "freezePrototype": false
     }

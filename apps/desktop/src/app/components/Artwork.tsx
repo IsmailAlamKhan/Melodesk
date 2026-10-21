@@ -1,6 +1,7 @@
 import { pickThumb, type Thumbnail } from '@melodesk/adapter';
 import { cn } from '@melodesk/ui';
 import { Music2 } from 'lucide-react';
+import { CachedImg } from '../../artwork/CachedImg';
 
 export function Artwork({
   thumbnails,
@@ -29,7 +30,7 @@ export function Artwork({
       style={fill ? undefined : { width: size, height: size }}
     >
       {url ? (
-        <img
+        <CachedImg
           src={url}
           alt={alt}
           loading="lazy"

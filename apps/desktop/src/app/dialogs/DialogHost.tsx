@@ -14,6 +14,7 @@ import {
   type Privacy,
 } from './playlists';
 import { useDialogs, type DialogRequest } from './store';
+import { CachedImg } from '../../artwork/CachedImg';
 
 export function DialogHost() {
   const current = useDialogs((s) => s.current);
@@ -237,7 +238,7 @@ function AddToPlaylistDialog({
             }}
           >
             {p.artworkUrl ? (
-              <img src={p.artworkUrl} alt="" className="size-10 rounded-md object-cover" />
+              <CachedImg src={p.artworkUrl} alt="" className="size-10 rounded-md object-cover" />
             ) : (
               <span className="size-10 rounded-md bg-bg-overlay" />
             )}

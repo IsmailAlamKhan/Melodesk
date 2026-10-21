@@ -11,7 +11,9 @@ import { SHORTCUT_ACTIONS, useSettings } from '../../settings/store';
 import { ShortcutField } from '../components/ShortcutField';
 import { PluginsSection } from '../components/PluginsSection';
 import { AppearanceSection } from '../components/AppearanceSection';
+import { StorageSection } from '../components/StorageSection';
 import { toast } from '../toast';
+import { CachedImg } from '../../artwork/CachedImg';
 
 function Toggle({
   label,
@@ -90,7 +92,7 @@ export function SettingsPage() {
         <h2 className="font-semibold">{t('settings.account')}</h2>
         <div className="flex items-center gap-3 rounded-lg border border-border bg-bg-elevated p-4">
           {account.data?.avatarUrl && (
-            <img src={account.data.avatarUrl} alt="" className="size-10 rounded-full" />
+            <CachedImg src={account.data.avatarUrl} alt="" className="size-10 rounded-full" />
           )}
           <div className="min-w-0 flex-1">
             <div className="font-medium">
@@ -216,6 +218,8 @@ export function SettingsPage() {
           )}
         </div>
       </section>
+
+      <StorageSection />
 
       <section className="flex flex-col gap-3">
         <h2 className="font-semibold">{t('settings.diagnostics')}</h2>

@@ -26,6 +26,7 @@ import { usePlayerStore } from '../player/store';
 import { toast } from './toast';
 import { useUiStore } from './uiStore';
 import { invoke } from '@tauri-apps/api/core';
+import { CachedImg } from '../artwork/CachedImg';
 
 function fmt(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
@@ -110,7 +111,7 @@ export function PlayerBar() {
             onClick={() => openNowPlaying(true)}
             className="shrink-0 rounded-sm focus-visible:outline-2 focus-visible:outline-accent"
           >
-            <img
+            <CachedImg
               src={track.artworkUrl}
               alt=""
               className="size-12 rounded-sm bg-bg-overlay object-cover"

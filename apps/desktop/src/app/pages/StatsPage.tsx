@@ -5,6 +5,7 @@ import { formatDurationLocale, intlLocale, useI18n, useT, type MessageKey } from
 import { loadStats, type StatsRange, type TopEntry } from '../../stats/queries';
 import { playEndpoint } from '../../player/actions';
 import { useNavigate } from 'react-router';
+import { CachedImg } from '../../artwork/CachedImg';
 
 const RANGES: { key: StatsRange; labelKey: MessageKey }[] = [
   { key: 'week', labelKey: 'stats.range.week' },
@@ -156,7 +157,7 @@ function TopList({
             >
               <span className="w-5 text-xs tabular-nums text-fg-subtle">{i + 1}</span>
               {e.artworkUrl ? (
-                <img src={e.artworkUrl} alt="" className="size-9 rounded-sm object-cover" />
+                <CachedImg src={e.artworkUrl} alt="" className="size-9 rounded-sm object-cover" />
               ) : (
                 <span className="size-9 rounded-sm bg-bg-overlay" />
               )}

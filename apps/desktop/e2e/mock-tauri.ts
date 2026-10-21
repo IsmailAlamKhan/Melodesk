@@ -68,11 +68,19 @@ export interface MockOptions {
 async function stubImages(page: Page): Promise<void> {
   await page.route(/^https:/u, (route) => {
     const req = route.request();
-    if (req.resourceType() !== 'image') return route.continue();
+    const imageHost = /^https:\/\/([^/]*\.)?(ytimg|googleusercontent|ggpht|gstatic)\.com\//u.test(
+      req.url(),
+    );
+    // <img> loads, plus the artwork cache's own fetch() of the same covers.
+    if (req.resourceType() !== 'image' && !imageHost) return route.continue();
     let h = 0;
     for (const c of req.url()) h = (h * 31 + c.charCodeAt(0)) % 360;
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${String(h)} 55% 42%)"/><stop offset="1" stop-color="hsl(${String((h + 50) % 360)} 60% 22%)"/></linearGradient></defs><rect width="400" height="400" fill="url(#g)"/></svg>`;
-    return route.fulfill({ contentType: 'image/svg+xml', body: svg });
+    return route.fulfill({
+      contentType: 'image/svg+xml',
+      headers: { 'access-control-allow-origin': '*' }, // as the real image hosts send
+      body: svg,
+    });
   });
 }
 
