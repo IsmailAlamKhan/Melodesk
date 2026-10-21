@@ -102,7 +102,8 @@ backend (the built app is loaded from disk, so no server or network is needed); 
 ## Privacy
 
 No telemetry. Nothing leaves your machine except the traffic the YouTube Music web app itself
-generates. Optional integrations (scrobbling, Discord) are off by default and documented.
+generates. Optional integrations (scrobbling, lyrics sources, Discord, a local AI helper) are off by
+default. [docs/privacy.md](docs/privacy.md) lists every connection the app can make.
 
 ## FAQ
 
