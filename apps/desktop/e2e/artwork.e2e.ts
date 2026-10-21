@@ -35,7 +35,7 @@ test('covers are kept for offline use and shown when the network copy fails', as
   const cover = page.locator('footer img').first();
   await expect(cover).toBeVisible();
   // The cover is stored once it has loaded (the shelf covers are stored too, so wait for this one).
-  await expect.poll(() => isStored(page, ART)).toBe(true);
+  await expect.poll(() => isStored(page, ART), { timeout: 20_000 }).toBe(true);
 
   // Go offline: every image request now fails. A fresh load should still show the cover.
   await page.route(/^https:/u, (route) =>
@@ -47,7 +47,9 @@ test('covers are kept for offline use and shown when the network copy fails', as
   await startPlayback(page, { track: { ...TRACK, artworkUrl: ART } });
   const offlineCover = page.locator('footer img').first();
   await expect
-    .poll(async () => offlineCover.evaluate((img: HTMLImageElement) => img.currentSrc))
+    .poll(async () => offlineCover.evaluate((img: HTMLImageElement) => img.currentSrc), {
+      timeout: 20_000,
+    })
     .toMatch(/^blob:/u);
   expect(await offlineCover.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(
     0,

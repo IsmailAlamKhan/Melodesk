@@ -34,7 +34,7 @@ function PluginCard({ plugin: p }: { plugin: PluginRecord }) {
   const id = p.manifest.id;
   const fields = p.def.settingsFields ?? [];
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-bg-elevated p-4">
+    <div className="flex flex-col gap-3 rounded-2xl border border-border/50 bg-bg-elevated p-4">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="font-medium">{td(`plugin.${id}.name`, p.manifest.name)}</div>

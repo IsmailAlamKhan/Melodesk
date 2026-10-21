@@ -47,7 +47,7 @@ export function Slider({
           if (v[0] !== undefined) onCommit?.(v[0]);
         }}
       >
-        <RadixSlider.Track className="relative h-1 grow rounded-full bg-accent-muted">
+        <RadixSlider.Track className="relative h-1 grow rounded-full bg-accent-muted transition-[height] duration-150 group-hover:h-1.5">
           <RadixSlider.Range className="absolute h-full rounded-full bg-accent group-hover:brightness-110" />
         </RadixSlider.Track>
         <RadixSlider.Thumb

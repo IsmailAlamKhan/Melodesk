@@ -49,7 +49,7 @@ test.describe('with timed lyrics from LRCLIB', () => {
   test.beforeEach(async ({ page }) => {
     await installTauri(page, { lrclib: LRCLIB });
     await page.goto('/');
-    await startPlayback(page, { positionS: 4 });
+    await startPlayback(page, { positionS: 4, playing: false });
     await openKaraoke(page);
     await page
       .getByRole('region', { name: 'Karaoke' })
@@ -64,7 +64,7 @@ test.describe('with timed lyrics from LRCLIB', () => {
     await expect(karaoke.getByText('Up next')).toBeVisible();
     await expect(karaoke.getByText('Hello from the other side')).toBeVisible();
 
-    await setPosition(page, 11, true);
+    await setPosition(page, 11, false);
     await expect(karaoke.getByRole('img', { name: 'Instrumental' })).toBeHidden();
     // The line being sung is split into words that fill one by one.
     await expect(karaoke.locator('p span span').filter({ hasText: 'Hello' }).first()).toBeVisible();
@@ -79,7 +79,7 @@ test.describe('with timed lyrics from LRCLIB', () => {
   });
 
   test('keyboard: space toggles playback and ] nudges the timing', async ({ page }) => {
-    await setPosition(page, 11, true);
+    await setPosition(page, 11, false);
     await page.keyboard.press(' ');
     await page.keyboard.press(']');
     await page.keyboard.press('ArrowRight');

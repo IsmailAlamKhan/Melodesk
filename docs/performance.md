@@ -47,6 +47,16 @@ What this says:
 
 Windows (WebView2) and Linux (WebKitGTK) have not been measured; add numbers here.
 
+## Idle CPU: an open finding
+
+On the dev build (macOS, 2026-10-21), with nothing playing, one WebKit WebContent process of the app
+sat at a steady ~27-29% CPU and the shell at ~7-8%. A profile sample showed continuous JavaScript
+allocation and garbage collection plus layout and paint, which looks like a polling or animation loop.
+It is not yet attributed to our interface or to the YouTube Music page in the player window (it is a
+debug build with the dev server, too). Next step: sample each webview separately (the player window
+shown with `MELODESK_DEV_SHOW_PLAYER=1`, then hidden) with Safari's Web Inspector timeline, and compare
+with a release build.
+
 ## Not measured yet
 
 - **Cold start**: needs a time-to-interactive probe that works in release builds (the dev logging that

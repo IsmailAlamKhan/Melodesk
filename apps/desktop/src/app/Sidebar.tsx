@@ -27,7 +27,7 @@ export function Sidebar() {
   return (
     <nav
       aria-label={t('nav.primary')}
-      className="flex h-full min-h-0 flex-col border-e border-accent-line bg-bg-elevated bg-[image:linear-gradient(to_bottom,var(--color-accent-soft),transparent_45%)]"
+      className="flex h-full min-h-0 flex-col bg-bg-elevated bg-[image:linear-gradient(to_bottom,var(--color-accent-soft),transparent_45%)]"
     >
       <div data-tauri-drag-region className="h-10 shrink-0" />
       <div className="flex flex-col gap-1 px-3">
@@ -38,10 +38,10 @@ export function Sidebar() {
             end={n.end ?? false}
             className={({ isActive }) =>
               cn(
-                'flex h-(--nav-h) items-center gap-3 rounded-md px-2 text-sm transition-colors duration-(--duration-fast)',
+                'flex h-(--nav-h) items-center gap-3 rounded-lg px-3 text-sm transition-colors duration-(--duration-fast)',
                 isActive
                   ? 'bg-accent-soft font-medium text-accent'
-                  : 'text-fg-muted hover:bg-accent-soft hover:text-fg',
+                  : 'text-fg-muted hover:bg-bg-overlay hover:text-fg',
               )
             }
           >
@@ -72,10 +72,10 @@ export function Sidebar() {
             to={routeForEndpoint(p.endpoint) ?? '#'}
             className={({ isActive }) =>
               cn(
-                'flex h-[calc(var(--nav-h)+0.25rem)] items-center gap-2 rounded-md px-2 text-sm',
+                'flex h-[calc(var(--nav-h)+0.25rem)] items-center gap-2 rounded-lg px-3 text-sm',
                 isActive
                   ? 'bg-accent-soft font-medium text-accent'
-                  : 'text-fg-muted hover:bg-accent-soft hover:text-fg',
+                  : 'text-fg-muted hover:bg-bg-overlay hover:text-fg',
               )
             }
           >
@@ -93,15 +93,15 @@ export function Sidebar() {
           </div>
         )}
       </div>
-      <div className="border-t border-border p-3">
+      <div className="border-t border-border/60 p-3">
         <NavLink
           to="/settings"
           className={({ isActive }) =>
             cn(
-              'flex h-(--nav-h) items-center gap-3 rounded-md px-2 text-sm',
+              'flex h-(--nav-h) items-center gap-3 rounded-lg px-3 text-sm',
               isActive
                 ? 'bg-accent-soft font-medium text-accent'
-                : 'text-fg-muted hover:bg-accent-soft hover:text-fg',
+                : 'text-fg-muted hover:bg-bg-overlay hover:text-fg',
             )
           }
         >

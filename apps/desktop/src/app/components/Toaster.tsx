@@ -16,7 +16,7 @@ export function Toaster() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="rounded-md border border-border bg-bg-overlay px-4 py-2 text-sm shadow-lg"
+            className="rounded-full bg-fg px-5 py-3 text-sm font-medium text-bg shadow-xl"
           >
             {t.text}
           </motion.div>

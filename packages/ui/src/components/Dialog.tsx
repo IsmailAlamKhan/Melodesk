@@ -28,17 +28,17 @@ export function Dialog({
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       <RadixDialog.Portal>
-        <RadixDialog.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" />
+        <RadixDialog.Overlay className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" />
         <RadixDialog.Content
           className={cn(
-            'fixed top-1/2 left-1/2 z-50 flex w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-lg border border-border bg-bg-elevated p-5 shadow-2xl',
+            'fixed top-1/2 left-1/2 z-50 flex w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-2xl bg-bg-elevated p-6 shadow-2xl ring-1 ring-border/60',
             'focus:outline-none',
             className,
           )}
         >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <RadixDialog.Title className="font-display text-lg font-semibold">
+              <RadixDialog.Title className="font-display text-xl font-bold tracking-tight">
                 {title}
               </RadixDialog.Title>
               {description && (
@@ -61,4 +61,4 @@ export function Dialog({
 }
 
 export const inputClass =
-  'h-10 w-full rounded-md border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
+  'h-11 w-full rounded-xl border border-transparent bg-bg-overlay px-4 text-sm text-fg placeholder:text-fg-subtle transition-colors focus-visible:border-accent focus-visible:bg-bg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-accent-soft';
