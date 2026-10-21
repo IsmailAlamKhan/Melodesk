@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { emit, installTauri } from './mock-tauri';
+import { openSettings } from './settings-nav';
 
 test.beforeEach(async ({ page }) => {
   await installTauri(page);
@@ -44,10 +45,7 @@ test('a playlist page takes the colours of its artwork and gives them back on le
 });
 
 test('it can be turned off in Settings', async ({ page }) => {
-  await page
-    .getByRole('navigation', { name: 'Primary' })
-    .getByRole('link', { name: 'Settings' })
-    .click();
+  await openSettings(page, 'Appearance');
   await page.getByRole('switch', { name: 'Color pages from artwork' }).uncheck();
   await page
     .getByRole('navigation', { name: 'Primary' })

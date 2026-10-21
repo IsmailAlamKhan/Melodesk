@@ -25,7 +25,7 @@ test('right-clicking the page offers navigation and views', async ({ page }) => 
 test('a menu choice acts: Settings opens the settings page', async ({ page }) => {
   await page.getByRole('heading', { name: 'Indian Music' }).click({ button: 'right' });
   await page.getByRole('menuitem', { name: 'Settings' }).click();
-  await expect(page.getByRole('heading', { name: 'Storage' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible();
 });
 
 test('with a track playing the menu leads with playback controls that work', async ({ page }) => {

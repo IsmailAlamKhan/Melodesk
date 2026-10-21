@@ -9,6 +9,7 @@ export default tseslint.config(
     ignores: [
       '**/node_modules/**',
       '**/dist/**',
+      '**/dist-e2e/**',
       '**/target/**',
       'apps/desktop/src-tauri/gen/**',
       'apps/desktop/public/**',

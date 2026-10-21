@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { TRACK, installTauri, startPlayback } from './mock-tauri';
+import { openSettings } from './settings-nav';
 
 test.beforeEach(async ({ page }) => {
   await installTauri(page);
@@ -50,7 +51,7 @@ test('everything holds still when the music stops', async ({ page }) => {
 });
 
 test('switching the feature off removes the Visualizer tab', async ({ page }) => {
-  await page.getByRole('link', { name: 'Settings' }).click();
+  await openSettings(page, 'Features');
   await page.getByRole('switch', { name: /^Music visuals [A-Z]/u }).uncheck();
   await page.getByRole('button', { name: 'Open now playing' }).click();
   await expect(page.getByRole('tab', { name: 'Visualizer' })).toHaveCount(0);

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { TRACK, installTauri, startPlayback } from './mock-tauri';
+import { openSettings } from './settings-nav';
 
 test.beforeEach(async ({ page }) => {
   await installTauri(page);
@@ -7,13 +8,13 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('Settings offers every lyrics source, each off until you choose it', async ({ page }) => {
-  await page.getByRole('link', { name: 'Settings' }).click();
+  await openSettings(page, 'Plugins');
   for (const name of ['LRCLIB lyrics', 'NetEase lyrics', 'lyrics.ovh'])
     await expect(page.getByRole('switch', { name: `Enable ${name}` })).not.toBeChecked();
 });
 
 test('turning on NetEase gives timed lyrics in Now Playing', async ({ page }) => {
-  await page.getByRole('link', { name: 'Settings' }).click();
+  await openSettings(page, 'Plugins');
   await page.getByRole('switch', { name: 'Enable NetEase lyrics' }).check();
   await page.getByRole('link', { name: 'Home' }).first().click();
   await startPlayback(page, {

@@ -12,16 +12,50 @@ const PERMISSION_KEYS: Record<string, MessageKey> = {
   'native:discord': 'plugin.perm.discord',
 };
 
+/** Plugins are listed by what they do, in this order; a group with no plugins is left out. */
+const GROUPS: { id: string; title: MessageKey; hint: MessageKey }[] = [
+  { id: 'lyrics', title: 'plugins.group.lyrics', hint: 'plugins.group.lyrics.hint' },
+  { id: 'identify', title: 'plugins.group.identify', hint: 'plugins.group.identify.hint' },
+  { id: 'activity', title: 'plugins.group.activity', hint: 'plugins.group.activity.hint' },
+];
+
+function groupOf(p: PluginRecord): string {
+  if (p.manifest.provides.includes('lyrics')) return 'lyrics';
+  if (p.manifest.provides.includes('identify')) return 'identify';
+  return 'activity';
+}
+
 export function PluginsSection() {
   const t = useT();
   const plugins = usePluginHost((s) => s.plugins);
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="font-semibold">{t('plugins.title')}</h2>
-      <p className="text-sm text-fg-muted">{t('plugins.intro')}</p>
-      {plugins.map((p) => (
-        <PluginCard key={p.manifest.id} plugin={p} />
-      ))}
+    <section className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2">
+        <h2 className="font-semibold">{t('plugins.title')}</h2>
+        <p className="text-sm text-fg-muted">{t('plugins.intro')}</p>
+      </div>
+      {GROUPS.map((g) => {
+        const inGroup = plugins.filter((p) => groupOf(p) === g.id);
+        if (inGroup.length === 0) return null;
+        return (
+          <div
+            key={g.id}
+            role="group"
+            aria-labelledby={`plugins-${g.id}`}
+            className="flex flex-col gap-3"
+          >
+            <div>
+              <h3 id={`plugins-${g.id}`} className="text-sm font-semibold">
+                {t(g.title)}
+              </h3>
+              <p className="text-xs text-fg-subtle">{t(g.hint)}</p>
+            </div>
+            {inGroup.map((p) => (
+              <PluginCard key={p.manifest.id} plugin={p} />
+            ))}
+          </div>
+        );
+      })}
     </section>
   );
 }
@@ -67,7 +101,10 @@ function PluginCard({ plugin: p }: { plugin: PluginRecord }) {
       {p.enabled && fields.length > 0 && (
         <div className="flex flex-col gap-2">
           {fields.map((f) => (
-            <label key={f.key} className="flex items-center justify-between gap-3 text-sm">
+            <label
+              key={f.key}
+              className="flex flex-col gap-1.5 text-sm rail:flex-row rail:items-center rail:justify-between rail:gap-3"
+            >
               <span>
                 {td(`plugin.${id}.field.${f.key}.label`, f.label)}
                 {f.hint && (
@@ -112,7 +149,7 @@ function PluginCard({ plugin: p }: { plugin: PluginRecord }) {
                       [f.key]: f.type === 'number' ? Number(e.target.value) : e.target.value,
                     })
                   }
-                  className={`${inputClass} max-w-64`}
+                  className={`${inputClass} w-full rail:max-w-64`}
                 />
               )}
             </label>

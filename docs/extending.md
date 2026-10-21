@@ -73,7 +73,13 @@ Everything goes under `contributes`; each key is an extension point.
 | `commands`  | Entries in the command palette (a function, so labels follow the language and live state) |
 | `menus`     | Entries in the right-click menu: `root`, `go` (Go to) or `view` (View)                    |
 | `settings`  | Sections on the Settings page                                                             |
-| `windows`   | The content of an extra native window, keyed by its `?window=` name                       |
+
+| `windows` | The content of an extra native window, keyed by its `?window=` name |
+
+Settings is a few pages (General, Appearance, Features, Plugins, Storage, About & updates), shown
+one at a time. A `settings` section picks its page with `category` (default `general`); a page with
+no sections is not listed, so a feature that is off takes its page with it, and
+`/settings?section=plugins` opens a page directly.
 
 Outside `contributes`:
 

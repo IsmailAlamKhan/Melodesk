@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { emit, installTauri } from './mock-tauri';
+import { openSettings } from './settings-nav';
 
 test.beforeEach(async ({ page }) => {
   await installTauri(page);
@@ -13,8 +14,7 @@ const toggle = (page: Page, name: string) =>
   page.getByRole('switch', { name: new RegExp(`^${name} [A-Z]`, 'u') });
 
 async function openFeatures(page: Page): Promise<void> {
-  await page.getByRole('link', { name: 'Settings' }).click();
-  await page.getByRole('heading', { name: 'Features' }).scrollIntoViewIfNeeded();
+  await openSettings(page, 'Features');
 }
 
 test('Settings lists the optional features and leaves the essential ones out', async ({ page }) => {
@@ -36,7 +36,7 @@ test('switching a feature off removes it from the sidebar and its page, and back
   await page.getByRole('link', { name: 'Home' }).first().click();
   await expect(page.getByRole('heading', { name: 'Indian Music' })).toBeVisible();
 
-  await page.getByRole('link', { name: 'Settings' }).click();
+  await openSettings(page, 'Features');
   await toggle(page, 'Listening stats').check();
   await expect(sidebar(page).getByRole('link', { name: 'Stats' })).toBeVisible();
 });
@@ -55,12 +55,15 @@ test('switching off the queue also switches off the tools that live in it', asyn
   await expect(page.getByRole('button', { name: 'Queue' })).toBeVisible();
 });
 
-test('a feature takes its settings section with it', async ({ page }) => {
+test('a feature takes its settings page with it', async ({ page }) => {
   await openFeatures(page);
-  await expect(page.getByRole('heading', { name: 'Storage' })).toBeVisible();
+  const pages = page.getByRole('navigation', { name: 'Settings pages' });
+  await expect(pages.getByRole('link', { name: 'Storage' })).toBeVisible();
   await toggle(page, 'Offline cover art').uncheck();
-  await expect(page.getByRole('heading', { name: 'Storage' })).toHaveCount(0);
+  await expect(pages.getByRole('link', { name: 'Storage' })).toHaveCount(0);
   await toggle(page, 'Offline cover art').check();
+  await expect(pages.getByRole('link', { name: 'Storage' })).toBeVisible();
+  await pages.getByRole('link', { name: 'Storage' }).click();
   await expect(page.getByRole('heading', { name: 'Storage' })).toBeVisible();
 });
 

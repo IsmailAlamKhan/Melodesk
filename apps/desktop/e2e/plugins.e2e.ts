@@ -1,14 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { emit, installTauri, sentCommands } from './mock-tauri';
+import { openSettings } from './settings-nav';
 
 test.beforeEach(async ({ page }) => {
   await installTauri(page);
   await page.goto('/');
   await emit(page, { type: 'ready', bridgeVersion: '0.1.0', protocolVersion: 1, loggedIn: true });
-  await page
-    .getByRole('navigation', { name: 'Primary' })
-    .getByRole('link', { name: 'Settings' })
-    .click();
+  await openSettings(page, 'Plugins');
 });
 
 test('a plugin sees the settings you type as soon as you type them', async ({ page }) => {

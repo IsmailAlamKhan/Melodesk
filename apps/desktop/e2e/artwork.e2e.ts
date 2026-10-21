@@ -41,7 +41,7 @@ test('covers are kept for offline use and shown when the network copy fails', as
   await page.route(/^https:/u, (route) =>
     route.request().resourceType() === 'image'
       ? route.abort('internetdisconnected')
-      : route.continue(),
+      : route.fallback(),
   );
   await page.reload();
   await startPlayback(page, { track: { ...TRACK, artworkUrl: ART } });

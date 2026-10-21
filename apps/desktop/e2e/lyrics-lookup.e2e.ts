@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { TRACK, installTauri, startPlayback } from './mock-tauri';
+import { openSettings } from './settings-nav';
 
 const SYNCED =
   '[00:01.00] First found line\n[00:05.00] Second found line\n[00:09.00] Third found line';
@@ -12,7 +13,7 @@ const entry = (trackName: string, artistName: string) => ({
 });
 
 async function enable(page: Page, ...plugins: string[]): Promise<void> {
-  await page.getByRole('link', { name: 'Settings' }).click();
+  await openSettings(page, 'Plugins');
   for (const name of plugins) await page.getByRole('switch', { name: `Enable ${name}` }).check();
   await page.getByRole('link', { name: 'Home' }).first().click();
 }

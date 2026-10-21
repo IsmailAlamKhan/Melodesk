@@ -103,6 +103,11 @@ export interface MenuContribution {
 export interface SettingsSection {
   id: string;
   order?: number;
+  /**
+   * Which page of Settings it belongs on: `general`, `appearance`, `features`, `storage` or `about`
+   * (default `general`). Order applies within the page.
+   */
+  category?: string;
   component: ComponentType;
 }
 

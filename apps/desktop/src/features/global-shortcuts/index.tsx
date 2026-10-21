@@ -10,6 +10,6 @@ export default defineFeature({
   // The OS-level hotkeys live in the native shell; builds without that module hide the settings.
   requires: ['shortcuts'],
   contributes: {
-    settings: [{ id: 'shortcuts', order: 40, component: ShortcutsSection }],
+    settings: [{ id: 'shortcuts', category: 'general', order: 40, component: ShortcutsSection }],
   },
 });

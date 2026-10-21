@@ -17,6 +17,6 @@ export default defineFeature({
   scope: 'all',
   contributes: {
     providers: [{ id: 'offline-images', order: 10, component: OfflineImages }],
-    settings: [{ id: 'storage', order: 50, component: StorageSection }],
+    settings: [{ id: 'storage', category: 'storage', order: 50, component: StorageSection }],
   },
 });

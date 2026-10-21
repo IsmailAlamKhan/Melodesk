@@ -96,7 +96,8 @@ pnpm build
 
 Useful scripts: `pnpm test`, `pnpm test:e2e`, `pnpm typecheck`, `pnpm lint`, `pnpm clippy`,
 `pnpm screenshots`. End-to-end tests run the real UI in headless Chromium against a mocked Tauri
-backend; the first time, run `pnpm --filter @melodesk/desktop exec playwright install chromium`.
+backend (the built app is loaded from disk, so no server or network is needed); the first time, run
+`pnpm --filter @melodesk/desktop exec playwright install chromium`.
 
 ## Privacy
 

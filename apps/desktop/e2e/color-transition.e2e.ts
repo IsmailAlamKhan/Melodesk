@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { emit, installTauri } from './mock-tauri';
+import { openSettings } from './settings-nav';
 
 /** Start recording whether the browser runs a transition on the primary colour. */
 const watchFade = (page: Page): Promise<void> =>
@@ -24,10 +25,7 @@ async function openAppearance(page: Page): Promise<void> {
   await installTauri(page);
   await page.goto('/');
   await emit(page, { type: 'ready', bridgeVersion: '0.1.0', protocolVersion: 1, loggedIn: true });
-  await page
-    .getByRole('navigation', { name: 'Primary' })
-    .getByRole('link', { name: 'Settings' })
-    .click();
+  await openSettings(page, 'Appearance');
   await expect(page.getByRole('heading', { name: 'Appearance' })).toBeVisible();
 }
 

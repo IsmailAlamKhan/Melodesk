@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Page } from '@playwright/test';
+import { serveBuiltApp } from './serve-built';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixtureDir = join(here, '../../../packages/adapter/tests/fixtures');
@@ -90,6 +91,8 @@ async function stubImages(page: Page): Promise<void> {
 
 export async function installTauri(page: Page, opts: MockOptions = {}): Promise<void> {
   await stubImages(page);
+  // After the image stub, so it answers first for the app's own address.
+  await serveBuiltApp(page);
   await page.exposeFunction('__nodeData', (endpoint: string, body: Record<string, unknown>) =>
     innertubeResponse(endpoint, body),
   );

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openSettings } from './settings-nav';
 import { TRACK, emit, installTauri, sentCommands, startPlayback } from './mock-tauri';
 
 test.use({ viewport: { width: 375, height: 812 } });
@@ -76,6 +77,23 @@ test('pages fit the window width', async ({ page }) => {
   await box.press('Enter');
   await expect(page.getByText('Instant Crush (feat. Julian Casablancas)').first()).toBeVisible();
   expect(await overflowing(page), 'search').toEqual([]);
+});
+
+test('every Settings page fits the window width', async ({ page }) => {
+  await openSettings(page);
+  const pages = page.getByRole('navigation', { name: 'Settings pages' });
+  for (const name of [
+    'General',
+    'Appearance',
+    'Features',
+    'Plugins',
+    'Storage',
+    'About & updates',
+  ]) {
+    await pages.getByRole('link', { name }).click();
+    await page.waitForTimeout(250);
+    expect(await overflowing(page), name).toEqual([]);
+  }
 });
 
 test('the player bar is compact: transport only, and tapping the cover opens Now Playing', async ({
@@ -195,6 +213,23 @@ test.describe('in between: a navigation rail', () => {
     for (const name of ['Home', 'Explore', 'Library', 'Stats', 'Settings']) {
       await rail.getByRole('link', { name }).click();
       await page.waitForTimeout(300);
+      expect(await overflowing(page), name).toEqual([]);
+    }
+  });
+
+  test('Settings pages fit at this width too', async ({ page }) => {
+    await openSettings(page);
+    const pages = page.getByRole('navigation', { name: 'Settings pages' });
+    for (const name of [
+      'General',
+      'Appearance',
+      'Features',
+      'Plugins',
+      'Storage',
+      'About & updates',
+    ]) {
+      await pages.getByRole('link', { name }).click();
+      await page.waitForTimeout(250);
       expect(await overflowing(page), name).toEqual([]);
     }
   });

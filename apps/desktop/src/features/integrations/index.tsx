@@ -28,7 +28,7 @@ export default defineFeature({
   description: 'feature.integrations.description',
   icon: Plug,
   contributes: {
-    settings: [{ id: 'plugins', order: 60, component: PluginsSection }],
+    settings: [{ id: 'plugins', category: 'plugins', order: 60, component: PluginsSection }],
   },
   start: () => {
     const stopHost = startPluginHost();

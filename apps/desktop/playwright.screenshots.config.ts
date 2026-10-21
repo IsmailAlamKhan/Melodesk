@@ -7,15 +7,10 @@ export default defineConfig({
   workers: 1,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:1420',
+    baseURL: 'https://melodesk.test',
     viewport: { width: 1280, height: 800 },
     deviceScaleFactor: 1,
     colorScheme: 'dark',
   },
-  webServer: {
-    command: 'pnpm exec vite',
-    url: 'http://localhost:1420',
-    reuseExistingServer: true,
-    timeout: 60_000,
-  },
+  globalSetup: './e2e/global-setup.ts',
 });
