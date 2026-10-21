@@ -31,7 +31,7 @@ export interface SlotMap {
   'sidebar.sections': object;
   /** Buttons on the right of the full-screen Now Playing header. */
   'nowPlaying.header': object;
-  /** A column shown beside the artwork in full-screen Now Playing. */
+  /** Tabs beside the artwork in full-screen Now Playing (queue, lyrics…); each item needs a label. */
   'nowPlaying.side': object;
   /** Buttons in the lyrics toolbar. */
   'lyrics.toolbar': object;
@@ -53,6 +53,9 @@ export interface SlotItem<P = object> {
   id: string;
   /** Lower comes first (default 100). */
   order?: number;
+  /** For slots that show their items as tabs (`nowPlaying.side`): the tab's name and icon. */
+  label?: MessageKey;
+  icon?: LucideIcon;
   component: ComponentType<P>;
 }
 

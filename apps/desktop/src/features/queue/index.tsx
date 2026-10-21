@@ -15,6 +15,11 @@ export default defineFeature({
     panels: [
       { id: 'queue', label: 'nav.queue', icon: ListMusic, order: 20, component: QueuePanel },
     ],
+    slots: {
+      'nowPlaying.side': [
+        { id: 'queue', order: 20, label: 'nav.queue', icon: ListMusic, component: QueuePanel },
+      ],
+    },
     commands: () => [
       {
         id: 'queue',

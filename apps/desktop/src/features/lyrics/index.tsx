@@ -9,11 +9,7 @@ const toggle = (): void => useUiStore.getState().toggleRightPanel('lyrics');
 
 /** The lyrics column beside the artwork in full-screen Now Playing. */
 function NowPlayingLyrics() {
-  return (
-    <div className="hidden h-[70vh] min-h-0 lg:block">
-      <LyricsPanel large />
-    </div>
-  );
+  return <LyricsPanel large />;
 }
 
 export default defineFeature({
@@ -25,7 +21,17 @@ export default defineFeature({
     panels: [
       { id: 'lyrics', label: 'nav.lyrics', icon: MicVocal, order: 10, component: LyricsPanel },
     ],
-    slots: { 'nowPlaying.side': [{ id: 'lyrics', order: 10, component: NowPlayingLyrics }] },
+    slots: {
+      'nowPlaying.side': [
+        {
+          id: 'lyrics',
+          order: 10,
+          label: 'nav.lyrics',
+          icon: MicVocal,
+          component: NowPlayingLyrics,
+        },
+      ],
+    },
     commands: () => [
       {
         id: 'lyrics',

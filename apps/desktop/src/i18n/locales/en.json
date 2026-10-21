@@ -211,6 +211,7 @@
   "nav.signInForPlaylists": "Sign in to see your playlists",
   "nav.stats": "Stats",
   "nowPlaying.close": "Close now playing",
+  "nowPlaying.playingFrom": "Playing from",
   "nowPlaying.region": "Now playing",
   "palette.cmd.explore": "Go to Explore",
   "palette.cmd.history": "Go to History",

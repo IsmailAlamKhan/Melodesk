@@ -2,6 +2,7 @@ import { IconButton, Slider, Tooltip, cn } from '@melodesk/ui';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronDown,
+  Heart,
   Pause,
   Play,
   Repeat,
@@ -9,16 +10,19 @@ import {
   Shuffle,
   SkipBack,
   SkipForward,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { createElement, useEffect, useState } from 'react';
 import { toHex } from '../../appearance/color';
 import { useArtworkColor } from '../../appearance/artworkAccent';
 import { useT } from '../../i18n/index';
 import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
 import { ArtistLinks } from '../../app/components/ArtistLinks';
+import { setLikeStatus } from '../../player/like';
 import { useNowPlaying } from './store';
-import { Img, Slot } from '../../core';
+import { FeatureBoundary, Img, Slot, useSlot } from '../../core';
 
 function fmt(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
@@ -45,9 +49,61 @@ function usePosition(): number {
     : state.position;
 }
 
+const TAB_KEY = 'melodesk.nowPlayingTab';
+
+function readTab(): string | null {
+  try {
+    return localStorage.getItem(TAB_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** Pill-shaped tabs with a highlight that slides to the chosen one. */
+function Tabs({
+  tabs,
+  active,
+  onChange,
+  name,
+}: {
+  tabs: { id: string; label: string }[];
+  active: string;
+  onChange: (id: string) => void;
+  name: string;
+}) {
+  return (
+    <div role="tablist" className="flex gap-1 rounded-full bg-bg-overlay/60 p-1 backdrop-blur-md">
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          role="tab"
+          aria-selected={active === tab.id}
+          onClick={() => onChange(tab.id)}
+          className={cn(
+            'relative h-9 rounded-full px-4 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-accent',
+            active === tab.id ? 'text-accent-fg' : 'text-fg-muted hover:text-fg',
+          )}
+        >
+          {active === tab.id && (
+            <motion.span
+              layoutId={`np-tab-${name}`}
+              className="absolute inset-0 rounded-full bg-accent"
+              transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+            />
+          )}
+          <span className="relative">{tab.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /**
- * Full-screen Now Playing: artwork, blurred artwork backdrop with an accent gradient sampled
- * from the art, big controls, and the synced lyrics column. Escape or the chevron closes it.
+ * Full-screen Now Playing. Left: the artwork (it settles back a little when paused), title, artist,
+ * seek bar and controls. Right: a glass panel with tabs for whatever features offer there (the
+ * queue, the lyrics). On a narrow window the player and those tabs take turns. The backdrop is the
+ * blurred artwork with a glow in its colour. Escape or the chevron closes it.
  */
 export function NowPlayingView() {
   const t = useT();
@@ -56,10 +112,26 @@ export function NowPlayingView() {
   const track = usePlayerStore((s) => s.track);
   const state = usePlayerStore((s) => s.state);
   const queue = usePlayerStore((s) => s.queue);
+  const flags = usePlayerStore((s) => s.flags);
   const position = usePosition();
   const [scrub, setScrub] = useState<number | null>(null);
   const artRgb = useArtworkColor(track?.artworkUrl ?? null);
   const accent = artRgb ? toHex(artRgb) : null;
+  const tabs = useSlot('nowPlaying.side');
+  // `side` is the tab shown in the panel; `view` only matters on a narrow window, where the player
+  // and the panel are separate screens.
+  const [side, setSide] = useState<string | null>(readTab);
+  const [view, setView] = useState<'player' | 'side'>('player');
+  const activeSide = tabs.find((x) => x.id === side) ?? tabs[0];
+  const choose = (id: string): void => {
+    setSide(id);
+    setView('side');
+    try {
+      localStorage.setItem(TAB_KEY, id);
+    } catch {
+      /* the choice just is not remembered */
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -76,6 +148,11 @@ export function NowPlayingView() {
 
   const playing = state?.playing ?? false;
   const duration = state?.duration ?? 0;
+  const volume = state?.volume ?? 1;
+  const muted = state?.muted ?? false;
+  const liked = flags?.likeStatus === 'LIKE';
+  const tabItems = tabs.map((x) => ({ id: x.id, label: x.label ? t(x.label) : x.id }));
+  const showPlayer = view === 'player' || !activeSide;
   return (
     <AnimatePresence>
       {open && (
@@ -96,7 +173,7 @@ export function NowPlayingView() {
               className="pointer-events-none absolute inset-0 size-full scale-125 object-cover opacity-50 blur-3xl"
             />
           )}
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,color-mix(in_oklch,var(--np-accent)_35%,transparent),transparent_60%),linear-gradient(to_bottom,transparent,var(--color-bg)_120%)]" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,color-mix(in_oklch,var(--np-accent)_40%,transparent),transparent_60%),radial-gradient(ellipse_at_bottom_right,color-mix(in_oklch,var(--np-accent)_25%,transparent),transparent_55%),linear-gradient(to_bottom,transparent,var(--color-bg)_130%)]" />
           <div
             data-tauri-drag-region
             className="absolute inset-x-0 top-0 z-10 flex h-14 items-center justify-end gap-1 px-3 pt-2"
@@ -106,31 +183,67 @@ export function NowPlayingView() {
               <ChevronDown />
             </IconButton>
           </div>
-          <div className="relative mx-auto grid h-full max-w-7xl grid-cols-1 items-center gap-6 px-5 py-16 md:gap-10 md:px-10 md:py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-            <div className="flex flex-col items-center gap-8 lg:items-start">
+          <div className="relative mx-auto flex h-full max-w-7xl flex-col gap-4 px-5 pt-16 pb-6 md:px-10 md:pb-10 lg:grid lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-14 lg:pt-20">
+            {tabs.length > 0 && (
+              <div className="flex justify-center lg:hidden">
+                <Tabs
+                  name="narrow"
+                  tabs={[{ id: 'player', label: t('nowPlaying.region') }, ...tabItems]}
+                  active={view === 'player' ? 'player' : (activeSide?.id ?? 'player')}
+                  onChange={(id) => (id === 'player' ? setView('player') : choose(id))}
+                />
+              </div>
+            )}
+            <div
+              className={cn(
+                'min-h-0 flex-1 flex-col items-center justify-center gap-6 overflow-y-auto lg:flex lg:items-stretch lg:overflow-visible',
+                showPlayer ? 'flex' : 'hidden',
+              )}
+            >
+              {queue?.title && (
+                <div className="w-full text-center text-xs font-medium tracking-widest text-fg-subtle uppercase lg:text-start">
+                  {t('nowPlaying.playingFrom')}
+                  <span className="mt-0.5 block truncate text-sm tracking-normal text-fg normal-case">
+                    {queue.title}
+                  </span>
+                </div>
+              )}
               <motion.div
                 key={track?.videoId ?? 'none'}
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                className="aspect-square w-full max-w-md overflow-hidden rounded-2xl bg-bg-overlay shadow-2xl"
+                initial={{ opacity: 0, scale: 0.94 }}
+                animate={{ opacity: 1, scale: playing ? 1 : 0.9 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                className="aspect-square w-[min(100%,28rem,max(12rem,calc(100dvh-27rem)))] shrink-0 self-center overflow-hidden rounded-3xl bg-bg-overlay shadow-[0_30px_80px_-24px_var(--np-accent)]"
               >
                 {track?.artworkUrl && (
                   <Img src={track.artworkUrl} alt="" className="size-full object-cover" />
                 )}
               </motion.div>
-              <div className="w-full max-w-md">
-                <h1 className="truncate font-display text-3xl font-bold tracking-tight">
-                  {track?.title ?? t('player.nothingPlaying')}
-                </h1>
-                <ArtistLinks
-                  byline={track?.artist ?? ''}
-                  className="block truncate text-lg text-fg-muted"
-                  onNavigate={() => close(false)}
-                />
+              <div className="w-full max-w-md self-center lg:max-w-none">
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <h1 className="truncate font-display text-3xl font-bold tracking-tight">
+                      {track?.title ?? t('player.nothingPlaying')}
+                    </h1>
+                    <ArtistLinks
+                      byline={track?.artist ?? ''}
+                      className="block truncate text-lg text-fg-muted"
+                      onNavigate={() => close(false)}
+                    />
+                  </div>
+                  {track?.videoId && (
+                    <IconButton
+                      label={liked ? t('player.removeLike') : t('player.like')}
+                      aria-pressed={liked}
+                      onClick={() => void setLikeStatus(liked ? 'INDIFFERENT' : 'LIKE')}
+                    >
+                      <Heart className={cn(liked && 'fill-current text-[var(--np-accent)]')} />
+                    </IconButton>
+                  )}
+                </div>
                 <div
                   dir="ltr"
-                  className="mt-6 flex items-center gap-3 text-xs tabular-nums text-fg-subtle"
+                  className="mt-5 flex items-center gap-3 text-xs tabular-nums text-fg-subtle"
                 >
                   <span className="w-12 text-right">{fmt(scrub ?? position)}</span>
                   <Slider
@@ -148,7 +261,7 @@ export function NowPlayingView() {
                   />
                   <span className="w-12">{fmt(duration)}</span>
                 </div>
-                <div dir="ltr" className="mt-4 flex items-center justify-center gap-3">
+                <div dir="ltr" className="mt-3 flex items-center justify-center gap-3">
                   <IconButton
                     label={t('player.shuffle')}
                     aria-pressed={queue?.shuffle ?? false}
@@ -171,7 +284,7 @@ export function NowPlayingView() {
                       type="button"
                       aria-label={playing ? t('player.pause') : t('player.play')}
                       onClick={() => void sendCommand({ type: 'toggle' })}
-                      className="flex size-16 items-center justify-center rounded-full bg-accent text-accent-fg shadow-lg transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
+                      className="flex size-16 items-center justify-center rounded-full bg-accent text-accent-fg shadow-[0_10px_30px_-8px_var(--np-accent)] transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
                     >
                       {playing ? (
                         <Pause className="size-7" />
@@ -208,9 +321,43 @@ export function NowPlayingView() {
                     {queue?.repeat === 'one' ? <Repeat1 /> : <Repeat />}
                   </IconButton>
                 </div>
+                <div dir="ltr" className="mt-3 flex items-center justify-center gap-2">
+                  <IconButton
+                    label={muted ? t('player.unmute') : t('player.mute')}
+                    size="sm"
+                    onClick={() => void sendCommand({ type: 'setMuted', muted: !muted })}
+                  >
+                    {muted || volume === 0 ? <VolumeX /> : <Volume2 />}
+                  </IconButton>
+                  <Slider
+                    label={t('player.volume')}
+                    valueLabel={(v) => `${String(Math.round(v * 100))}%`}
+                    className="w-40"
+                    value={muted ? 0 : volume}
+                    max={1}
+                    step={0.01}
+                    onCommit={(v) => void sendCommand({ type: 'setVolume', volume: v })}
+                  />
+                </div>
               </div>
             </div>
-            <Slot name="nowPlaying.side" />
+            {activeSide && (
+              <div
+                className={cn(
+                  'min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-border/40 bg-bg-elevated/55 shadow-2xl backdrop-blur-2xl lg:flex',
+                  showPlayer ? 'hidden' : 'flex',
+                )}
+              >
+                <div className="hidden shrink-0 justify-center px-4 pt-4 lg:flex">
+                  <Tabs name="wide" tabs={tabItems} active={activeSide.id} onChange={choose} />
+                </div>
+                <div className="min-h-0 flex-1 pt-2">
+                  <FeatureBoundary featureId={activeSide.featureId}>
+                    {createElement(activeSide.component)}
+                  </FeatureBoundary>
+                </div>
+              </div>
+            )}
           </div>
         </motion.section>
       )}

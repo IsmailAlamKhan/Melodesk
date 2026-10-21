@@ -16,12 +16,10 @@ import {
 } from 'lucide-react';
 import { create } from 'zustand';
 import type { CSSProperties } from 'react';
-import { run } from '../data/innertube';
-import { queryClient } from '../data/queryClient';
 import { useT } from '../i18n';
+import { setLikeStatus } from '../player/like';
 import { sendCommand, setPlayerVisible } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
-import { toast } from './toast';
 import { ArtistLinks } from './components/ArtistLinks';
 import { useArtworkColor } from '../appearance/artworkAccent';
 import { usePositionMs } from '../player/usePositionMs';
@@ -41,7 +39,6 @@ export function PlayerBar() {
   const track = usePlayerStore((s) => s.track);
   const queue = usePlayerStore((s) => s.queue);
   const flags = usePlayerStore((s) => s.flags);
-  const loggedIn = usePlayerStore((s) => s.loggedIn);
   const artRgb = useArtworkColor(track?.artworkUrl ?? null);
   const canOpenNowPlaying = useHasAction('nowPlaying.open');
 
@@ -51,25 +48,7 @@ export function PlayerBar() {
   const muted = state?.muted ?? false;
   const like = flags?.likeStatus ?? null;
 
-  const setLike = async (status: 'LIKE' | 'DISLIKE' | 'INDIFFERENT'): Promise<void> => {
-    if (!track?.videoId) return;
-    if (!loggedIn) {
-      toast(t('player.signInToLike'));
-      return;
-    }
-    const endpoint =
-      status === 'LIKE' ? 'like/like' : status === 'DISLIKE' ? 'like/dislike' : 'like/removelike';
-    await run({ endpoint, body: { target: { videoId: track.videoId } } });
-    usePlayerStore.setState((s) => (s.flags ? { flags: { ...s.flags, likeStatus: status } } : {}));
-    void queryClient.invalidateQueries({ queryKey: ['browse'] });
-    toast(
-      status === 'LIKE'
-        ? t('player.savedToLiked')
-        : status === 'DISLIKE'
-          ? t('player.disliked')
-          : t('player.removedFromLiked'),
-    );
-  };
+  const setLike = setLikeStatus;
 
   const dot =
     'relative after:absolute after:bottom-0.5 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-accent';
