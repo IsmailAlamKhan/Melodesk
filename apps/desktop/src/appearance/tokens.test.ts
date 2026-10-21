@@ -13,7 +13,7 @@ import {
   ACCENT_PRESETS,
   type Rgb,
 } from './color';
-import { ACCENT_MIN_CONTRAST } from './apply';
+import { roleColors, type ContrastLevel, type ThemeName } from './material';
 
 const css = readFileSync(
   fileURLToPath(new URL('../../../../packages/ui/src/styles/tokens.css', import.meta.url)),
@@ -24,8 +24,9 @@ const css = readFileSync(
 function tokens(theme: 'dark' | 'light' | 'amoled'): Record<string, Rgb> {
   const read = (block: string): Record<string, Rgb> => {
     const out: Record<string, Rgb> = {};
-    for (const m of block.matchAll(/--color-([\w-]+):\s*(oklch\([^)]*\));/gu)) {
-      const rgb = parseOklch(m[2] ?? '');
+    for (const m of block.matchAll(/--color-([\w-]+):\s*(#[0-9a-fA-F]{6}|oklch\([^)]*\));/gu)) {
+      const value = m[2] ?? '';
+      const rgb = value.startsWith('#') ? parseHex(value) : parseOklch(value);
       if (rgb && m[1]) out[m[1]] = rgb;
     }
     return out;
@@ -60,36 +61,93 @@ describe.each(['dark', 'light', 'amoled'] as const)('%s theme meets WCAG AA', (t
   });
 });
 
-const mixRgb = (a: Rgb, b: Rgb, t: number): Rgb => [
-  a[0] * t + b[0] * (1 - t),
-  a[1] * t + b[1] * (1 - t),
-  a[2] * t + b[2] * (1 - t),
+/** Pairs that must read as text or as a control label: [foreground role, background role]. */
+const PAIRS: [string, string][] = [
+  ['on-surface', 'surface'],
+  ['on-surface', 'surface-container-lowest'],
+  ['on-surface', 'surface-container'],
+  ['on-surface', 'surface-container-high'],
+  ['on-surface', 'surface-container-highest'],
+  ['on-surface-variant', 'surface'],
+  ['on-surface-variant', 'surface-container'],
+  ['on-surface-variant', 'surface-container-high'],
+  ['on-surface-subtle', 'surface'],
+  ['on-surface-subtle', 'surface-container'],
+  ['on-surface-subtle', 'surface-container-high'],
+  ['on-primary', 'primary'],
+  ['on-primary-container', 'primary-container'],
+  ['on-secondary', 'secondary'],
+  ['on-secondary-container', 'secondary-container'],
+  ['on-tertiary', 'tertiary'],
+  ['on-tertiary-container', 'tertiary-container'],
+  ['on-error', 'error'],
+  ['on-error-container', 'error-container'],
+  ['inverse-on-surface', 'inverse-surface'],
+  // accent-coloured text and icons sit on the page and on raised surfaces
+  ['primary', 'surface'],
+  ['primary', 'surface-container'],
+  ['error', 'surface'],
 ];
-/** accent-soft is 14% accent; gradients can add a little more where they overlap. */
-const TINT = 0.16;
 
-describe.each(['dark', 'light', 'amoled'] as const)('%s theme: accent on its own tint', (theme) => {
-  const t = tokens(theme);
-  it('the default accent stays readable as text on the tinted surfaces', () => {
-    const accent = t['accent'] ?? [0, 0, 0];
-    for (const surface of ['bg', 'bg-elevated']) {
-      const bg = t[surface] ?? [0, 0, 0];
-      expect(contrast(accent, mixRgb(accent, bg, TINT))).toBeGreaterThanOrEqual(4.5);
-    }
-  });
-  it('every preset, once nudged, does too', () => {
-    const page = t['bg'] ?? [0, 0, 0];
-    for (const p of ACCENT_PRESETS) {
-      const accent = ensureContrast(presetRgb(p.id), page, ACCENT_MIN_CONTRAST);
-      for (const surface of ['bg', 'bg-elevated']) {
-        const bg = t[surface] ?? [0, 0, 0];
-        expect(
-          contrast(accent, mixRgb(accent, bg, TINT)),
-          `${p.id} on ${surface}`,
-        ).toBeGreaterThanOrEqual(4.5);
+/** Presets, plus seeds that are hard for colour schemes: saturated, pale, dark and grey. */
+const SEEDS = [
+  ...ACCENT_PRESETS.map((p) => toHex(presetRgb(p.id))),
+  '#ffff00',
+  '#0000ff',
+  '#00ff00',
+  '#808080',
+  '#101010',
+  '#fafafa',
+];
+
+describe.each(['dark', 'light', 'amoled'] as const)('Material scheme (%s)', (theme: ThemeName) => {
+  for (const level of ['standard', 'medium', 'high'] as ContrastLevel[])
+    it(`every text pairing meets WCAG AA for ${String(SEEDS.length)} seeds at ${level} contrast`, () => {
+      for (const seed of SEEDS) {
+        const roles = roleColors(seed, theme, level) as Record<string, string>;
+        for (const [fg, bg] of PAIRS) {
+          const a = parseHex(roles[fg] ?? '');
+          const b = parseHex(roles[bg] ?? '');
+          if (!a || !b) throw new Error(`missing role ${fg} or ${bg}`);
+          expect(
+            contrast(a, b),
+            `${seed} ${theme}/${level}: ${fg} on ${bg}`,
+          ).toBeGreaterThanOrEqual(4.5);
+        }
       }
+    });
+
+  it('keeps raised surfaces ordered from the page upward', () => {
+    const r = roleColors(toHex(presetRgb('blue')), theme) as Record<string, string>;
+    const lum = (k: string): number => {
+      const c = parseHex(r[k] ?? '') ?? [0, 0, 0];
+      return contrast(c, [0, 0, 0]);
+    };
+    const order = [
+      'surface-container-lowest',
+      'surface-container-low',
+      'surface-container',
+      'surface-container-high',
+      'surface-container-highest',
+    ];
+    for (let i = 1; i < order.length; i += 1) {
+      const lower = order[i - 1] ?? '';
+      const upper = order[i] ?? '';
+      if (theme === 'light') expect(lum(upper)).toBeLessThanOrEqual(lum(lower));
+      else expect(lum(upper)).toBeGreaterThanOrEqual(lum(lower));
     }
   });
+});
+
+it('AMOLED has a pure black page', () => {
+  expect(roleColors('#ff6f61', 'amoled').surface).toBe('#000000');
+});
+
+it('Expressive shifts hues: the secondary and tertiary containers differ from the primary', () => {
+  const r = roleColors('#ff6f61', 'dark');
+  expect(
+    new Set([r['primary-container'], r['secondary-container'], r['tertiary-container']]).size,
+  ).toBe(3);
 });
 
 describe('color math', () => {

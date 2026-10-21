@@ -33,7 +33,7 @@ export function Slider({
         data-slider-root=""
         dir="ltr"
         className={cn(
-          'group relative flex h-5 w-full touch-none items-center select-none',
+          'group relative flex h-7 w-full touch-none items-center select-none',
           className,
         )}
         value={[Math.min(value, max)]}
@@ -47,14 +47,15 @@ export function Slider({
           if (v[0] !== undefined) onCommit?.(v[0]);
         }}
       >
-        <RadixSlider.Track className="relative h-1 grow rounded-full bg-accent-muted">
-          <RadixSlider.Range className="absolute h-full rounded-full bg-accent group-hover:brightness-110" />
+        <RadixSlider.Track className="relative h-2 grow rounded-full bg-outline-variant">
+          <RadixSlider.Range className="absolute h-full rounded-full bg-primary" />
         </RadixSlider.Track>
         <RadixSlider.Thumb
           aria-label={label}
           className={cn(
-            'block size-3 rounded-full bg-accent opacity-0 shadow transition-opacity duration-(--duration-fast)',
-            'group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
+            // Expressive handle: a tall bar that thins while pressed.
+            'block h-7 w-1 rounded-full bg-primary shadow transition-[width] duration-(--duration-fast)',
+            'active:w-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
           )}
         />
       </RadixSlider.Root>

@@ -44,6 +44,17 @@ the mock doesn't know, the "no unexpected backend calls" test fails: add the com
 deliberately. Every cover is replaced by a generated gradient, so tests never touch the network.
 Specs are `*.e2e.ts`; `*.shots.ts` files regenerate the README screenshots (`pnpm screenshots`).
 
+## Changing colours or the default accent
+
+Colours come from a generated Material scheme (see docs/architecture.md). If you change the generator
+or the default seed in `appearance/material.ts`, regenerate the default values in `tokens.css`:
+
+```bash
+UPDATE_TOKENS=1 pnpm --filter @melodesk/desktop exec vitest run src/appearance/tokens.generate
+```
+
+and run `pnpm test`: the contrast tests fail if any text pairing stops meeting WCAG AA.
+
 ## When YouTube changes something
 
 Selectors live in `packages/bridge/src/inject/selectors.vN.ts` and parsers in

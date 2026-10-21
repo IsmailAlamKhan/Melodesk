@@ -50,7 +50,7 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
       <button
         type="button"
         onClick={() => void playItem(item)}
-        className="flex h-12 items-center gap-3 rounded-md px-3 text-sm text-fg-muted hover:bg-accent-soft"
+        className="flex h-12 items-center gap-3 rounded-xl px-3 text-sm text-fg-muted hover:bg-state-hover"
       >
         {item.title}
       </button>
@@ -72,7 +72,7 @@ export function ItemRow({ item, index, showIndex, showAlbum = true, onPlay, dens
           if (e.key === 'Enter') activate();
         }}
         className={cn(
-          'group grid cursor-default items-center gap-3 rounded-md px-2 outline-none hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-accent',
+          'group grid cursor-default items-center gap-3 rounded-md px-2 outline-none hover:bg-state-hover focus-visible:ring-2 focus-visible:ring-accent',
           dense ? 'h-[calc(var(--row-h)-0.5rem)]' : 'h-(--row-h)',
           showAlbum
             ? 'grid-cols-[2rem_auto_minmax(0,3fr)_minmax(0,2fr)_auto_2.5rem]'

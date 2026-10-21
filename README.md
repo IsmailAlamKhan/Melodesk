@@ -59,7 +59,8 @@ Planned and in progress; ticked items work today.
 - [x] Cover art kept for offline use (capped at 100 MB, clearable in Settings)
 - [ ] Mini player (built, not yet checked on screen)
 - [ ] Last.fm / ListenBrainz scrobbling, Discord Rich Presence (built as opt-in plugins, not yet checked against real accounts)
-- [x] Light / dark / AMOLED themes, accent colors (including from album art), density, right-to-left layout
+- [x] Material 3 Expressive design: a full tonal colour scheme generated from your accent (or the album art), light / dark / AMOLED themes, three contrast levels, pill navigation, shape-shifting buttons, Roboto Flex type, spring motion
+- [x] Density and right-to-left layout
 - [x] Translation framework with English strings; see [docs/translating.md](docs/translating.md)
 - [x] Listening stats, command palette, plugins, lyrics romanization and translation
 

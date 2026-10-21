@@ -1,67 +1,213 @@
-/* Design tokens. 8-pt grid, calm content-first palette, platform fonts.
+/* Design tokens: Material 3 Expressive.
+ *
+ * Colour comes from a tonal scheme generated from one seed colour (see
+ * apps/desktop/src/appearance/material.ts). The three marked blocks below are that scheme for the
+ * default seed, generated, not hand-written: after changing the generator or the default seed run
+ *   UPDATE_TOKENS=1 pnpm --filter @melodesk/desktop exec vitest run src/appearance/tokens.generate
+ * and a test fails if they drift. At runtime the app overwrites the same variables when the user
+ * picks another accent or takes colour from the album art.
  *
  * Dark is the default. The app sets data-theme="light" | "dark" | "amoled" on <html>
- * ("system" is resolved to light/dark in JS). Text tokens are checked against WCAG AA in
- * apps/desktop/src/appearance/tokens.test.ts, so change values there with care.
+ * ("system" is resolved to light/dark in JS). Text pairs are checked against WCAG AA in
+ * apps/desktop/src/appearance/tokens.test.ts.
  */
 @theme {
   --font-sans:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text', 'Segoe UI',
-    system-ui, sans-serif;
+    'Roboto Flex Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+    'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
   --font-display:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI Variable Display', 'Segoe UI',
-    system-ui, sans-serif;
+    'Roboto Flex Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Display',
+    'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
 
-  --color-bg: oklch(0.145 0.004 260);
-  --color-bg-elevated: oklch(0.19 0.005 260);
-  --color-bg-overlay: oklch(0.23 0.006 260);
-  --color-fg: oklch(0.96 0.003 260);
-  --color-fg-muted: oklch(0.72 0.01 260);
-  --color-fg-subtle: oklch(0.64 0.01 260);
-  --color-border: oklch(0.3 0.006 260);
-  --color-accent: oklch(0.72 0.17 25);
-  --color-accent-fg: oklch(0.15 0.02 25);
-  /* Tints of whatever the accent currently is (preset, custom, or from album art). */
+  /* material:dark:start */
+  --color-accent: #e1cbff;
+  --color-accent-fg: #543e76;
+  --color-bg: #110b1a;
+  --color-bg-elevated: #1e162b;
+  --color-bg-overlay: #251b33;
+  --color-border: #4f4261;
+  --color-danger: #fd6f85;
+  --color-error: #fd6f85;
+  --color-error-container: #8a1632;
+  --color-fg: #efe0ff;
+  --color-fg-muted: #b4a5c8;
+  --color-fg-subtle: #bda7de;
+  --color-inverse-on-surface: #5a5264;
+  --color-inverse-primary: #6b548d;
+  --color-inverse-surface: #fef7ff;
+  --color-on-error: #490013;
+  --color-on-error-container: #ff97a3;
+  --color-on-primary: #543e76;
+  --color-on-primary-container: #4b356c;
+  --color-on-secondary: #374430;
+  --color-on-secondary-container: #99a88f;
+  --color-on-surface: #efe0ff;
+  --color-on-surface-subtle: #bda7de;
+  --color-on-surface-variant: #b4a5c8;
+  --color-on-tertiary: #3d6819;
+  --color-on-tertiary-container: #356010;
+  --color-outline: #7d6f90;
+  --color-outline-variant: #4f4261;
+  --color-primary: #e1cbff;
+  --color-primary-container: #d5bbfc;
+  --color-scrim: #000000;
+  --color-secondary: #bccbb1;
+  --color-secondary-container: #1d2917;
+  --color-surface: #110b1a;
+  --color-surface-bright: #332646;
+  --color-surface-container: #1e162b;
+  --color-surface-container-high: #251b33;
+  --color-surface-container-highest: #2c203d;
+  --color-surface-container-low: #171022;
+  --color-surface-container-lowest: #000000;
+  --color-surface-dim: #110b1a;
+  --color-tertiary: #e5ffca;
+  --color-tertiary-container: #c3f897;
+  /* material:dark:end */
+
+  /* State layers: Material's hover, focus and press overlays, drawn from the text colour. */
+  --color-state-hover: color-mix(in srgb, var(--color-on-surface) 8%, transparent);
+  --color-state-press: color-mix(in srgb, var(--color-on-surface) 12%, transparent);
+  --color-primary-hover: color-mix(in srgb, var(--color-on-primary) 8%, transparent);
+  --color-primary-press: color-mix(in srgb, var(--color-on-primary) 12%, transparent);
+  /* Tints of the accent, kept from before the Material move. */
   --color-accent-soft: color-mix(in oklch, var(--color-accent) 14%, transparent);
   --color-accent-muted: color-mix(in oklch, var(--color-accent) 30%, transparent);
   --color-accent-line: color-mix(in oklch, var(--color-accent) 32%, var(--color-border));
-  --color-danger: oklch(0.72 0.19 25);
   --color-warning: oklch(0.8 0.15 80);
   --color-success: oklch(0.75 0.15 150);
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  /* Expressive shape scale: generous corners; buttons and chips go fully round. */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+  --radius-3xl: 36px;
   --radius-full: 9999px;
 
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Expressive motion: spatial moves overshoot slightly like a spring; effects (colour, opacity)
+     settle without overshoot. */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-spatial: linear(
+    0,
+    0.18 2.5%,
+    0.56 6.5%,
+    0.86 10.5%,
+    1.03 14.5%,
+    1.065 17.5%,
+    1.04 21%,
+    1.012 26%,
+    0.997 32%,
+    1.001 42%,
+    1
+  );
+  --ease-effects: cubic-bezier(0.34, 0.8, 0.34, 1);
   --duration-fast: 150ms;
-  --duration-base: 200ms;
-  --duration-slow: 250ms;
+  --duration-base: 250ms;
+  --duration-slow: 350ms;
+  --duration-spatial: 500ms;
 }
 
 :root[data-theme='light'] {
-  --color-bg: oklch(0.985 0.002 260);
-  --color-bg-elevated: oklch(1 0 0);
-  --color-bg-overlay: oklch(0.95 0.003 260);
-  --color-fg: oklch(0.2 0.005 260);
-  --color-fg-muted: oklch(0.43 0.01 260);
-  --color-fg-subtle: oklch(0.5 0.01 260);
-  --color-border: oklch(0.88 0.005 260);
-  --color-accent: oklch(0.5 0.2 25);
-  --color-accent-fg: oklch(0.99 0.01 25);
-  --color-danger: oklch(0.52 0.2 25);
+  /* material:light:start */
+  --color-accent: #6f4ea1;
+  --color-accent-fg: #fef7ff;
+  --color-bg: #fef7ff;
+  --color-bg-elevated: #f5eaff;
+  --color-bg-overlay: #f1e3ff;
+  --color-border: #bea9da;
+  --color-danger: #ac3149;
+  --color-error: #ac3149;
+  --color-error-container: #f76a80;
+  --color-fg: #3a2b53;
+  --color-fg-muted: #685782;
+  --color-fg-subtle: #674c90;
+  --color-inverse-on-surface: #a498b3;
+  --color-inverse-primary: #c19df7;
+  --color-inverse-surface: #120a1e;
+  --color-on-error: #fff7f7;
+  --color-on-error-container: #68001f;
+  --color-on-primary: #fef7ff;
+  --color-on-primary-container: #4b2a7c;
+  --color-on-secondary: #ecffdd;
+  --color-on-secondary-container: #49603f;
+  --color-on-surface: #3a2b53;
+  --color-on-surface-subtle: #674c90;
+  --color-on-surface-variant: #685782;
+  --color-on-tertiary: #edffd8;
+  --color-on-tertiary-container: #356010;
+  --color-outline: #8573a0;
+  --color-outline-variant: #bea9da;
+  --color-primary: #6f4ea1;
+  --color-primary-container: #d2b3ff;
+  --color-scrim: #000000;
+  --color-secondary: #4e6544;
+  --color-secondary-container: #def9cd;
+  --color-surface: #fef7ff;
+  --color-surface-bright: #fef7ff;
+  --color-surface-container: #f5eaff;
+  --color-surface-container-high: #f1e3ff;
+  --color-surface-container-highest: #ecdcff;
+  --color-surface-container-low: #faf0ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-dim: #e6d2ff;
+  --color-tertiary: #3f6a1a;
+  --color-tertiary-container: #c3f897;
+  /* material:light:end */
   --color-warning: oklch(0.5 0.12 80);
   --color-success: oklch(0.48 0.13 150);
   color-scheme: light;
 }
 
-/* True black for OLED panels: the base is #000, raised surfaces stay barely lighter. */
+/* True black for OLED panels; raised surfaces stay barely lighter. */
 :root[data-theme='amoled'] {
-  --color-bg: oklch(0 0 0);
-  --color-bg-elevated: oklch(0.12 0.004 260);
-  --color-bg-overlay: oklch(0.17 0.005 260);
-  --color-border: oklch(0.26 0.006 260);
+  /* material:amoled:start */
+  --color-accent: #e1cbff;
+  --color-accent-fg: #543e76;
+  --color-bg: #000000;
+  --color-bg-elevated: #1d1726;
+  --color-bg-overlay: #251f2e;
+  --color-border: #4f4261;
+  --color-danger: #fd6f85;
+  --color-error: #fd6f85;
+  --color-error-container: #8a1632;
+  --color-fg: #efe0ff;
+  --color-fg-muted: #b4a5c8;
+  --color-fg-subtle: #bda7de;
+  --color-inverse-on-surface: #5a5264;
+  --color-inverse-primary: #6b548d;
+  --color-inverse-surface: #fef7ff;
+  --color-on-error: #490013;
+  --color-on-error-container: #ff97a3;
+  --color-on-primary: #543e76;
+  --color-on-primary-container: #4b356c;
+  --color-on-secondary: #374430;
+  --color-on-secondary-container: #99a88f;
+  --color-on-surface: #efe0ff;
+  --color-on-surface-subtle: #bda7de;
+  --color-on-surface-variant: #b4a5c8;
+  --color-on-tertiary: #3d6819;
+  --color-on-tertiary-container: #356010;
+  --color-outline: #7d6f90;
+  --color-outline-variant: #4f4261;
+  --color-primary: #e1cbff;
+  --color-primary-container: #d5bbfc;
+  --color-scrim: #000000;
+  --color-secondary: #bccbb1;
+  --color-secondary-container: #1d2917;
+  --color-surface: #000000;
+  --color-surface-bright: #393242;
+  --color-surface-container: #1d1726;
+  --color-surface-container-high: #251f2e;
+  --color-surface-container-highest: #2e2737;
+  --color-surface-container-low: #140e1d;
+  --color-surface-container-lowest: #000000;
+  --color-surface-dim: #000000;
+  --color-tertiary: #e5ffca;
+  --color-tertiary-container: #c3f897;
+  /* material:amoled:end */
   color-scheme: dark;
 }
 
@@ -74,22 +220,23 @@
     --duration-fast: 0ms;
     --duration-base: 0ms;
     --duration-slow: 0ms;
+    --duration-spatial: 0ms;
   }
 }
 
 /* Density: row and tile sizes follow data-density on <html>. */
 :root {
   --row-h: 3.5rem;
-  --nav-h: 2.25rem;
+  --nav-h: 3rem;
   --tile: 168px;
 }
 :root[data-density='compact'] {
   --row-h: 2.75rem;
-  --nav-h: 1.875rem;
+  --nav-h: 2.5rem;
   --tile: 144px;
 }
 :root[data-density='spacious'] {
   --row-h: 4.25rem;
-  --nav-h: 2.75rem;
+  --nav-h: 3.5rem;
   --tile: 192px;
 }

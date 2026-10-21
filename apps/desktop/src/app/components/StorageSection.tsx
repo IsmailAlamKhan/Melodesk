@@ -24,8 +24,8 @@ export function StorageSection() {
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="section-title font-semibold">{t('settings.storage')}</h2>
-      <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-bg-elevated px-4 py-3">
+      <h2 className="font-semibold">{t('settings.storage')}</h2>
+      <div className="flex items-center justify-between gap-4 rounded-2xl bg-surface-container px-4 py-3">
         <div>
           <div className="text-sm font-medium">{t('settings.artworkCache')}</div>
           <div className="text-xs text-fg-muted">

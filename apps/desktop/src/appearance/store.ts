@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { kvGet, kvSet } from '../data/kv';
 import type { AccentPresetId } from './color';
+import type { ContrastLevel } from './material';
 
 export type ThemeMode = 'system' | 'light' | 'dark' | 'amoled';
 export type Density = 'compact' | 'comfortable' | 'spacious';
@@ -10,6 +11,8 @@ export type Accent =
 
 export interface AppearancePrefs {
   theme: ThemeMode;
+  /** Material contrast level for text and controls. */
+  contrast: ContrastLevel;
   accent: Accent;
   density: Density;
   /** Text direction: follow the language, or force one. */
@@ -20,7 +23,8 @@ export interface AppearancePrefs {
 
 export const DEFAULT_APPEARANCE: AppearancePrefs = {
   theme: 'system',
-  accent: { kind: 'preset', id: 'coral' },
+  contrast: 'standard',
+  accent: { kind: 'preset', id: 'purple' },
   density: 'comfortable',
   direction: 'auto',
   language: 'system',
@@ -47,6 +51,7 @@ export function sanitize(raw: unknown): AppearancePrefs {
     accent = { kind: 'preset', id: a['id'] as AccentPresetId };
   return {
     theme: pick(o['theme'], ['system', 'light', 'dark', 'amoled'], 'system'),
+    contrast: pick(o['contrast'], ['standard', 'medium', 'high'], 'standard'),
     accent,
     density: pick(o['density'], ['compact', 'comfortable', 'spacious'], 'comfortable'),
     direction: pick(o['direction'], ['auto', 'ltr', 'rtl'], 'auto'),
@@ -68,6 +73,7 @@ interface State extends AppearancePrefs {
 function snapshot(s: AppearancePrefs): AppearancePrefs {
   return {
     theme: s.theme,
+    contrast: s.contrast,
     accent: s.accent,
     density: s.density,
     direction: s.direction,

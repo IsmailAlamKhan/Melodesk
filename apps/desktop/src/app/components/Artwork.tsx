@@ -24,7 +24,7 @@ export function Artwork({
     <div
       className={cn(
         'shrink-0 overflow-hidden bg-bg-overlay',
-        round ? 'rounded-full' : 'rounded-md',
+        round ? 'rounded-full' : size >= 120 ? 'rounded-xl' : 'rounded-md',
         className,
       )}
       style={fill ? undefined : { width: size, height: size }}

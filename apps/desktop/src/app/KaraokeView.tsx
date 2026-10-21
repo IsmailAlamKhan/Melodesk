@@ -460,7 +460,10 @@ function Stage() {
               type="button"
               aria-label={playing ? t('player.pause') : t('player.play')}
               onClick={() => void sendCommand({ type: 'toggle' })}
-              className="flex size-14 items-center justify-center rounded-full bg-accent text-accent-fg shadow-lg transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent"
+              className={cn(
+                'state-layer m3-motion flex size-14 items-center justify-center bg-primary text-on-primary shadow-lg hover:scale-105 focus-visible:outline-2 focus-visible:outline-primary',
+                playing ? 'rounded-[28px]' : 'rounded-[20px]',
+              )}
             >
               {playing ? <Pause className="size-6" /> : <Play className="size-6 translate-x-0.5" />}
             </button>

@@ -125,7 +125,7 @@ export function StatsPage() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-border bg-bg-elevated p-4">
+    <div className="rounded-2xl bg-surface-container p-4">
       <div className="text-xs text-fg-subtle">{label}</div>
       <div className="mt-1 font-display text-2xl font-semibold tabular-nums">{value}</div>
     </div>

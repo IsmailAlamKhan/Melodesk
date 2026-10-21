@@ -17,7 +17,7 @@ export function PluginsSection() {
   const plugins = usePluginHost((s) => s.plugins);
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="section-title font-semibold">{t('plugins.title')}</h2>
+      <h2 className="font-semibold">{t('plugins.title')}</h2>
       <p className="text-sm text-fg-muted">{t('plugins.intro')}</p>
       {plugins.map((p) => (
         <PluginCard key={p.manifest.id} plugin={p} />
@@ -34,7 +34,7 @@ function PluginCard({ plugin: p }: { plugin: PluginRecord }) {
   const id = p.manifest.id;
   const fields = p.def.settingsFields ?? [];
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-bg-elevated p-4">
+    <div className="flex flex-col gap-3 rounded-2xl bg-surface-container p-4">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="font-medium">{td(`plugin.${id}.name`, p.manifest.name)}</div>

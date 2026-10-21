@@ -27,7 +27,7 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <label className="flex items-center justify-between gap-4 rounded-lg border border-border bg-bg-elevated px-4 py-3">
+    <label className="flex items-center justify-between gap-4 rounded-2xl bg-surface-container px-4 py-3">
       <span>
         <span className="block text-sm font-medium">{label}</span>
         {hint && <span className="block text-xs text-fg-muted">{hint}</span>}
@@ -89,8 +89,8 @@ export function SettingsPage() {
       <h1 className="font-display text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
 
       <section className="flex flex-col gap-3">
-        <h2 className="section-title font-semibold">{t('settings.account')}</h2>
-        <div className="flex items-center gap-3 rounded-lg border border-border bg-bg-elevated p-4">
+        <h2 className="font-semibold">{t('settings.account')}</h2>
+        <div className="flex items-center gap-3 rounded-2xl bg-surface-container p-4">
           {account.data?.avatarUrl && (
             <CachedImg src={account.data.avatarUrl} alt="" className="size-10 rounded-full" />
           )}
@@ -131,7 +131,7 @@ export function SettingsPage() {
       <AppearanceSection />
 
       <section className="flex flex-col gap-3">
-        <h2 className="section-title font-semibold">{t('settings.desktop')}</h2>
+        <h2 className="font-semibold">{t('settings.desktop')}</h2>
         {settings && (
           <>
             <Toggle
@@ -166,10 +166,10 @@ export function SettingsPage() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="section-title font-semibold">{t('settings.shortcuts')}</h2>
+        <h2 className="font-semibold">{t('settings.shortcuts')}</h2>
         <p className="text-sm text-fg-muted">{t('settings.shortcutsHint')}</p>
         {settings && (
-          <div className="flex flex-col divide-y divide-border rounded-lg border border-border bg-bg-elevated">
+          <div className="flex flex-col divide-y divide-border rounded-2xl bg-surface-container">
             {SHORTCUT_ACTIONS.map((a) => (
               <div
                 key={a.key}
@@ -191,8 +191,8 @@ export function SettingsPage() {
       <PluginsSection />
 
       <section className="flex flex-col gap-3">
-        <h2 className="section-title font-semibold">{t('settings.updates')}</h2>
-        <div className="flex items-center gap-3 rounded-lg border border-border bg-bg-elevated p-4 text-sm">
+        <h2 className="font-semibold">{t('settings.updates')}</h2>
+        <div className="flex items-center gap-3 rounded-2xl bg-surface-container p-4 text-sm">
           <div className="flex-1">
             <div>{t('settings.version', { version: version || '—' })}</div>
             <div className="text-xs text-fg-muted">
@@ -222,8 +222,8 @@ export function SettingsPage() {
       <StorageSection />
 
       <section className="flex flex-col gap-3">
-        <h2 className="section-title font-semibold">{t('settings.diagnostics')}</h2>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 rounded-lg border border-border bg-bg-elevated p-4 text-sm">
+        <h2 className="font-semibold">{t('settings.diagnostics')}</h2>
+        <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-1 rounded-2xl bg-surface-container p-4 text-sm">
           <dt className="text-fg-subtle">{t('diag.bridge')}</dt>
           <dd>{bridgeVersion ?? '—'}</dd>
           <dt className="text-fg-subtle">{t('diag.health')}</dt>
@@ -252,7 +252,7 @@ export function SettingsPage() {
       </section>
 
       <section className="flex flex-col gap-2 text-sm text-fg-muted">
-        <h2 className="section-title font-semibold text-fg">{t('settings.about')}</h2>
+        <h2 className="font-semibold text-fg">{t('settings.about')}</h2>
         <p>{t('about.text')}</p>
         <p className="text-xs text-fg-subtle">{t('about.disclaimer')}</p>
       </section>

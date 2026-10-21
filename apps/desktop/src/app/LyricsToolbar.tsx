@@ -8,8 +8,9 @@ import type { Caveat } from '../lyrics/transliterate';
 import { openDialog } from './dialogs/store';
 import { useUiStore } from './uiStore';
 
-const panel = 'z-50 w-80 rounded-lg border border-border bg-bg-elevated p-4 text-sm shadow-xl';
-const select = 'h-8 w-full rounded-md border border-border bg-bg px-2 text-sm';
+const panel = 'z-50 w-80 rounded-2xl bg-surface-container-high p-5 text-sm shadow-xl';
+const select =
+  'h-10 w-full rounded-md border border-outline bg-transparent px-3 text-sm text-on-surface';
 
 export interface LyricsToolbarProps {
   hasTimedLines: boolean;

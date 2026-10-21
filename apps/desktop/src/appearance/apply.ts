@@ -1,15 +1,8 @@
-import {
-  accentForeground,
-  ensureContrast,
-  parseHex,
-  parseOklch,
-  presetRgb,
-  toHex,
-  type Rgb,
-} from './color';
+import type { Rgb } from './color';
+import { colorVars, seedFor, type ThemeName, type Vars } from './material';
 import type { AppearancePrefs } from './store';
 
-export type ResolvedTheme = 'light' | 'dark' | 'amoled';
+export type ResolvedTheme = ThemeName;
 
 export function resolveTheme(
   mode: AppearancePrefs['theme'],
@@ -33,34 +26,12 @@ export function resolveDirection(
   return pref === 'auto' ? (isRtlLocale(locale) ? 'rtl' : 'ltr') : pref;
 }
 
-/** Fallback page backgrounds for contrast nudging (matches tokens.css). */
-const BG: Record<ResolvedTheme, Rgb> = {
-  dark: parseOklch('oklch(0.145 0.004 260)') ?? [20, 20, 22],
-  amoled: [0, 0, 0],
-  light: parseOklch('oklch(0.985 0.002 260)') ?? [250, 250, 250],
-};
+/** Key under which the last non-default scheme is cached for the early-load script. */
+export const VARS_CACHE_KEY = 'melodesk.theme-vars';
 
-/**
- * Accent text must stay readable on the background and also on the accent's own tint (selected
- * nav items, hovered buttons), which is slightly closer to the accent. 5.5 on the page keeps the
- * worst case on a tint above 4.5 (checked in tokens.test.ts).
- */
-export const ACCENT_MIN_CONTRAST = 5.5;
-
-/** CSS variable overrides for the accent, or null to use the theme's own accent. */
-export function accentVars(
-  prefs: AppearancePrefs,
-  theme: ResolvedTheme,
-  artRgb: Rgb | null,
-): { accent: string; accentFg: string } | null {
-  let base: Rgb | null = null;
-  if (prefs.accent.kind === 'custom') base = parseHex(prefs.accent.hex);
-  else if (prefs.accent.kind === 'art') base = artRgb;
-  else if (prefs.accent.id !== 'coral') base = presetRgb(prefs.accent.id);
-  if (!base) return null;
-  // Accent is used for text and icons on the page background as well as for fills.
-  const readable = ensureContrast(base, BG[theme], ACCENT_MIN_CONTRAST);
-  return { accent: toHex(readable), accentFg: accentForeground(readable) };
+/** The Material scheme variables for the user's accent (or the album art) in this theme. */
+export function schemeVars(prefs: AppearancePrefs, theme: ResolvedTheme, artRgb: Rgb | null): Vars {
+  return colorVars(seedFor(prefs.accent, artRgb), theme, prefs.contrast);
 }
 
 /** Write the resolved appearance onto <html>. */
@@ -69,18 +40,25 @@ export function applyToDocument(opts: {
   density: AppearancePrefs['density'];
   dir: 'ltr' | 'rtl';
   lang: string;
-  accent: { accent: string; accentFg: string } | null;
+  vars: Vars;
 }): void {
   const root = document.documentElement;
   root.dataset['theme'] = opts.theme;
   root.dataset['density'] = opts.density;
   root.dir = opts.dir;
   root.lang = opts.lang;
-  if (opts.accent) {
-    root.style.setProperty('--color-accent', opts.accent.accent);
-    root.style.setProperty('--color-accent-fg', opts.accent.accentFg);
-  } else {
-    root.style.removeProperty('--color-accent');
-    root.style.removeProperty('--color-accent-fg');
+  for (const [name, value] of Object.entries(opts.vars)) root.style.setProperty(name, value);
+}
+
+/**
+ * Remember the applied scheme so the next launch can paint it before React starts (otherwise a
+ * non-default accent would flash the default colours). The default scheme is already in the CSS.
+ */
+export function cacheVars(theme: ResolvedTheme, vars: Vars, isDefault: boolean): void {
+  try {
+    if (isDefault) localStorage.removeItem(VARS_CACHE_KEY);
+    else localStorage.setItem(VARS_CACHE_KEY, JSON.stringify({ theme, vars }));
+  } catch {
+    /* private mode: the app still applies it once React has started */
   }
 }

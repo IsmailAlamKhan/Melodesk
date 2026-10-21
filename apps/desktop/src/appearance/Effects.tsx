@@ -3,7 +3,8 @@ import { DirectionProvider } from '@radix-ui/react-direction';
 import { MotionConfig } from 'framer-motion';
 import { useEffect, useState, type ReactNode } from 'react';
 import { usePlayerStore } from '../player/store';
-import { accentVars, applyToDocument, resolveDirection, resolveTheme } from './apply';
+import { applyToDocument, cacheVars, resolveDirection, resolveTheme, schemeVars } from './apply';
+import { DEFAULT_SEED, seedFor } from './material';
 import { useArtworkColor } from './artworkAccent';
 import { MIRROR_KEY, useAppearance } from './store';
 import { invoke } from '@tauri-apps/api/core';
@@ -55,13 +56,19 @@ export function AppearanceEffects({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const theme = resolveTheme(prefs.theme, light);
+    const vars = schemeVars(prefs, theme, artRgb);
     applyToDocument({
       theme,
       density: prefs.density,
       dir: resolveDirection(prefs.direction, locale),
       lang: locale,
-      accent: accentVars(prefs, theme, artRgb),
+      vars,
     });
+    cacheVars(
+      theme,
+      vars,
+      seedFor(prefs.accent, artRgb) === DEFAULT_SEED && prefs.contrast === 'standard',
+    );
   }, [prefs, light, locale, artRgb]);
 
   // Respect the OS "reduce motion" setting for every Framer Motion animation.

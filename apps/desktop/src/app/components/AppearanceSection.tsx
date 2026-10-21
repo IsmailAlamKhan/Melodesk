@@ -55,7 +55,7 @@ function Segmented<T extends string>({
     <div
       role="radiogroup"
       aria-label={label}
-      className="flex flex-wrap gap-1 rounded-full border border-border bg-bg-elevated p-1"
+      className="flex flex-wrap overflow-hidden rounded-full border border-outline"
     >
       {options.map((o) => (
         <button
@@ -65,8 +65,10 @@ function Segmented<T extends string>({
           aria-checked={value === o.id}
           onClick={() => onChange(o.id)}
           className={cn(
-            'rounded-full px-3 py-1 text-sm',
-            value === o.id ? 'bg-fg text-bg' : 'text-fg-muted hover:text-fg',
+            'type-label-large state-layer m3-motion border-s border-outline px-4 py-2 first:border-s-0',
+            value === o.id
+              ? 'bg-secondary-container text-on-secondary-container'
+              : 'text-on-surface',
           )}
         >
           {o.text}
@@ -76,13 +78,19 @@ function Segmented<T extends string>({
   );
 }
 
+const CONTRASTS = [
+  { id: 'standard', key: 'settings.contrast.standard' },
+  { id: 'medium', key: 'settings.contrast.medium' },
+  { id: 'high', key: 'settings.contrast.high' },
+] as const;
+
 export function AppearanceSection() {
   const t = useT();
   const a = useAppearance();
   const customHex = a.accent.kind === 'custom' ? a.accent.hex : '#7c5cff';
   return (
     <section className="flex flex-col gap-4">
-      <h2 className="section-title font-semibold">{t('settings.appearance')}</h2>
+      <h2 className="font-semibold">{t('settings.appearance')}</h2>
 
       <div className="flex flex-col gap-2">
         <span className="text-sm text-fg-muted">{t('settings.theme')}</span>
@@ -92,6 +100,17 @@ export function AppearanceSection() {
           options={THEMES.map((x) => ({ id: x.id, text: t(x.key) }))}
           onChange={(theme) => a.update({ theme })}
         />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <span className="text-sm text-fg-muted">{t('settings.contrast')}</span>
+        <Segmented
+          label={t('settings.contrast')}
+          value={a.contrast}
+          options={CONTRASTS.map((x) => ({ id: x.id, text: t(x.key) }))}
+          onChange={(contrast) => a.update({ contrast })}
+        />
+        <span className="text-xs text-fg-subtle">{t('settings.contrast.hint')}</span>
       </div>
 
       <div className="flex flex-col gap-2">

@@ -121,3 +121,16 @@ test('right-click menus', async ({ page }) => {
   await expect(page.getByRole('menu')).toBeVisible();
   await shot(page, 'context-menu-item');
 });
+
+test('settings', async ({ page }) => {
+  await installTauri(page);
+  await page.goto('/');
+  await startPlayback(page, { positionS: 62, track: SAMPLE });
+  await page
+    .getByRole('navigation', { name: 'Primary' })
+    .getByRole('link', { name: 'Settings' })
+    .click();
+  await expect(page.getByRole('heading', { name: 'Appearance' })).toBeVisible();
+  await page.getByRole('heading', { name: 'Appearance' }).scrollIntoViewIfNeeded();
+  await shot(page, 'settings');
+});

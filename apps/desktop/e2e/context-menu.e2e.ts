@@ -30,7 +30,7 @@ test('a menu choice acts: Settings opens the settings page', async ({ page }) =>
 
 test('with a track playing the menu leads with playback controls that work', async ({ page }) => {
   await startPlayback(page);
-  await page.locator('footer').click({ button: 'right', position: { x: 4, y: 4 } });
+  await page.locator('footer').click({ button: 'right', position: { x: 6, y: 40 } });
   const menu = page.getByRole('menu');
   await expect(menu.getByRole('menuitem', { name: 'Pause' })).toBeVisible();
   await menu.getByRole('menuitem', { name: 'View' }).click();

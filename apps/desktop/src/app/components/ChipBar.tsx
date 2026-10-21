@@ -23,10 +23,10 @@ export function ChipBar({
             aria-selected={active}
             onClick={() => onSelect(active ? null : c)}
             className={cn(
-              'h-8 shrink-0 rounded-full border px-3 text-sm transition-colors duration-(--duration-fast)',
+              'type-label-large state-layer m3-motion flex h-8 shrink-0 items-center rounded-sm border px-4',
               active
-                ? 'border-accent bg-accent text-accent-fg'
-                : 'border-border bg-bg-overlay text-fg-muted hover:border-accent hover:bg-accent-soft hover:text-fg',
+                ? 'border-transparent bg-secondary-container text-on-secondary-container'
+                : 'border-outline-variant text-on-surface-variant',
             )}
           >
             {c.text}

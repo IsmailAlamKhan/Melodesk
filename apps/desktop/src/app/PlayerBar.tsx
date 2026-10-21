@@ -101,7 +101,7 @@ export function PlayerBar() {
   return (
     <footer
       aria-label={t('player.region')}
-      className="grid h-20 grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] items-center gap-4 border-t border-accent-line bg-bg-elevated bg-[image:linear-gradient(to_right,var(--color-accent-soft),transparent_35%)] px-4"
+      className="mx-3 mb-3 grid h-20 grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] items-center gap-4 rounded-[28px] bg-surface-container-high px-5"
     >
       <div className="flex min-w-0 items-center gap-3">
         {track?.artworkUrl ? (
@@ -181,6 +181,8 @@ export function PlayerBar() {
           <IconButton
             label={playing ? t('player.pause') : t('player.play')}
             variant="solid"
+            size="lg"
+            shape={playing ? 'round' : 'squircle'}
             disabled={disabled}
             onClick={() => void sendCommand({ type: 'toggle' })}
           >
