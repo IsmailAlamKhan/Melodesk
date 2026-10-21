@@ -38,7 +38,7 @@ export function ItemCard({ item, width }: { item: Item; width?: number }) {
         onKeyDown={(e) => {
           if (e.key === 'Enter') open();
         }}
-        className="group box-content flex shrink-0 cursor-pointer flex-col gap-2 rounded-2xl p-2 outline-none transition-colors duration-(--duration-fast) hover:bg-state-hover focus-visible:ring-2 focus-visible:ring-primary"
+        className="group box-content flex shrink-0 cursor-pointer flex-col gap-2 rounded-lg p-2 outline-none transition-colors duration-(--duration-fast) hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-accent"
         style={{ width: isVideo ? tile * 1.6 : tile }}
       >
         <div className="relative">
@@ -58,7 +58,7 @@ export function ItemCard({ item, width }: { item: Item; width?: number }) {
                   e.stopPropagation();
                   void playItem(item);
                 }}
-                className="absolute end-2 bottom-2 flex size-10 items-center justify-center rounded-[16px] bg-primary-container text-on-primary-container hover:rounded-full opacity-0 shadow-lg transition-all duration-(--duration-fast) group-hover:opacity-100 hover:scale-105 focus-visible:opacity-100"
+                className="absolute end-2 bottom-2 flex size-10 items-center justify-center rounded-full bg-bg/90 text-fg opacity-0 shadow-lg transition-all duration-(--duration-fast) group-hover:opacity-100 hover:scale-105 focus-visible:opacity-100"
               >
                 <Play className="size-5 translate-x-px" />
               </button>
@@ -135,7 +135,7 @@ function ActionTile({ item }: { item: Extract<Item, { kind: 'action' }> }) {
     <button
       type="button"
       onClick={() => void playItem(item)}
-      className="flex h-12 shrink-0 items-center gap-2 rounded-md border border-dashed border-border px-4 text-sm text-fg-muted hover:bg-state-hover"
+      className="flex h-12 shrink-0 items-center gap-2 rounded-md border border-dashed border-border px-4 text-sm text-fg-muted hover:bg-accent-soft"
     >
       {item.title}
     </button>

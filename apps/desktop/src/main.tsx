@@ -1,4 +1,3 @@
-import '@fontsource-variable/roboto-flex/wght.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';

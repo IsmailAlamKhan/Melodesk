@@ -1,13 +1,13 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { expect, it } from 'vitest';
-import { colorVars, cssBlock, DEFAULT_SEED, type ThemeName } from './material';
+import { colorVars, cssBlock, DEFAULT_SEED, registrationCss, type ThemeName } from './material';
 
 const cssPath = fileURLToPath(
   new URL('../../../../packages/ui/src/styles/tokens.css', import.meta.url),
 );
 
-function region(css: string, theme: ThemeName): [number, number] {
+function region(css: string, theme: ThemeName | 'properties'): [number, number] {
   const start = css.indexOf(`/* material:${theme}:start */`);
   const end = css.indexOf(`/* material:${theme}:end */`);
   if (start < 0 || end < 0) throw new Error(`markers for ${theme} are missing in tokens.css`);
@@ -25,5 +25,12 @@ it('the generated colour blocks in tokens.css match the Material scheme for the 
     else
       expect(css.slice(from, to), `${theme} block is stale; run with UPDATE_TOKENS=1`).toBe(wanted);
   }
+  const wanted = `\n${registrationCss()}`;
+  const [from, to] = region(css, 'properties');
+  if (update) css = css.slice(0, from) + wanted + css.slice(to);
+  else
+    expect(css.slice(from, to), 'colour registration is stale; run with UPDATE_TOKENS=1').toBe(
+      wanted,
+    );
   if (update) writeFileSync(cssPath, css);
 });

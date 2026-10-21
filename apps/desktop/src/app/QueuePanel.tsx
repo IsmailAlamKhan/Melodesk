@@ -127,8 +127,8 @@ function QueueRow({
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        'group flex h-(--row-h) items-center gap-2 rounded-md px-1 hover:bg-state-hover',
-        current && 'bg-secondary-container text-on-secondary-container',
+        'group flex h-(--row-h) items-center gap-2 rounded-md px-1 hover:bg-accent-soft',
+        current && 'bg-accent-soft text-accent',
         isDragging && 'z-10 bg-bg-overlay shadow',
       )}
       onDoubleClick={() => void sendCommand({ type: 'queueSelect', index })}

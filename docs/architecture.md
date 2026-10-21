@@ -132,24 +132,24 @@ the website uses.
 - **Crossfade** is not attempted: it needs two simultaneous streams or processed audio, and the
   page owns the single player element.
 
-- **Material 3 Expressive theming.** `appearance/material.ts` turns one seed colour (the accent
+- **Material 3 Expressive colour.** `appearance/material.ts` turns one seed colour (the accent
   preset, a custom colour, or the colour of the current album art) into a complete tonal scheme with
   Google's `@material/material-color-utilities`: `SchemeExpressive`, 2025 spec, so the secondary and
-  tertiary colours are hue-shifted from the primary. The library chooses tones so each "on-" colour
+  tertiary colours are hue-shifted from the primary. Only the colour system is Material; the
+  components keep their own shapes, type and motion. The library chooses tones so each "on-" colour
   is readable on its container; `tokens.test.ts` re-verifies WCAG AA for every text pairing across
   the presets and awkward seeds (pure yellow, blue, grey, near-black, near-white) in all three themes
   at standard, medium and high contrast. The scheme is written as CSS variables (`--color-primary`,
-  `--color-secondary-container`, `--color-surface-container-high`…) and also mapped onto the older
-  names (`--color-bg`, `--color-fg`, `--color-accent`) so existing classes keep working. The
+  `--color-secondary-container`, `--color-surface-container-high`…) and also mapped onto the app's own
+  names (`--color-bg`, `--color-fg`, `--color-accent`) so every existing class picks it up. The
   default seed's values live in `packages/ui/src/styles/tokens.css` as generated blocks (regenerate
   with `UPDATE_TOKENS=1`, a test fails if they drift); a non-default scheme is cached in
-  localStorage so `public/appearance-init.js` can paint it before React starts. Components use the
-  Material roles, state layers (`.state-layer`: an 8/10/12% overlay in the control's own colour),
-  the shape scale (buttons and icon buttons animate their corner radius, so use real half-height
-  radii, not 9999px), the type scale (`type-*` utilities, Roboto Flex bundled from fontsource) and
-  spring easings (`--ease-spatial` overshoots slightly, `--ease-effects` does not). The library
-  imports its own files without extensions, which Node's ESM loader rejects, so `vitest.config.ts`
-  bundles it (Vite does that for the app).
+  localStorage so `public/appearance-init.js` can paint it before React starts.
+  **Colour changes cross-fade.** Every colour variable is registered with `@property` as a typed
+  `<color>` and the root transitions them (450 ms, off under reduced motion); without registration
+  CSS swaps custom properties instantly. The registration is generated too. The library imports its
+  own files without extensions, which Node's ESM loader rejects, so `vitest.config.ts` bundles it
+  (Vite does that for the app).
 - **Global shortcuts are opt-in.** A system-wide shortcut is taken from every app, so the first
   version's defaults (Cmd/Ctrl+Shift+Left/Right/Space) broke text selection everywhere. There are no
   defaults now; saved legacy defaults are cleared on launch (`settings::load`); and

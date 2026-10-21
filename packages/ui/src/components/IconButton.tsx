@@ -6,21 +6,11 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
   /** Required: icon buttons have no visible text. */
   label: string;
   size?: 'sm' | 'md' | 'lg';
-  /**
-   * `ghost` is Material's standard icon button, `tonal` and `solid` its tonal and filled ones.
-   * A button with `aria-pressed` is a toggle: it turns into a tonal rounded square while on.
-   */
-  variant?: 'ghost' | 'tonal' | 'solid';
-  /** Round (default) or the squircle Expressive uses for prominent buttons such as Play. */
-  shape?: 'round' | 'squircle';
+  variant?: 'ghost' | 'solid';
 }
 
-// Radii are real numbers (half the height), not 9999px, so the corner can animate between shapes.
-const ROUND = { sm: 'rounded-[16px]', md: 'rounded-[20px]', lg: 'rounded-[24px]' } as const;
-const SQUIRCLE = { sm: 'rounded-[11px]', md: 'rounded-[14px]', lg: 'rounded-[16px]' } as const;
-
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
-  { className, label, size = 'md', variant = 'ghost', shape = 'round', type = 'button', ...props },
+  { className, label, size = 'md', variant = 'ghost', type = 'button', ...props },
   ref,
 ) {
   const button = (
@@ -29,18 +19,15 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       type={type}
       aria-label={label}
       className={cn(
-        'state-layer m3-motion inline-flex shrink-0 items-center justify-center select-none',
-        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+        'inline-flex shrink-0 items-center justify-center rounded-full select-none',
+        'transition-colors duration-(--duration-fast) ease-(--ease-out)',
+        'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent',
         'disabled:pointer-events-none disabled:opacity-40',
-        size === 'sm' && 'size-8 [&>svg]:size-[18px]',
-        size === 'md' && 'size-10 [&>svg]:size-6',
+        size === 'sm' && 'size-8 [&>svg]:size-4',
+        size === 'md' && 'size-10 [&>svg]:size-5',
         size === 'lg' && 'size-12 [&>svg]:size-6',
-        shape === 'round' ? ROUND[size] : SQUIRCLE[size],
-        variant === 'ghost' &&
-          'text-on-surface-variant aria-pressed:rounded-[12px] aria-pressed:bg-secondary-container aria-pressed:text-on-secondary-container',
-        variant === 'tonal' && 'bg-secondary-container text-on-secondary-container',
-        variant === 'solid' && 'bg-primary text-on-primary',
-        'active:rounded-[10px]',
+        variant === 'ghost' && 'text-fg-muted hover:bg-accent-soft hover:text-accent',
+        variant === 'solid' && 'bg-accent text-accent-fg hover:brightness-110',
         className,
       )}
       {...props}

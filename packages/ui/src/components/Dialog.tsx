@@ -28,21 +28,21 @@ export function Dialog({
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       <RadixDialog.Portal>
-        <RadixDialog.Overlay className="fixed inset-0 z-40 bg-scrim/40 backdrop-blur-sm" />
+        <RadixDialog.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" />
         <RadixDialog.Content
           className={cn(
-            'fixed top-1/2 left-1/2 z-50 flex w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-[28px] bg-surface-container-high p-6 shadow-2xl',
+            'fixed top-1/2 left-1/2 z-50 flex w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-lg border border-border bg-bg-elevated p-5 shadow-2xl',
             'focus:outline-none',
             className,
           )}
         >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <RadixDialog.Title className="type-headline-small font-display">
+              <RadixDialog.Title className="font-display text-lg font-semibold">
                 {title}
               </RadixDialog.Title>
               {description && (
-                <RadixDialog.Description className="type-body-medium mt-2 text-on-surface-variant">
+                <RadixDialog.Description className="mt-1 text-sm text-fg-muted">
                   {description}
                 </RadixDialog.Description>
               )}
@@ -61,4 +61,4 @@ export function Dialog({
 }
 
 export const inputClass =
-  'type-body-large h-12 w-full rounded-md border border-outline bg-transparent px-4 text-on-surface placeholder:text-on-surface-subtle hover:border-on-surface focus-visible:border-primary focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary';
+  'h-10 w-full rounded-md border border-border bg-bg px-3 text-sm text-fg placeholder:text-fg-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';

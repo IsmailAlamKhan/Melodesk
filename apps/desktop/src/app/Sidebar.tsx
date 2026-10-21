@@ -27,7 +27,7 @@ export function Sidebar() {
   return (
     <nav
       aria-label={t('nav.primary')}
-      className="flex h-full min-h-0 flex-col bg-surface-container-low"
+      className="flex h-full min-h-0 flex-col border-e border-accent-line bg-bg-elevated bg-[image:linear-gradient(to_bottom,var(--color-accent-soft),transparent_45%)]"
     >
       <div data-tauri-drag-region className="h-10 shrink-0" />
       <div className="flex flex-col gap-1 px-3">
@@ -38,10 +38,10 @@ export function Sidebar() {
             end={n.end ?? false}
             className={({ isActive }) =>
               cn(
-                'flex h-(--nav-h) items-center gap-3 type-label-large rounded-full px-4 transition-colors duration-(--duration-fast)',
+                'flex h-(--nav-h) items-center gap-3 rounded-md px-2 text-sm transition-colors duration-(--duration-fast)',
                 isActive
-                  ? 'bg-secondary-container text-on-secondary-container'
-                  : 'text-on-surface-variant hover:bg-state-hover',
+                  ? 'bg-accent-soft font-medium text-accent'
+                  : 'text-fg-muted hover:bg-accent-soft hover:text-fg',
               )
             }
           >
@@ -57,7 +57,7 @@ export function Sidebar() {
             <button
               type="button"
               aria-label={t('nav.newPlaylist')}
-              className="text-on-surface-variant hover:text-primary"
+              className="text-fg-subtle hover:text-accent"
               onClick={() => openDialog({ type: 'createPlaylist' })}
             >
               <Plus className="size-4" />
@@ -72,10 +72,10 @@ export function Sidebar() {
             to={routeForEndpoint(p.endpoint) ?? '#'}
             className={({ isActive }) =>
               cn(
-                'flex h-[calc(var(--nav-h)-0.25rem)] items-center gap-2 type-label-large rounded-full px-4',
+                'flex h-[calc(var(--nav-h)+0.25rem)] items-center gap-2 rounded-md px-2 text-sm',
                 isActive
-                  ? 'bg-secondary-container text-on-secondary-container'
-                  : 'text-on-surface-variant hover:bg-state-hover',
+                  ? 'bg-accent-soft font-medium text-accent'
+                  : 'text-fg-muted hover:bg-accent-soft hover:text-fg',
               )
             }
           >
@@ -93,15 +93,15 @@ export function Sidebar() {
           </div>
         )}
       </div>
-      <div className="border-t border-outline-variant p-3">
+      <div className="border-t border-border p-3">
         <NavLink
           to="/settings"
           className={({ isActive }) =>
             cn(
-              'flex h-(--nav-h) items-center gap-3 type-label-large rounded-full px-4',
+              'flex h-(--nav-h) items-center gap-3 rounded-md px-2 text-sm',
               isActive
-                ? 'bg-secondary-container text-on-secondary-container'
-                : 'text-on-surface-variant hover:bg-state-hover',
+                ? 'bg-accent-soft font-medium text-accent'
+                : 'text-fg-muted hover:bg-accent-soft hover:text-fg',
             )
           }
         >

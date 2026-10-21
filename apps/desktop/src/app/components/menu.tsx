@@ -32,15 +32,16 @@ import { Fragment, type ReactNode } from 'react';
 
 /** One look for every menu in the app: right-click menus and "more" dropdowns alike. */
 export const menuContent =
-  'menu-surface z-[90] max-h-(--radix-popper-available-height) min-w-56 max-w-80 overflow-y-auto rounded-2xl bg-surface-container p-2 text-sm shadow-xl';
+  'menu-surface z-[90] max-h-(--radix-popper-available-height) min-w-56 max-w-80 overflow-y-auto rounded-xl border border-border/80 bg-bg-elevated/95 p-1.5 text-sm shadow-2xl backdrop-blur-xl';
 export const menuItem =
-  'type-label-large flex cursor-default select-none items-center gap-3 rounded-xl px-3 py-2.5 text-on-surface outline-none ' +
-  'data-[highlighted]:bg-state-hover data-[disabled]:pointer-events-none data-[disabled]:opacity-40 ' +
-  '[&>svg]:size-5 [&>svg]:shrink-0 [&>svg]:text-on-surface-variant';
-export const menuDanger = 'text-error data-[highlighted]:bg-error-container/40 [&>svg]:text-error!';
-export const menuSeparator = 'my-2 h-px bg-outline-variant';
-export const menuHeading = 'type-label-medium px-3 pt-2 pb-1 text-on-surface-variant';
-export const menuHint = 'type-label-medium ms-auto ps-6 text-on-surface-variant';
+  'flex cursor-default select-none items-center gap-3 rounded-lg px-2.5 py-2 text-fg outline-none ' +
+  'data-[highlighted]:bg-accent/15 data-[disabled]:pointer-events-none data-[disabled]:opacity-40 ' +
+  '[&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-fg-muted data-[highlighted]:[&>svg]:text-accent';
+export const menuDanger = 'text-danger data-[highlighted]:bg-danger/15 [&>svg]:text-danger!';
+export const menuSeparator = 'my-1.5 h-px bg-border/70';
+export const menuHeading =
+  'px-2.5 pt-1.5 pb-1 text-[11px] font-medium tracking-wide text-fg-subtle uppercase';
+export const menuHint = 'ms-auto ps-6 text-xs text-fg-subtle';
 
 export interface ActionEntry {
   key: string;

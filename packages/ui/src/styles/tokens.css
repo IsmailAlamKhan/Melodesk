@@ -11,13 +11,284 @@
  * ("system" is resolved to light/dark in JS). Text pairs are checked against WCAG AA in
  * apps/desktop/src/appearance/tokens.test.ts.
  */
+/* material:properties:start */
+@property --color-accent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-accent-fg {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-bg {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-bg-elevated {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-bg-overlay {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-border {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-danger {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-error {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-error-container {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-fg {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-fg-muted {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-fg-subtle {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-inverse-on-surface {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-inverse-primary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-inverse-surface {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-on-error {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-on-error-container {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-on-primary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-on-primary-container {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-on-secondary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-on-secondary-container {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-on-surface {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-on-surface-subtle {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-on-surface-variant {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-on-tertiary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-on-tertiary-container {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-outline {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-outline-variant {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-primary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-primary-container {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-scrim {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-secondary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-secondary-container {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-surface {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-surface-bright {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-surface-container {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-surface-container-high {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-surface-container-highest {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-surface-container-low {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-surface-container-lowest {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-surface-dim {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-tertiary {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+@property --color-tertiary-container {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+
+:root {
+  transition:
+    --color-accent 450ms var(--ease-out),
+    --color-accent-fg 450ms var(--ease-out),
+    --color-bg 450ms var(--ease-out),
+    --color-bg-elevated 450ms var(--ease-out),
+    --color-bg-overlay 450ms var(--ease-out),
+    --color-border 450ms var(--ease-out),
+    --color-danger 450ms var(--ease-out),
+    --color-error 450ms var(--ease-out),
+    --color-error-container 450ms var(--ease-out),
+    --color-fg 450ms var(--ease-out),
+    --color-fg-muted 450ms var(--ease-out),
+    --color-fg-subtle 450ms var(--ease-out),
+    --color-inverse-on-surface 450ms var(--ease-out),
+    --color-inverse-primary 450ms var(--ease-out),
+    --color-inverse-surface 450ms var(--ease-out),
+    --color-on-error 450ms var(--ease-out),
+    --color-on-error-container 450ms var(--ease-out),
+    --color-on-primary 450ms var(--ease-out),
+    --color-on-primary-container 450ms var(--ease-out),
+    --color-on-secondary 450ms var(--ease-out),
+    --color-on-secondary-container 450ms var(--ease-out),
+    --color-on-surface 450ms var(--ease-out),
+    --color-on-surface-subtle 450ms var(--ease-out),
+    --color-on-surface-variant 450ms var(--ease-out),
+    --color-on-tertiary 450ms var(--ease-out),
+    --color-on-tertiary-container 450ms var(--ease-out),
+    --color-outline 450ms var(--ease-out),
+    --color-outline-variant 450ms var(--ease-out),
+    --color-primary 450ms var(--ease-out),
+    --color-primary-container 450ms var(--ease-out),
+    --color-scrim 450ms var(--ease-out),
+    --color-secondary 450ms var(--ease-out),
+    --color-secondary-container 450ms var(--ease-out),
+    --color-surface 450ms var(--ease-out),
+    --color-surface-bright 450ms var(--ease-out),
+    --color-surface-container 450ms var(--ease-out),
+    --color-surface-container-high 450ms var(--ease-out),
+    --color-surface-container-highest 450ms var(--ease-out),
+    --color-surface-container-low 450ms var(--ease-out),
+    --color-surface-container-lowest 450ms var(--ease-out),
+    --color-surface-dim 450ms var(--ease-out),
+    --color-tertiary 450ms var(--ease-out),
+    --color-tertiary-container 450ms var(--ease-out);
+}
+/* material:properties:end */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    transition: none;
+  }
+}
+
 @theme {
   --font-sans:
-    'Roboto Flex Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Text',
-    'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI Variable Text', 'Segoe UI',
+    system-ui, sans-serif;
   --font-display:
-    'Roboto Flex Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Display',
-    'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI Variable Display', 'Segoe UI',
+    system-ui, sans-serif;
 
   /* material:dark:start */
   --color-accent: #e1cbff;
@@ -65,49 +336,22 @@
   --color-tertiary-container: #c3f897;
   /* material:dark:end */
 
-  /* State layers: Material's hover, focus and press overlays, drawn from the text colour. */
-  --color-state-hover: color-mix(in srgb, var(--color-on-surface) 8%, transparent);
-  --color-state-press: color-mix(in srgb, var(--color-on-surface) 12%, transparent);
-  --color-primary-hover: color-mix(in srgb, var(--color-on-primary) 8%, transparent);
-  --color-primary-press: color-mix(in srgb, var(--color-on-primary) 12%, transparent);
-  /* Tints of the accent, kept from before the Material move. */
+  /* Tints of whatever the accent currently is (preset, custom, or from album art). */
   --color-accent-soft: color-mix(in oklch, var(--color-accent) 14%, transparent);
   --color-accent-muted: color-mix(in oklch, var(--color-accent) 30%, transparent);
   --color-accent-line: color-mix(in oklch, var(--color-accent) 32%, var(--color-border));
   --color-warning: oklch(0.8 0.15 80);
   --color-success: oklch(0.75 0.15 150);
 
-  /* Expressive shape scale: generous corners; buttons and chips go fully round. */
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-2xl: 28px;
-  --radius-3xl: 36px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
   --radius-full: 9999px;
 
-  /* Expressive motion: spatial moves overshoot slightly like a spring; effects (colour, opacity)
-     settle without overshoot. */
-  --ease-out: cubic-bezier(0.2, 0, 0, 1);
-  --ease-spatial: linear(
-    0,
-    0.18 2.5%,
-    0.56 6.5%,
-    0.86 10.5%,
-    1.03 14.5%,
-    1.065 17.5%,
-    1.04 21%,
-    1.012 26%,
-    0.997 32%,
-    1.001 42%,
-    1
-  );
-  --ease-effects: cubic-bezier(0.34, 0.8, 0.34, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-fast: 150ms;
-  --duration-base: 250ms;
-  --duration-slow: 350ms;
-  --duration-spatial: 500ms;
+  --duration-base: 200ms;
+  --duration-slow: 250ms;
 }
 
 :root[data-theme='light'] {
@@ -220,23 +464,22 @@
     --duration-fast: 0ms;
     --duration-base: 0ms;
     --duration-slow: 0ms;
-    --duration-spatial: 0ms;
   }
 }
 
 /* Density: row and tile sizes follow data-density on <html>. */
 :root {
   --row-h: 3.5rem;
-  --nav-h: 3rem;
+  --nav-h: 2.25rem;
   --tile: 168px;
 }
 :root[data-density='compact'] {
   --row-h: 2.75rem;
-  --nav-h: 2.5rem;
+  --nav-h: 1.875rem;
   --tile: 144px;
 }
 :root[data-density='spacious'] {
   --row-h: 4.25rem;
-  --nav-h: 3.5rem;
+  --nav-h: 2.75rem;
   --tile: 192px;
 }

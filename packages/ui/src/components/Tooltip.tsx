@@ -32,7 +32,7 @@ export function Tooltip({ label, children, side = 'top' }: TooltipProps) {
           side={side}
           sideOffset={6}
           collisionPadding={8}
-          className="type-body-small pointer-events-none z-[100] max-w-xs rounded-md bg-inverse-surface px-3 py-1.5 text-inverse-on-surface shadow-md"
+          className="pointer-events-none z-[100] max-w-xs rounded-md border border-border bg-bg-elevated px-2 py-1 text-xs text-fg shadow-lg"
         >
           {label}
         </RadixTooltip.Content>

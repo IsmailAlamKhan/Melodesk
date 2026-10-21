@@ -149,3 +149,26 @@ export function cssBlock(vars: Vars, indent = '  '): string {
     .map(([k, v]) => `${indent}${k}: ${v};`)
     .join('\n');
 }
+
+/** How long colour changes (theme, accent, album-art colour) take to cross-fade. */
+export const COLOR_TRANSITION_MS = 450;
+
+/**
+ * Registers every colour variable as a typed <color> property and gives the root a transition on
+ * them. Without registration CSS treats a custom property as text and swaps it instantly; with it,
+ * the value is interpolated and everything that inherits it fades together. Generated into
+ * tokens.css (see tokens.generate.test.ts).
+ */
+export function registrationCss(): string {
+  const names = Object.keys(colorVars(DEFAULT_SEED, 'dark')).sort();
+  const rules = names
+    .map(
+      (n) =>
+        `@property ${n} {\n  syntax: '<color>';\n  inherits: true;\n  initial-value: #000000;\n}`,
+    )
+    .join('\n');
+  const transition = names
+    .map((n) => `${n} ${String(COLOR_TRANSITION_MS)}ms var(--ease-out)`)
+    .join(',\n    ');
+  return `${rules}\n\n:root {\n  transition:\n    ${transition};\n}\n`;
+}

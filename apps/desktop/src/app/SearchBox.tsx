@@ -74,8 +74,8 @@ export function SearchBox() {
 
   return (
     <div className="relative w-full max-w-xl">
-      <div className="flex h-12 items-center gap-3 rounded-full bg-surface-container-high px-4 transition-colors focus-within:bg-surface-container-highest focus-within:ring-2 focus-within:ring-primary">
-        <Search className="size-5 shrink-0 text-on-surface-variant" />
+      <div className="flex h-9 items-center gap-2 rounded-full border border-border bg-bg-overlay px-3 focus-within:border-fg-subtle">
+        <Search className="size-4 shrink-0 text-fg-subtle" />
         <input
           dir="auto"
           ref={input}
@@ -98,7 +98,7 @@ export function SearchBox() {
             else if (e.key === 'ArrowUp') setActive((a) => Math.max(a - 1, -1));
             else if (e.key === 'Escape') setOpen(false);
           }}
-          className="type-body-large h-full min-w-0 flex-1 bg-transparent text-on-surface outline-none placeholder:text-on-surface-subtle"
+          className="h-full min-w-0 flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-fg-subtle"
         />
         {value && (
           <Tooltip label={t('common.clear')}>
@@ -117,7 +117,7 @@ export function SearchBox() {
         <ul
           id="search-suggestions"
           role="listbox"
-          className="absolute top-14 right-0 left-0 z-30 overflow-hidden rounded-3xl bg-surface-container-high py-2 shadow-xl"
+          className="absolute top-11 right-0 left-0 z-30 overflow-hidden rounded-lg border border-border bg-bg-elevated py-1 shadow-xl"
         >
           {list.map((s, i) => (
             <li
@@ -148,7 +148,7 @@ export function SearchBox() {
                 </>
               ) : (
                 <>
-                  <Search className="size-5 shrink-0 text-on-surface-variant" />
+                  <Search className="size-4 shrink-0 text-fg-subtle" />
                   <span className="truncate">
                     <strong>{s.boldPrefix}</strong>
                     {s.text.slice(s.boldPrefix.length)}
