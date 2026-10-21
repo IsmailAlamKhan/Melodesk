@@ -20,7 +20,7 @@ import { useNavigate } from 'react-router';
 import { run } from '../data/innertube';
 import { queryClient } from '../data/queryClient';
 import { useT } from '../i18n';
-import { sendCommand } from '../player/ipc';
+import { sendCommand, setPlayerVisible } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
 import { toast } from './toast';
 import { useArtworkColor } from '../appearance/artworkAccent';
@@ -228,9 +228,13 @@ export function PlayerBar() {
             size="sm"
             aria-pressed={flags?.isVideo ?? false}
             className={cn(flags?.isVideo && 'text-accent')}
-            onClick={() =>
-              void sendCommand({ type: 'setVideoMode', video: !(flags?.isVideo ?? false) })
-            }
+            onClick={() => {
+              const video = !(flags?.isVideo ?? false);
+              void sendCommand({ type: 'setVideoMode', video });
+              // The picture only exists in the player window, so bring it up (and put it away
+              // again when going back to audio).
+              void setPlayerVisible(video);
+            }}
           >
             <MonitorPlay />
           </IconButton>
