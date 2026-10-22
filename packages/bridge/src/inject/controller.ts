@@ -32,6 +32,8 @@ const BOOT_TIMEOUT_MS = 30_000;
 const POLL_MS = 250;
 const METADATA_POLL_MS = 1000;
 const TIMEUPDATE_MIN_INTERVAL_MS = 500;
+/** How recently the music must have been playing for the idle question to be what paused it. */
+const IDLE_RESUME_WINDOW_MS = 60_000;
 
 /**
  * Owns the lifecycle of the bridge inside the music.youtube.com page: finds the
@@ -46,6 +48,7 @@ export class BridgeController {
   private pendingVideoId: string | null = null;
   private pendingSince = 0;
   private lastTimeupdateAt = 0;
+  private lastPlayingAt = 0;
   private healthStatus: 'ok' | 'degraded' | 'broken' = 'ok';
   private started = false;
   private lastQueueJson = '';
@@ -124,6 +127,7 @@ export class BridgeController {
     }
     video.addEventListener('timeupdate', () => {
       const now = Date.now();
+      this.lastPlayingAt = now;
       if (now - this.lastTimeupdateAt >= TIMEUPDATE_MIN_INTERVAL_MS) {
         this.lastTimeupdateAt = now;
         this.emitState();
@@ -149,7 +153,11 @@ export class BridgeController {
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
-    watchIdlePrompt();
+    // The question pauses the music. Answering it normally starts it again; if it does not, do so.
+    watchIdlePrompt(() => {
+      if (this.video?.paused && Date.now() - this.lastPlayingAt < IDLE_RESUME_WINDOW_MS)
+        this.player?.playVideo?.();
+    });
     this.subscribeStore();
     this.emitReady();
     this.emitTrack(true);

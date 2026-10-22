@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { findConfirmButton } from '../src/inject/idle-prompt';
+import { findConfirmButton, markActive } from '../src/inject/idle-prompt';
 
 interface FakeEl {
   tagName: string;
@@ -60,5 +60,13 @@ describe('the "Continue watching?" prompt', () => {
       { tagName: 'YTMUSIC-YOU-THERE-RENDERER', textContent: '', buttons: ['Yes'], shown: false },
     ]);
     expect(confirm()).toBeNull();
+  });
+});
+
+describe('keeping the page from going idle', () => {
+  it('moves the page’s last-activity time to now', () => {
+    const page: { _lact?: number } = { _lact: 1 };
+    markActive(page, 5000);
+    expect(page._lact).toBe(5000);
   });
 });

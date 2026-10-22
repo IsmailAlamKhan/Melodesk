@@ -25,16 +25,38 @@ export function findConfirmButton(): HTMLElement | null {
   return null;
 }
 
+const ACTIVE_MS = 30_000;
+const RESUME_AFTER_MS = 1200;
+
+/**
+ * YouTube decides the page is idle from the time of the last input it saw, kept in `_lact`. The
+ * player window never gets input, so that time never moves. Keeping it current, as input would,
+ * stops the question from coming up at all.
+ */
+export function markActive(page: { _lact?: number }, now: number): void {
+  page._lact = now;
+}
+
 let started = false;
 
-/** Keep watching for the question; safe to call more than once. */
-export function watchIdlePrompt(): void {
+/**
+ * Keep the page from going idle, and answer the question if it comes anyway. `onConfirmed` is told
+ * after an answer so the caller can start the music again if the question had paused it. Safe to
+ * call more than once.
+ */
+export function watchIdlePrompt(onConfirmed?: () => void): void {
   if (started) return;
   started = true;
+  const page = window as unknown as { _lact?: number };
+  markActive(page, Date.now());
+  window.setInterval(() => {
+    markActive(page, Date.now());
+  }, ACTIVE_MS);
   window.setInterval(() => {
     const button = findConfirmButton();
     if (!button) return;
     log('info', 'idle prompt: confirming "Continue watching?"');
     button.click();
+    if (onConfirmed) window.setTimeout(onConfirmed, RESUME_AFTER_MS);
   }, CHECK_MS);
 }

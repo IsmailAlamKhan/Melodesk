@@ -240,6 +240,9 @@ keyboard input in the page. The player window is hidden, so it never sees the us
 question appears mid-session. `inject/idle-prompt.ts` presses "Yes" for the user. It only answers
 that question: YouTube's dedicated element, or a dialog whose text says "continue watching", and
 never another confirmation (deleting a playlist and so on). It does not touch the stream or ads.
+To keep it from coming up at all, the page's last-activity time (`_lact`, what YouTube's idle check
+reads) is refreshed every 30 s, as input would. If the question still appears and the music is
+paused after it is answered, the player is told to play again.
 
 ## Gotchas learned the hard way
 
