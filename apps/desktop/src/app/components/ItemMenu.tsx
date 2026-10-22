@@ -125,7 +125,14 @@ export function ItemMenuButton({ item, className }: { item: Item; className?: st
         </IconButton>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content align="end" className={menuContent}>
+        <DropdownMenu.Content
+          align="end"
+          className={menuContent}
+          // The menu is drawn elsewhere on the page but is, for React, inside the card it belongs to:
+          // without this a click or Enter on an entry also reaches the card and plays its song.
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
           <DropdownEntries entries={entries} />
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

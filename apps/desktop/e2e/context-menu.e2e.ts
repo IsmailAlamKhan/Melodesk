@@ -77,3 +77,22 @@ test('a sidebar link offers Open on top of the app menu', async ({ page }) => {
   await expect(page.getByRole('menuitem', { name: 'Open' })).toBeVisible();
   await expect(page.getByRole('menuitem', { name: 'Command palette' })).toBeVisible();
 });
+
+test('choosing an entry of a card’s "more" menu does not also play the card', async ({ page }) => {
+  // A song row on the Library/Home page: find one with a "More" button.
+  const more = page.getByRole('button', { name: 'More' }).first();
+  await more.scrollIntoViewIfNeeded();
+  await more.hover();
+  await more.click();
+  const menu = page.getByRole('menu');
+  await expect(menu).toBeVisible();
+  const before = (await sentCommands(page)).length;
+  await menu
+    .getByRole('menuitem', { name: /Play next|Add to queue/u })
+    .first()
+    .click();
+  await page.waitForTimeout(400);
+  // Only the queue is asked; the card was not opened (which would load its page) or played.
+  const after = (await sentCommands(page)).slice(before);
+  expect(after.map((c) => c['type'])).toEqual(['queueAdd']);
+});
