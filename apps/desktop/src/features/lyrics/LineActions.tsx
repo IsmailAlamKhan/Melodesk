@@ -110,10 +110,10 @@ export function ExplanationNote({ value }: { value: Explanation }) {
       role="note"
       aria-label={t('lyrics.line.explanation')}
       className={cn(
-        'mx-2 mt-1 mb-2 rounded-lg border-s-2 px-3 py-2 text-sm',
+        'relative mx-2 mt-1 mb-2 rounded-lg px-4 py-2 text-sm before:absolute before:inset-y-2 before:start-1.5 before:w-0.5 before:rounded-full',
         value.state === 'error'
-          ? 'border-danger bg-danger/10 text-danger'
-          : 'border-accent bg-bg-overlay/60 text-fg-muted',
+          ? 'bg-danger/10 text-danger before:bg-danger'
+          : 'bg-bg-overlay/60 text-fg-muted before:bg-accent',
       )}
     >
       {value.state === 'loading' && t('lyrics.line.explaining')}
