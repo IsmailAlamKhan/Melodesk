@@ -5,14 +5,26 @@ import { Img } from '../../core';
 import { useT } from '../../i18n/index';
 import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
-import { forget, loadSaved, type SavedListen } from './saved';
+import { endpointVideoId, forget, loadSaved, type SavedListen } from './saved';
 
 const SEEK_WAIT_MS = 20_000;
+/** How long the saved song has to start before it is asked for again, plainly. */
+const START_WAIT_MS = 7_000;
 
-/** Play the saved song through the page's own endpoint, then jump to where it was. */
+/**
+ * Play the saved song through the page's own endpoint (so it carries on inside the same playlist or
+ * radio), then jump to where it was. An endpoint that is for a different song is not used, and if
+ * the wrong song comes up anyway the song itself is asked for.
+ */
 export async function resume(saved: SavedListen): Promise<void> {
-  const endpoint = saved.endpoint ?? { watchEndpoint: { videoId: saved.videoId } };
-  await sendCommand({ type: 'endpoint', endpoint, mode: 'navigate' });
+  const plain = { watchEndpoint: { videoId: saved.videoId } };
+  const own = endpointVideoId(saved.endpoint) === saved.videoId ? saved.endpoint : null;
+  await sendCommand({ type: 'endpoint', endpoint: own ?? plain, mode: 'navigate' });
+  if (own)
+    window.setTimeout(() => {
+      if (usePlayerStore.getState().track?.videoId !== saved.videoId)
+        void sendCommand({ type: 'endpoint', endpoint: plain, mode: 'navigate' });
+    }, START_WAIT_MS);
   if (saved.position < 5) return;
   // The player needs a moment to load the song before it can be moved.
   const stop = usePlayerStore.subscribe((s) => {

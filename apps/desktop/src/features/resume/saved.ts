@@ -50,3 +50,29 @@ export async function save(value: SavedListen): Promise<void> {
 export async function forget(): Promise<void> {
   await kvDel(KEY);
 }
+
+/** The song a navigation endpoint would play, if it says. */
+export function endpointVideoId(endpoint: Record<string, unknown> | null): string | null {
+  const watch = endpoint?.['watchEndpoint'];
+  if (typeof watch !== 'object' || watch === null) return null;
+  const id = (watch as Record<string, unknown>)['videoId'];
+  return typeof id === 'string' ? id : null;
+}
+
+/**
+ * The endpoint that plays `videoId` inside its playlist or radio, taken from the queue item that is
+ * that very song. The queue's current index can lag behind the track, so it is not trusted: an
+ * endpoint of another song would resume the wrong one.
+ */
+export function endpointFor(
+  videoId: string,
+  queue: {
+    items: readonly { videoId: string; endpoint: Record<string, unknown> | null }[];
+    index: number;
+  } | null,
+): Record<string, unknown> | null {
+  if (!queue) return null;
+  const at = queue.items[queue.index];
+  const item = at?.videoId === videoId ? at : queue.items.find((i) => i.videoId === videoId);
+  return item && endpointVideoId(item.endpoint) === videoId ? item.endpoint : null;
+}

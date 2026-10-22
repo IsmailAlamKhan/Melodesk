@@ -68,3 +68,27 @@ test('a song that has only just started is not worth coming back to', async ({ p
     'resume:last',
   );
 });
+
+test('Continue plays the saved song even when its saved endpoint is for another one', async ({
+  page,
+}) => {
+  const saved = {
+    videoId: 'right-song',
+    title: 'Right Song',
+    artist: 'Someone',
+    artworkUrl: null,
+    position: 60,
+    duration: 200,
+    endpoint: { watchEndpoint: { videoId: 'wrong-song', playlistId: 'RDx' } },
+    savedAt: Date.now(),
+  };
+  await page.addInitScript((value) => {
+    localStorage.setItem('__mockKv', JSON.stringify([['resume:last', JSON.stringify(value)]]));
+  }, saved);
+  await installTauri(page);
+  await openHome(page);
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect
+    .poll(async () => (await sentCommands(page)).find((c) => c['type'] === 'endpoint'))
+    .toMatchObject({ endpoint: { watchEndpoint: { videoId: 'right-song' } } });
+});
