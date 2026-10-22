@@ -65,6 +65,8 @@ export interface MockOptions {
   lrclib?: { syncedLyrics: string; plainLyrics: string } | null;
   /** Answers plugin HTTP requests before the built-in ones; return null to fall through. */
   http?: (url: string) => { status: number; body: unknown } | null;
+  /** Rows for SQL selects the built-in answers do not cover (listening history, for the stats). */
+  sql?: (query: string, values: unknown[]) => unknown[] | null;
   /** Optional native modules this build has (default: unknown, so all are assumed). */
   nativeModules?: string[];
 }
@@ -95,6 +97,10 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
   await serveBuiltApp(page);
   await page.exposeFunction('__nodeData', (endpoint: string, body: Record<string, unknown>) =>
     innertubeResponse(endpoint, body),
+  );
+  await page.exposeFunction(
+    '__nodeSql',
+    (query: string, values: unknown[]) => opts.sql?.(query, values) ?? [],
   );
   await page.exposeFunction('__nodeHttp', (url: string) => {
     const custom = opts.http?.(url);
@@ -135,6 +141,7 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
     const w = window as unknown as Record<string, unknown> & {
       __nodeData: (e: string, b: unknown) => Promise<unknown>;
       __nodeHttp: (u: string) => Promise<{ status: number; body: string }>;
+      __nodeSql: (q: string, v: unknown[]) => Promise<unknown[]>;
     };
     let nextId = 1;
     const listeners = new Map<string, { id: number; handler: number }[]>();
@@ -210,7 +217,7 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
             const val = kv.get(String(v[0]));
             return val === undefined ? [] : [{ value: val }];
           }
-          return [];
+          return w.__nodeSql(q, v);
         }
         case 'get_settings':
           return settings;

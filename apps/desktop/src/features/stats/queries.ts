@@ -43,6 +43,8 @@ export interface StatsSummary {
   streak: { current: number; longest: number };
   /** Artists first heard in this range (not meaningful for `all`). */
   newArtists: number;
+  /** Seconds listened in the equal stretch just before this range, or null for `all`. */
+  previousSeconds: number | null;
   dayPart: DayPart | null;
 }
 
@@ -128,6 +130,14 @@ export async function loadStats(
      ) WHERE first BETWEEN $1 AND $2`,
     args,
   );
+  let previousSeconds: number | null = null;
+  if (range !== 'all') {
+    const [prev] = await c.select<{ seconds: number | null }[]>(
+      'SELECT COALESCE(SUM(listened_seconds), 0) AS seconds FROM history WHERE played_at >= $1 AND played_at < $2',
+      [from - (to - from), from],
+    );
+    previousSeconds = prev?.seconds ?? 0;
+  }
   return {
     range: { from, to },
     totalSeconds: totals?.seconds ?? 0,
@@ -157,6 +167,7 @@ export async function loadStats(
       localDay(now),
     ),
     newArtists: fresh?.n ?? 0,
+    previousSeconds,
     dayPart: dayPart(hours),
   };
 }

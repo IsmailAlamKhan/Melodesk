@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { dayPart, localDay, streaks } from './recap';
+import { changePercent, dayPart, localDay, streaks } from './recap';
 import { loadStats, type StatsDb } from './queries';
 
 describe('streaks', () => {
@@ -156,5 +156,29 @@ describe('loadStats', () => {
     expect(s.newArtists).toBe(1);
     expect(s.dayPart).toBe('evening');
     expect(localDay(NOW)).toBe('2026-06-15');
+  });
+});
+
+describe('changePercent', () => {
+  it('compares with the stretch before, in whole percent', () => {
+    expect(changePercent(150, 100)).toBe(50);
+    expect(changePercent(50, 100)).toBe(-50);
+    expect(changePercent(100, 100)).toBe(0);
+    expect(changePercent(10, 0)).toBeNull();
+  });
+});
+
+describe('loadStats against the stretch before', () => {
+  it('adds up what was listened to in the equal stretch just before the range', async () => {
+    const { conn, add } = fakeDb();
+    const NOW = new Date(2026, 5, 15, 23, 0, 0).getTime();
+    const at = (n: number): number => NOW - n * 86_400_000;
+    add({ id: 'a', title: 'This week', artist: 'X', duration: 200, at: at(2), listened: 200 });
+    add({ id: 'b', title: 'Last week', artist: 'X', duration: 200, at: at(9), listened: 100 });
+    add({ id: 'c', title: 'Long ago', artist: 'X', duration: 200, at: at(30), listened: 500 });
+    const week = await loadStats('week', conn, NOW);
+    expect(week.totalSeconds).toBe(200);
+    expect(week.previousSeconds).toBe(100);
+    expect((await loadStats('all', conn, NOW)).previousSeconds).toBeNull();
   });
 });

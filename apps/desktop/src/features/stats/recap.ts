@@ -42,6 +42,15 @@ export function streaks(
   return { current, longest };
 }
 
+/**
+ * How much more (positive) or less (negative) listening there was than before, in whole percent, or
+ * null when there is nothing before to compare with.
+ */
+export function changePercent(current: number, previous: number): number | null {
+  if (!(previous > 0)) return null;
+  return Math.round(((current - previous) / previous) * 100);
+}
+
 export type DayPart = 'morning' | 'afternoon' | 'evening' | 'night';
 
 const PART_OF_HOUR: DayPart[] = Array.from({ length: 24 }, (_, h) =>

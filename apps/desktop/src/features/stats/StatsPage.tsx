@@ -7,7 +7,7 @@ import { playEndpoint } from '../../player/actions';
 import { useNavigate } from 'react-router';
 import { Img } from '../../core';
 import { toast } from '../../app/toast';
-import type { DayPart } from './recap';
+import { changePercent, type DayPart } from './recap';
 import type { StatsSummary } from './queries';
 
 const RANGES: { key: StatsRange; labelKey: MessageKey }[] = [
@@ -101,10 +101,10 @@ export function StatsPage() {
             </button>
           </section>
 
-          {range === 'week' && s.totalSeconds > 0 && (
+          {range !== 'all' && s.totalSeconds > 0 && (
             <section className="rounded-xl border border-border bg-gradient-to-br from-accent/20 to-bg-elevated p-6">
               <div className="text-xs font-medium tracking-wide text-fg-subtle uppercase">
-                {t('stats.yourWeek')}
+                {t(RECAP_TITLE[range])}
               </div>
               <p className="mt-2 font-display text-2xl font-semibold">
                 {s.topArtists[0]
@@ -117,6 +117,15 @@ export function StatsPage() {
                   ? ` ${t('stats.recap.track', { track: s.topTracks[0].label, count: s.topTracks[0].plays })}`
                   : ''}
               </p>
+              {s.previousSeconds !== null &&
+                changePercent(s.totalSeconds, s.previousSeconds) !== null && (
+                  <p className="mt-2 text-sm text-fg-muted">
+                    {t(CHANGE_KEY(changePercent(s.totalSeconds, s.previousSeconds) ?? 0), {
+                      percent: Math.abs(changePercent(s.totalSeconds, s.previousSeconds) ?? 0),
+                      period: t(PERIOD_KEY[range]),
+                    })}
+                  </p>
+                )}
             </section>
           )}
 
@@ -163,6 +172,19 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
     </div>
   );
 }
+
+const RECAP_TITLE: Record<Exclude<StatsRange, 'all'>, MessageKey> = {
+  week: 'stats.yourWeek',
+  month: 'stats.yourMonth',
+  year: 'stats.yourYear',
+};
+const PERIOD_KEY: Record<Exclude<StatsRange, 'all'>, MessageKey> = {
+  week: 'stats.period.week',
+  month: 'stats.period.month',
+  year: 'stats.period.year',
+};
+const CHANGE_KEY = (percent: number): MessageKey =>
+  percent > 0 ? 'stats.change.more' : percent < 0 ? 'stats.change.less' : 'stats.change.same';
 
 const DAY_PART_KEY: Record<DayPart, MessageKey> = {
   morning: 'stats.dayPart.morning',
