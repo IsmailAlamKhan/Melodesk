@@ -1,4 +1,15 @@
-import { Tooltip, cn } from '@melodesk/ui';
+import { Button, Tooltip, cn } from '@melodesk/ui';
+import { useMemo, useState } from 'react';
+import { toast } from '../../app/toast';
+import { roleColors } from '../../appearance/material';
+import {
+  THEME_PRESETS,
+  decodeTheme,
+  encodeTheme,
+  isPreset,
+  presetPrefs,
+  type ThemePreset,
+} from '../../appearance/themes';
 import {
   ACCENT_PRESETS,
   oklchToRgb,
@@ -82,6 +93,117 @@ const CONTRASTS = [
   { id: 'high', key: 'settings.contrast.high' },
 ] as const;
 
+/** A small picture of a preset: its background, a raised card and its accent. */
+function PresetSwatch({ preset }: { preset: ThemePreset }) {
+  const colors = useMemo(() => roleColors(preset.accent, preset.theme), [preset]);
+  return (
+    <span
+      aria-hidden
+      className="flex h-14 w-full flex-col justify-between rounded-lg border border-border/60 p-2"
+      style={{ background: colors.surface }}
+    >
+      <span className="h-2 w-1/2 rounded-full" style={{ background: colors.primary }} />
+      <span className="flex gap-1">
+        <span
+          className="h-4 flex-1 rounded"
+          style={{ background: colors['surface-container-high'] }}
+        />
+        <span
+          className="h-4 w-4 rounded-full"
+          style={{ background: colors['primary-container'] }}
+        />
+      </span>
+    </span>
+  );
+}
+
+function Themes() {
+  const t = useT();
+  const a = useAppearance();
+  const [code, setCode] = useState('');
+  const [invalid, setInvalid] = useState(false);
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-sm text-fg-muted" id="themes-title">
+        {t('settings.themes')}
+      </span>
+      <div
+        role="group"
+        aria-labelledby="themes-title"
+        className="grid grid-cols-2 gap-2 rail:grid-cols-4"
+      >
+        {THEME_PRESETS.map((p) => {
+          const on = isPreset(p, a);
+          return (
+            <button
+              key={p.id}
+              type="button"
+              aria-pressed={on}
+              onClick={() => a.update(presetPrefs(p))}
+              className={cn(
+                'flex flex-col gap-1.5 rounded-xl border p-1.5 text-start text-sm transition-colors',
+                on ? 'border-accent bg-accent-soft' : 'border-border/50 hover:bg-bg-overlay',
+              )}
+            >
+              <PresetSwatch preset={p} />
+              <span className="px-1 pb-0.5">{t(p.name)}</span>
+            </button>
+          );
+        })}
+      </div>
+      <span className="text-xs text-fg-subtle">{t('settings.themes.hint')}</span>
+      <div className="mt-2 flex flex-col gap-2">
+        <span className="text-xs text-fg-subtle">{t('settings.themeCode.hint')}</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            onClick={() => {
+              void navigator.clipboard
+                .writeText(encodeTheme(a))
+                .then(() => toast(t('settings.themeCode.copied')))
+                .catch(() => undefined);
+            }}
+          >
+            {t('settings.themeCode.copy')}
+          </Button>
+          <form
+            className="flex min-w-0 flex-1 gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const look = decodeTheme(code);
+              setInvalid(look === null);
+              if (look) {
+                a.update(look);
+                setCode('');
+                toast(t('settings.themeCode.applied'));
+              }
+            }}
+          >
+            <input
+              value={code}
+              aria-label={t('settings.themeCode.paste')}
+              placeholder={t('settings.themeCode.paste')}
+              aria-invalid={invalid}
+              onChange={(e) => {
+                setCode(e.target.value);
+                setInvalid(false);
+              }}
+              className="h-9 min-w-0 flex-1 rounded-md border border-border bg-bg-elevated px-3 text-sm outline-none focus:border-accent"
+            />
+            <Button type="submit" disabled={!code.trim()}>
+              {t('settings.themeCode.apply')}
+            </Button>
+          </form>
+        </div>
+        {invalid && (
+          <p role="alert" className="text-xs text-danger">
+            {t('settings.themeCode.invalid')}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function AppearanceSection() {
   const t = useT();
   const a = useAppearance();
@@ -89,6 +211,8 @@ export function AppearanceSection() {
   return (
     <section className="flex flex-col gap-4">
       <h2 className="font-semibold">{t('settings.appearance')}</h2>
+
+      <Themes />
 
       <div className="flex flex-col gap-2">
         <span className="text-sm text-fg-muted">{t('settings.theme')}</span>

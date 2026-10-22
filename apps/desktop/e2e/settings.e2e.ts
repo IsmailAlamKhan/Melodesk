@@ -55,3 +55,48 @@ test('a page can be linked to straight from the address', async ({ page }) => {
     'page',
   );
 });
+
+test('a ready-made theme changes the whole look, and a theme code carries it to someone else', async ({
+  page,
+}) => {
+  await openSettings(page, 'Appearance');
+  const root = page.locator('html');
+  const primary = (): Promise<string> =>
+    page.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim(),
+    );
+  const before = await primary();
+  await page.getByRole('button', { name: 'Sunset' }).click();
+  await expect(page.getByRole('button', { name: 'Sunset' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(root).toHaveAttribute('data-theme', 'dark');
+  await expect.poll(primary).not.toBe(before);
+  // Colours fade for about half a second; read the final value.
+  await page.waitForTimeout(700);
+  const sunset = await primary();
+  await page.getByRole('button', { name: 'Paper' }).click();
+  await expect(root).toHaveAttribute('data-theme', 'light');
+  await expect(page.getByRole('button', { name: 'Sunset' })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
+
+  // Someone sends a code: the same one the Copy button would make for the Sunset look.
+  const code =
+    'melodesk-theme:1:' +
+    Buffer.from(JSON.stringify({ t: 'dark', c: 'standard', a: '#ff7a45' })).toString('base64url');
+  await page.getByLabel('Paste a theme code').fill(code);
+  await page.getByRole('button', { name: 'Apply' }).click();
+  await expect(root).toHaveAttribute('data-theme', 'dark');
+  await expect.poll(primary).toBe(sunset);
+  await expect(page.getByRole('button', { name: 'Sunset' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+
+  await page.getByLabel('Paste a theme code').fill('not a code');
+  await page.getByRole('button', { name: 'Apply' }).click();
+  await expect(page.getByRole('alert')).toContainText('not a Melodesk theme code');
+});
