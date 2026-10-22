@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
+import { supportsCors } from '../core/imageHosts';
 import type { Rgb } from './color';
 
 /** Average saturated color of an image (skipping greys), or null if it can't be read. */
 export function useArtworkColor(url: string | null): Rgb | null {
   const [sampled, setSampled] = useState<{ url: string; rgb: Rgb | null } | null>(null);
   useEffect(() => {
-    if (!url) return;
+    // The pixels can only be read from hosts that allow CORS; others keep the app's colours.
+    if (!url || !supportsCors(url)) return;
     let cancelled = false;
     const done = (rgb: Rgb | null): void => {
       if (!cancelled) setSampled({ url, rgb });

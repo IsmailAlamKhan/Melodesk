@@ -1,3 +1,4 @@
+import { supportsCors } from './imageHosts';
 import {
   createContext,
   createElement,
@@ -55,9 +56,10 @@ function PlainImg({ src, onError, onLoad, ...rest }: ImgProps) {
       {...rest}
       key={key}
       src={src ?? undefined}
-      // CORS mode, like the offline cache's and the colour sampler's requests for the same cover, so
-      // all three share one cached download instead of asking the host three times.
-      crossOrigin="anonymous"
+      // CORS mode where the host allows it, like the offline cache's and the colour sampler's
+      // requests for the same cover, so all three share one cached download. Other hosts do not send
+      // CORS headers and would fail in this mode.
+      crossOrigin={supportsCors(src) ? 'anonymous' : undefined}
       // No Referer: Google's image hosts answer 429 to some (the dev server's localhost), and a
       // cover request has no business telling them which page it was for.
       referrerPolicy="no-referrer"

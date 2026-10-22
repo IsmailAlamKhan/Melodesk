@@ -13,7 +13,9 @@ export default defineConfig({
     strictPort: true,
     host: host ?? false,
     ...(host ? { hmr: { protocol: 'ws' as const, host, port: 1421 } } : {}),
-    watch: { ignored: ['**/src-tauri/**'] },
+    // Not the build outputs: the end-to-end tests rebuild dist-e2e, and the dev server must not
+    // reload the running app (or choke) every time.
+    watch: { ignored: ['**/src-tauri/**', '**/dist/**', '**/dist-e2e/**'] },
   },
   envPrefix: ['VITE_', 'TAURI_ENV_*'],
   build: {

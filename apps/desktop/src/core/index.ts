@@ -36,6 +36,7 @@ export { registerAction, runAction, useHasAction } from './actions';
 export { navigateTo, setNavigator } from './navigation';
 export { AppProviders } from './AppProviders';
 export { Img, ImgComponentContext, useImageRetry } from './Img';
+export { supportsCors } from './imageHosts';
 export type { ImgProps } from './Img';
 export {
   BAND_COUNT,

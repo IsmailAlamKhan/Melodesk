@@ -74,3 +74,27 @@ test('cover requests carry no Referer (Google rejects some, and it is nobody els
   expect(referers.length).toBeGreaterThan(0);
   expect(referers.filter(Boolean)).toEqual([]);
 });
+
+test('covers from hosts without CORS headers (gstatic, music.youtube.com) still show', async ({
+  page,
+}) => {
+  await installTauri(page);
+  // Like Google's real answer for these hosts: an image, and no Access-Control-Allow-Origin.
+  await page.route(/^https:\/\/(www\.gstatic\.com|music\.youtube\.com)\/.*\.png/u, (route) =>
+    route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" fill="#a33"/></svg>',
+    }),
+  );
+  await page.goto('/');
+  await startPlayback(page, {
+    track: { ...TRACK, artworkUrl: 'https://www.gstatic.com/music/listening_review/X_226x226.png' },
+  });
+  const cover = page.locator('footer img').first();
+  await expect(cover).toBeVisible();
+  await expect
+    .poll(() => cover.evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBeGreaterThan(0);
+  // And the same cover from a host that does allow CORS is requested in CORS mode (shared download).
+  expect(await cover.evaluate((img: HTMLImageElement) => img.crossOrigin)).toBeNull();
+});

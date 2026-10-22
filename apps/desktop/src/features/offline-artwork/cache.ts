@@ -4,6 +4,8 @@
  * HTTP cache still does the everyday work; this is the safety net, capped and evicted oldest first.
  */
 
+import { supportsCors } from '../../core/imageHosts';
+
 const DB_NAME = 'melodesk-artwork';
 const IMAGES = 'images';
 const META = 'meta';
@@ -177,7 +179,8 @@ function pump(): void {
 
 /** Keep a copy of this cover for offline use. Cheap to call repeatedly. */
 export function remember(url: string): void {
-  if (!url.startsWith('https://') || known.has(url)) return;
+  // Only hosts that allow CORS can be read back to keep a copy.
+  if (!url.startsWith('https://') || !supportsCors(url) || known.has(url)) return;
   known.add(url);
   queue.push(url);
   pump();

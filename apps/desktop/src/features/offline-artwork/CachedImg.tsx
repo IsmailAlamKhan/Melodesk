@@ -1,5 +1,5 @@
 import { useEffect, useState, type ImgHTMLAttributes } from 'react';
-import { useImageRetry } from '../../core';
+import { supportsCors, useImageRetry } from '../../core';
 import { getCached, remember } from './cache';
 
 /**
@@ -28,7 +28,7 @@ export function CachedImg({
       {...rest}
       key={key}
       src={shown ?? undefined}
-      crossOrigin="anonymous"
+      crossOrigin={supportsCors(src) ? 'anonymous' : undefined}
       // See core/Img.tsx: no Referer, which some image hosts reject.
       referrerPolicy="no-referrer"
       onLoad={(e) => {
