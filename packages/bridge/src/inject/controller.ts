@@ -21,6 +21,7 @@ import {
 } from './page-api';
 import { AudioEngine } from './audio';
 import { watchIdlePrompt } from './idle-prompt';
+import { isStaleTrack } from './staleTrack';
 import { setVideoLayout } from './video-layout';
 import { selectors } from './selectors.v1';
 import { emit, log } from './transport';
@@ -41,6 +42,9 @@ export class BridgeController {
   private player: YtPlayerElement | null = null;
   private video: HTMLVideoElement | null = null;
   private lastTrackKey = '';
+  private lastTrack: Track | null = null;
+  private pendingVideoId: string | null = null;
+  private pendingSince = 0;
   private lastTimeupdateAt = 0;
   private healthStatus: 'ok' | 'degraded' | 'broken' = 'ok';
   private started = false;
@@ -610,6 +614,13 @@ export class BridgeController {
 
   private emitTrack(force: boolean): void {
     const track = readTrack(this.player);
+    if (track?.videoId && track.videoId !== this.pendingVideoId) {
+      this.pendingVideoId = track.videoId;
+      this.pendingSince = Date.now();
+    }
+    // A new id with the last song's details is the page catching up: wait for the real ones.
+    if (isStaleTrack(this.lastTrack, track, this.pendingSince, Date.now())) return;
+    this.lastTrack = track;
     const key = track
       ? `${track.videoId ?? ''}|${track.title}|${track.artist}|${track.artworkUrl ?? ''}`
       : '';
