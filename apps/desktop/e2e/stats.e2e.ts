@@ -6,11 +6,11 @@ test('the stats page shows highlights and a recap that compares with the stretch
 }) => {
   await installTauri(page, {
     sql: (query) => {
-      if (/COUNT\(DISTINCT CASE WHEN/u.test(query))
+      if (query.includes('COUNT(DISTINCT CASE WHEN'))
         return [{ seconds: 7200, plays: 12, tracks: 8, artists: 3 }];
       // The count of artists first heard in the range (it also groups by name, so ask for it first).
       if (/FROM \(\s*SELECT/u.test(query)) return [{ n: 2 }];
-      if (/GROUP BY video_id/u.test(query))
+      if (query.includes('GROUP BY video_id'))
         return [
           {
             video_id: 'v1',
@@ -21,18 +21,18 @@ test('the stats page shows highlights and a recap that compares with the stretch
             seconds: 900,
           },
         ];
-      if (/GROUP BY name/u.test(query))
+      if (query.includes('GROUP BY name'))
         return [{ name: 'Top Artist', artwork_url: null, plays: 9, seconds: 3000 }];
-      if (/SELECT DISTINCT date/u.test(query)) {
+      if (query.includes('SELECT DISTINCT date')) {
         const day = (n: number): string => {
           const d = new Date(Date.now() - n * 86_400_000);
           return `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         };
         return [{ day: day(2) }, { day: day(1) }, { day: day(0) }];
       }
-      if (/played_at >= \$1 AND played_at < \$2/u.test(query)) return [{ seconds: 3600 }];
-      if (/strftime\('%H'/u.test(query)) return [{ hour: 21, seconds: 5000 }];
-      if (/GROUP BY day/u.test(query)) return [];
+      if (query.includes('played_at >= $1 AND played_at < $2')) return [{ seconds: 3600 }];
+      if (query.includes("strftime('%H'")) return [{ hour: 21, seconds: 5000 }];
+      if (query.includes('GROUP BY day')) return [];
       return [];
     },
   });
