@@ -2,6 +2,8 @@ import { Plug } from 'lucide-react';
 import { defineFeature, lyricsSources, type LyricsSource } from '../../core';
 import {
   enablePlugin,
+  canExplainLyrics,
+  explainLyric,
   isLyricsProviderOn,
   lyricsSignature,
   lyricsFromPlugins,
@@ -19,6 +21,8 @@ const lrclib: LyricsSource = {
   label: 'LRCLIB',
   isActive: isLyricsProviderOn,
   signature: lyricsSignature,
+  canExplain: canExplainLyrics,
+  explain: explainLyric,
   subscribe: (onChange) => usePluginHost.subscribe(onChange),
   activate: () => void enablePlugin('lrclib'),
   fetch: lyricsFromPlugins,

@@ -24,6 +24,28 @@ export function buildPrompt(track: PluginTrack): string {
   ].join(' ');
 }
 
+/** What the model is asked to explain a line. It is given the line and a little around it, no more. */
+export function buildExplainPrompt(
+  track: PluginTrack,
+  line: string,
+  context: readonly string[],
+): string {
+  const uploader = track.artist.split(' • ')[0] ?? track.artist;
+  return [
+    'You help someone understand song lyrics.',
+    `The song is ${JSON.stringify(track.title)} by ${JSON.stringify(uploader)}.`,
+    `The line is ${JSON.stringify(line)}.`,
+    context.length > 0
+      ? `Nearby lines, for context only: ${JSON.stringify(context.join(' / '))}.`
+      : '',
+    'In at most three short sentences, say what the line means in plain language.',
+    'If it is not in English, begin with an English translation. If it is an idiom or a reference, explain it.',
+    'Do not quote any other lines. Reply with the explanation only.',
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
 /** The guesses in a model's reply, or none if it did not follow the shape. */
 export function parseGuesses(reply: string): Guess[] {
   let data: unknown;
@@ -66,10 +88,10 @@ export const ollama = definePlugin({
     name: 'Local AI song finder',
     version: '1.0.0',
     description:
-      'Asks an AI model running on your own computer (Ollama) which song a title really is, so lyrics can be found for covers, remixes and “From the film …” uploads. The title and uploader go to localhost only. Needs Ollama and a small model, for example “ollama pull llama3.2:3b”.',
+      'Asks an AI model running on your own computer (Ollama) which song a title really is, so lyrics can be found for covers, remixes and “From the film …” uploads, and can explain a lyric line when you ask. The title, uploader and the line go to localhost only. Needs Ollama and a small model, for example “ollama pull llama3.2:3b”.',
     permissions: ['network:fetch', 'storage:plugin'],
     hosts: ['localhost', '127.0.0.1'],
-    provides: ['identify'],
+    provides: ['identify', 'explain'],
   },
   settingsFields: [
     {
@@ -115,6 +137,32 @@ export const ollama = definePlugin({
     return {
       status: () => status,
       actions: [{ label: 'Check connection', run: check }],
+      explainLyric: async ({ track, line, context }) => {
+        if (!ctx.fetch) return null;
+        try {
+          const res = await ctx.fetch(`${base()}/api/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: model(),
+              prompt: buildExplainPrompt(track, line, context),
+              stream: false,
+              options: { temperature: 0.3, num_predict: 220 },
+            }),
+          });
+          if (!res.ok) {
+            status = `Ollama answered ${String(res.status)} (is “${model()}” installed?)`;
+            return null;
+          }
+          const body = (await res.json()) as { response?: string };
+          status = `Ready · ${model()}`;
+          const text = (body.response ?? '').trim();
+          return text ? text.slice(0, 800) : null;
+        } catch {
+          status = `Cannot reach Ollama at ${base()}. Is it running?`;
+          return null;
+        }
+      },
       identifySong: async (track) => {
         if (!ctx.fetch) return [];
         const key = `ai:${track.videoId}`;

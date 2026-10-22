@@ -298,6 +298,30 @@ export function startPluginHost(): () => void {
   };
 }
 
+/** Whether a plugin that explains lyric lines is switched on and running. */
+export function canExplainLyrics(): boolean {
+  return usePluginHost
+    .getState()
+    .plugins.some((p) => p.enabled && p.instance?.explainLyric !== undefined);
+}
+
+/** Ask the first plugin that can to explain a line; it gets a time limit. */
+export async function explainLyric(
+  track: PluginTrack,
+  line: string,
+  context: string[],
+): Promise<string | null> {
+  const p = usePluginHost
+    .getState()
+    .plugins.find((x) => x.enabled && x.instance?.explainLyric !== undefined);
+  if (!p?.instance?.explainLyric) return null;
+  return within(
+    60_000,
+    p.instance.explainLyric({ track, line, context }).catch(() => null),
+    null,
+  );
+}
+
 /** Which plugins that find or help find lyrics are switched on, as a stable text. */
 export function lyricsSignature(): string {
   return usePluginHost

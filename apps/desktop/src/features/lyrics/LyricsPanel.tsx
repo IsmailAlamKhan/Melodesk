@@ -8,6 +8,7 @@ import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
 import { usePositionMs } from '../../player/usePositionMs';
 import { lyricsSources } from '../../core';
+import { ExplanationNote, LineActions, useExplanations } from './LineActions';
 import { LyricsFinder } from './LyricsFinder';
 import { LyricsToolbar } from './LyricsToolbar';
 
@@ -74,6 +75,10 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
   } = useTrackLyrics();
   const data = lyrics.data;
   const active = activeAt(positionMs);
+  const explanations = useExplanations(
+    videoId,
+    rows.map((r) => r.text),
+  );
 
   useEffect(() => {
     const list = listRef.current;
@@ -158,6 +163,7 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
           {rows.map((row, i) => {
             const roman = showRoman ? romanized.data[i] : undefined;
             const trans = showTrans ? translated.data[i] : undefined;
+            const explained = explanations.get(i);
             if (!row.text.trim()) return <li key={i} aria-hidden className="h-4" />;
             const timed = row.startMs !== undefined;
             const content = (
@@ -183,28 +189,31 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
             );
             return (
               <li key={`${String(row.startMs ?? '')}-${String(i)}`} data-line={i}>
-                {timed ? (
-                  <button
-                    type="button"
-                    dir="auto"
-                    onClick={() =>
-                      void sendCommand({
-                        type: 'seek',
-                        seconds: Math.max(0, ((row.startMs ?? 0) + offsetMs) / 1000),
-                      })
-                    }
-                    className={cn(
-                      'w-full rounded-md px-2 py-1.5 text-start transition-colors duration-(--duration-slow) ease-(--ease-out) hover:bg-bg-overlay/60',
-                      i === active ? 'text-fg' : i < active ? 'text-fg-subtle' : 'text-fg-muted',
-                    )}
-                  >
-                    {content}
-                  </button>
-                ) : (
-                  <p dir="auto" className="px-2 py-1 text-fg">
-                    {content}
-                  </p>
-                )}
+                <LineActions line={row.text} onExplain={() => explanations.explain(i)}>
+                  {timed ? (
+                    <button
+                      type="button"
+                      dir="auto"
+                      onClick={() =>
+                        void sendCommand({
+                          type: 'seek',
+                          seconds: Math.max(0, ((row.startMs ?? 0) + offsetMs) / 1000),
+                        })
+                      }
+                      className={cn(
+                        'w-full rounded-md px-2 py-1.5 text-start transition-colors duration-(--duration-slow) ease-(--ease-out) hover:bg-bg-overlay/60',
+                        i === active ? 'text-fg' : i < active ? 'text-fg-subtle' : 'text-fg-muted',
+                      )}
+                    >
+                      {content}
+                    </button>
+                  ) : (
+                    <p dir="auto" className="px-2 py-1 text-fg">
+                      {content}
+                    </p>
+                  )}
+                </LineActions>
+                {explained && <ExplanationNote value={explained} />}
               </li>
             );
           })}

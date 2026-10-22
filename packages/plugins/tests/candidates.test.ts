@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { buildPrompt, cleanTitle, lyricsCandidates, parseGuesses, pickLrclib } from '../src';
+import {
+  buildExplainPrompt,
+  buildPrompt,
+  cleanTitle,
+  lyricsCandidates,
+  parseGuesses,
+  pickLrclib,
+} from '../src';
 
 const track = (title: string, artist: string) => ({
   videoId: 'x',
@@ -100,5 +107,21 @@ describe('LRCLIB result matching', () => {
       list[2],
     );
     expect(pickLrclib(list, track('Unrelated', ''))).toBeNull();
+  });
+});
+
+describe('the explain prompt', () => {
+  it('carries the line as plain data and asks for no more lyrics', () => {
+    const prompt = buildExplainPrompt(track('Song', 'Singer • Album'), 'a "quoted" line', [
+      'before',
+      'after',
+    ]);
+    expect(prompt).toContain(JSON.stringify('a "quoted" line'));
+    expect(prompt).toContain('before / after');
+    expect(prompt).toContain('Do not quote any other lines');
+    expect(prompt).toContain(JSON.stringify('Singer'));
+  });
+  it('works without context', () => {
+    expect(buildExplainPrompt(track('Song', 'Singer'), 'line', [])).not.toContain('Nearby lines');
   });
 });

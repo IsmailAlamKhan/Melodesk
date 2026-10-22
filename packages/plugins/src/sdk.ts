@@ -105,6 +105,15 @@ export interface PluginInstance {
    * guesses of the original title and artist, best first. Used to find lyrics when the plain lookup fails.
    */
   identifySong?: (track: PluginTrack) => Promise<{ title: string; artist: string }[]>;
+  /**
+   * Optional: explain what a line of the lyrics means, in plain words (and translated if it is in
+   * another language). `context` is a few lines around it. Returns null when it cannot.
+   */
+  explainLyric?: (input: {
+    track: PluginTrack;
+    line: string;
+    context: string[];
+  }) => Promise<string | null>;
   /** Optional: a user-facing action shown in the plugin's settings card. */
   actions?: { label: string; run: () => Promise<void> }[];
   /** Optional: status line for the settings card. */

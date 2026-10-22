@@ -29,6 +29,10 @@ export interface LyricsSource {
    * lyrics looked up before that are looked up again.
    */
   signature?: () => string;
+  /** Whether something can explain a line of the lyrics (a plugin with an AI model, switched on). */
+  canExplain?: () => boolean;
+  /** An explanation of `line` in plain words, or null when none could be made. */
+  explain?: (track: PluginTrack, line: string, context: string[]) => Promise<string | null>;
   /** Turn it on (the lyrics view offers this when the lyrics it has are not timed). */
   activate: () => void;
   fetch: (track: PluginTrack) => Promise<LyricsResult | null>;
