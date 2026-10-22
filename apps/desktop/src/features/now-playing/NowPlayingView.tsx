@@ -19,6 +19,7 @@ import { useArtworkColor } from '../../appearance/artworkAccent';
 import { useT } from '../../i18n/index';
 import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
+import { useVolume } from '../../player/useVolume';
 import { ArtistLinks } from '../../app/components/ArtistLinks';
 import { BeatRing } from '../../app/components/BeatRing';
 import { Marquee } from '../../app/components/Marquee';
@@ -182,6 +183,7 @@ export function NowPlayingView() {
   const duration = state?.duration ?? 0;
   const volume = state?.volume ?? 1;
   const muted = state?.muted ?? false;
+  const volumeProps = useVolume();
   const liked = flags?.likeStatus === 'LIKE';
   const tabItems = tabs.map((x) => ({ id: x.id, label: x.label ? t(x.label) : x.id }));
   const showPlayer = view === 'player' || !activeSide;
@@ -379,10 +381,9 @@ export function NowPlayingView() {
                     label={t('player.volume')}
                     valueLabel={(v) => `${String(Math.round(v * 100))}%`}
                     className="w-40"
-                    value={muted ? 0 : volume}
+                    {...volumeProps}
                     max={1}
                     step={0.01}
-                    onCommit={(v) => void sendCommand({ type: 'setVolume', volume: v })}
                   />
                 </div>
               </div>

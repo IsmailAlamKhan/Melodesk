@@ -20,6 +20,7 @@ import { useT } from '../i18n';
 import { setLikeStatus } from '../player/like';
 import { sendCommand, setPlayerVisible } from '../player/ipc';
 import { usePlayerStore } from '../player/store';
+import { useVolume } from '../player/useVolume';
 import { ArtistLinks } from './components/ArtistLinks';
 import { BeatGlow } from './components/BeatGlow';
 import { BeatRing } from './components/BeatRing';
@@ -50,6 +51,7 @@ export function PlayerBar() {
   const playing = state?.playing ?? false;
   const volume = state?.volume ?? 1;
   const muted = state?.muted ?? false;
+  const volumeProps = useVolume();
   const like = flags?.likeStatus ?? null;
 
   const setLike = setLikeStatus;
@@ -255,11 +257,10 @@ export function PlayerBar() {
           label={t('player.volume')}
           valueLabel={(v) => `${String(Math.round(v * 100))}%`}
           className="w-28"
-          value={muted ? 0 : volume}
+          {...volumeProps}
           max={1}
           step={0.01}
           disabled={disabled}
-          onCommit={(v) => void sendCommand({ type: 'setVolume', volume: v })}
         />
       </div>
     </footer>
