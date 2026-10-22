@@ -2,7 +2,7 @@ import * as ContextMenu from '@radix-ui/react-context-menu';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { cn } from '@melodesk/ui';
 import { Copy, Image, MoreHorizontal, Sparkles } from 'lucide-react';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import {
   ContextEntries,
   DropdownEntries,
@@ -10,66 +10,10 @@ import {
   type MenuEntry,
 } from '../../app/components/menu';
 import { toast } from '../../app/toast';
-import { lyricsSources } from '../../core';
 import { useT } from '../../i18n/index';
 import { usePlayerStore } from '../../player/store';
+import type { Explanation } from './explanations';
 import { copyLyricCard } from './lyricCard';
-
-export type Explanation =
-  { state: 'loading' } | { state: 'done'; text: string } | { state: 'error'; message: string };
-
-/** Explanations asked for so far, by song and line, so each is asked once and stays on screen. */
-export function useExplanations(videoId: string | null, texts: readonly string[]) {
-  const t = useT();
-  const sources = lyricsSources.useAll();
-  const [byLine, setByLine] = useState<Record<string, Explanation>>({});
-  const key = (i: number): string => `${videoId ?? ''}:${String(i)}`;
-
-  const explain = (i: number): void => {
-    const line = texts[i];
-    const source = sources.find((s) => s.canExplain?.() && s.explain);
-    if (!line) return;
-    if (!source?.explain) {
-      setByLine((m) => ({
-        ...m,
-        [key(i)]: { state: 'error', message: t('lyrics.line.explainOff') },
-      }));
-      return;
-    }
-    const st = usePlayerStore.getState();
-    if (!st.track?.videoId) return;
-    const track = {
-      videoId: st.track.videoId,
-      title: st.track.title,
-      artist: st.track.artist,
-      album: st.track.album,
-      artworkUrl: st.track.artworkUrl,
-      durationSeconds: st.state?.duration ?? null,
-    };
-    const context = texts
-      .slice(Math.max(0, i - 2), i + 3)
-      .filter((x, j) => x.trim() && j !== Math.min(i, 2));
-    setByLine((m) => ({ ...m, [key(i)]: { state: 'loading' } }));
-    source
-      .explain(track, line, context)
-      .then((text) => {
-        setByLine((m) => ({
-          ...m,
-          [key(i)]: text
-            ? { state: 'done', text }
-            : { state: 'error', message: t('lyrics.line.explainFailed') },
-        }));
-      })
-      .catch(() => {
-        setByLine((m) => ({
-          ...m,
-          [key(i)]: { state: 'error', message: t('lyrics.line.explainFailed') },
-        }));
-      });
-  };
-
-  return { get: (i: number): Explanation | undefined => byLine[key(i)], explain };
-}
 
 /** What can be done with one line of lyrics: the same entries serve the right-click menu and the "…" button. */
 function useLineEntries(line: string, onExplain: () => void): MenuEntry[] {
@@ -174,7 +118,8 @@ export function ExplanationNote({ value }: { value: Explanation }) {
     >
       {value.state === 'loading' && t('lyrics.line.explaining')}
       {value.state === 'done' && value.text}
-      {value.state === 'error' && value.message}
+      {value.state === 'error' &&
+        t(value.reason === 'off' ? 'lyrics.line.explainOff' : 'lyrics.line.explainFailed')}
     </div>
   );
 }

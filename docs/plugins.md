@@ -75,7 +75,7 @@ machine over plain http; everything else stays https only.
 A plugin with `provides: ['explain']` (Local AI song finder is one) adds "Explain this line" to the
 menu of every lyric line (right-click, or the "…" that shows on hover). Give the instance an
 `explainLyric({ track, line, context })` that returns a few plain sentences, or `null`; `context`
-is the lines around it. The answer is shown under the line and nothing is stored. The same menu can
+is the lines around it. The answer is shown under the line and kept on this computer, so it is not asked for again. The same menu can
 copy the line, or copy it as a picture over the cover.
 
 And when the machine cannot work it out either, the lyrics panel has "Wrong or missing lyrics? Look

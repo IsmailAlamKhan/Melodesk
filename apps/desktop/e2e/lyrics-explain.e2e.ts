@@ -83,3 +83,59 @@ test('a line, or a picture of it, can be copied', async ({ page, context }) => {
   });
   expect(types).toContain('image/png');
 });
+
+test('an explanation keeps coming while the view is closed, and is kept afterwards', async ({
+  page,
+}) => {
+  let release: () => void = () => undefined;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let asked = 0;
+  await installTauri(page, {
+    http: async (url) => {
+      if (url.includes('localhost:11434/api/tags'))
+        return { status: 200, body: { models: [{ name: 'llama3.2:3b' }] } };
+      if (url.includes('localhost:11434/api/generate')) {
+        asked += 1;
+        await gate;
+        return { status: 200, body: { response: 'A slow but thoughtful answer.' } };
+      }
+      return lrclib(url);
+    },
+  });
+  await page.goto('/');
+  await enable(page, 'LRCLIB lyrics', 'Local AI song finder');
+  let view = await openLyrics(page);
+  await view.getByText('Second found line').click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Explain this line' }).click();
+  await expect(view.getByRole('note')).toHaveText('Thinking…');
+
+  // Leave and come back while it is still thinking.
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(500);
+  await page.getByRole('button', { name: 'Open now playing' }).click();
+  view = page.getByRole('region', { name: /now playing/iu });
+  await expect(view.getByRole('note')).toHaveText('Thinking…');
+
+  release();
+  await expect(view.getByRole('note')).toHaveText('A slow but thoughtful answer.');
+  await page.waitForTimeout(500);
+
+  // Closed and reopened: the answer is there, and nobody is asked again.
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(500);
+  await page.getByRole('button', { name: 'Open now playing' }).click();
+  await expect(view.getByRole('note')).toHaveText('A slow but thoughtful answer.');
+  expect(asked).toBe(1);
+
+  // And after a restart.
+  await page.reload();
+  await startPlayback(page, {
+    positionS: 2,
+    track: { ...TRACK, artworkUrl: 'https://i.ytimg.com/vi/sample/hq720.jpg' },
+  });
+  await page.getByRole('button', { name: 'Open now playing' }).click();
+  await expect(view.getByRole('note')).toHaveText('A slow but thoughtful answer.');
+  expect(asked).toBe(1);
+});
