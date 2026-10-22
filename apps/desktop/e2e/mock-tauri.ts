@@ -20,10 +20,15 @@ function fixture(name: string): unknown {
 export const LYRICS_BROWSE_ID = 'MPLYt_6AEOVn4k62q';
 
 /** What the fake player returns for each InnerTube call. */
-function innertubeResponse(endpoint: string, body: Record<string, unknown>): unknown {
+function innertubeResponse(
+  endpoint: string,
+  body: Record<string, unknown>,
+  youtubeLyrics: boolean,
+): unknown {
   const id = typeof body['browseId'] === 'string' ? body['browseId'] : '';
   switch (endpoint) {
     case 'browse':
+      if (id === LYRICS_BROWSE_ID && !youtubeLyrics) return {};
       if (id === LYRICS_BROWSE_ID)
         return {
           contents: {
@@ -64,11 +69,15 @@ export interface MockOptions {
   /** Body LRCLIB returns, or null to answer 404 (no timed lyrics). */
   lrclib?: { syncedLyrics: string; plainLyrics: string } | null;
   /** Answers plugin HTTP requests before the built-in ones; return null to fall through. */
-  http?: (url: string) => { status: number; body: unknown } | null;
+  http?: (
+    url: string,
+  ) => { status: number; body: unknown } | null | Promise<{ status: number; body: unknown } | null>;
   /** Rows for SQL selects the built-in answers do not cover (listening history, for the stats). */
   sql?: (query: string, values: unknown[]) => unknown[] | null;
   /** Optional native modules this build has (default: unknown, so all are assumed). */
   nativeModules?: string[];
+  /** False for a song YouTube Music has no lyrics for (default: it has plain ones). */
+  youtubeLyrics?: boolean;
 }
 
 /** Every cover is replaced with a generated gradient: hermetic tests, and no third-party artwork in screenshots. */
@@ -96,14 +105,14 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
   // After the image stub, so it answers first for the app's own address.
   await serveBuiltApp(page);
   await page.exposeFunction('__nodeData', (endpoint: string, body: Record<string, unknown>) =>
-    innertubeResponse(endpoint, body),
+    innertubeResponse(endpoint, body, opts.youtubeLyrics ?? true),
   );
   await page.exposeFunction(
     '__nodeSql',
     (query: string, values: unknown[]) => opts.sql?.(query, values) ?? [],
   );
-  await page.exposeFunction('__nodeHttp', (url: string) => {
-    const custom = opts.http?.(url);
+  await page.exposeFunction('__nodeHttp', async (url: string) => {
+    const custom = await opts.http?.(url);
     if (custom) return { status: custom.status, body: JSON.stringify(custom.body) };
     if (url.includes('ws.audioscrobbler.com'))
       return { status: 200, body: JSON.stringify({ token: 'test-token' }) };

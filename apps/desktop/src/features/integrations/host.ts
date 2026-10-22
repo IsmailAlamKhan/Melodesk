@@ -21,7 +21,7 @@ import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { invoke } from '@tauri-apps/api/core';
 import { create } from 'zustand';
-import { useFeatures } from '../../core';
+import { lyricsProgress, useFeatures, type LyricsStepState } from '../../core';
 import { kvDel, kvGet, kvSet } from '../../data/kv';
 import { loadLyricsOverride } from '../../data/lyricsOverride';
 import { sendCommand } from '../../player/ipc';
@@ -42,6 +42,8 @@ export interface PluginRecord {
 
 interface PluginHostState {
   plugins: PluginRecord[];
+  /** Set once the saved on/off choices are read and the plugins that are on have started. */
+  loaded: boolean;
   setEnabled: (id: string, enabled: boolean) => Promise<void>;
   setSettings: (id: string, values: SettingsValues) => Promise<void>;
   refreshStatus: () => void;
@@ -199,6 +201,7 @@ async function instantiate(rec: PluginRecord): Promise<PluginInstance> {
 
 export const usePluginHost = create<PluginHostState>((set, get) => ({
   plugins: [],
+  loaded: false,
   setEnabled: async (id, enabled) => {
     const rec = get().plugins.find((p) => p.manifest.id === id);
     if (!rec) return;
@@ -286,6 +289,7 @@ export function startPluginHost(): () => void {
       if (rec.enabled && !isStopped())
         await usePluginHost.getState().setEnabled(rec.manifest.id, true);
     if (isStopped()) return;
+    usePluginHost.setState({ loaded: true });
     timer = window.setInterval(() => usePluginHost.getState().refreshStatus(), 2000);
   })().catch((err: unknown) => {
     console.error('plugin host failed', err);
@@ -294,7 +298,7 @@ export function startPluginHost(): () => void {
     run.stopped = true;
     window.clearInterval(timer);
     for (const p of usePluginHost.getState().plugins) p.instance?.dispose?.();
-    usePluginHost.setState({ plugins: [] });
+    usePluginHost.setState({ plugins: [], loaded: false });
   };
 }
 
@@ -362,13 +366,25 @@ async function askProviders(
   const providers = usePluginHost
     .getState()
     .plugins.filter((p) => p.enabled && p.instance?.lyricsProvider);
+  const report = (id: string, label: string, state: LyricsStepState, detail?: string): void =>
+    lyricsProgress.step(track.videoId, {
+      id,
+      label,
+      state,
+      ...(detail !== undefined ? { detail } : {}),
+    });
   const answers = await Promise.all(
-    providers.map((p) =>
-      within(
+    providers.map(async (p) => {
+      const id = `plugin:${p.manifest.id}`;
+      const name = p.manifest.name;
+      report(id, name, 'running');
+      const slow = Symbol('slow');
+      const answer = await within<LyricsResult | null | typeof slow>(
         PROVIDER_BUDGET_MS,
         (async (): Promise<LyricsResult | null> => {
           let plain: LyricsResult | null = null;
           for (const g of guesses) {
+            report(id, name, 'running', g.title);
             const asked: PluginTrack = {
               ...track,
               title: g.title,
@@ -390,9 +406,12 @@ async function askProviders(
           }
           return plain;
         })(),
-        null,
-      ),
-    ),
+        slow,
+      );
+      if (answer === slow) report(id, name, 'slow');
+      else report(id, name, answer ? 'found' : 'none');
+      return answer === slow ? null : answer;
+    }),
   );
   const found = answers.filter((a): a is LyricsResult => a !== null);
   return found.find((a) => a.synced?.length) ?? found[0] ?? null;
@@ -415,6 +434,7 @@ export async function lyricsFromPlugins(track: PluginTrack): Promise<LyricsResul
     .plugins.filter((p) => p.enabled && p.instance?.identifySong);
   if (finders.length === 0) return null;
   const seen = new Set(tried.map((g) => `${plainName(g.title)}|${plainName(g.artist)}`));
+  lyricsProgress.step(track.videoId, { id: 'ai', label: 'ai', state: 'running' });
   const ai = (
     await Promise.all(
       finders.map((p) =>
@@ -434,6 +454,12 @@ export async function lyricsFromPlugins(track: PluginTrack): Promise<LyricsResul
       seen.add(key);
       return true;
     });
+  lyricsProgress.step(track.videoId, {
+    id: 'ai',
+    label: 'ai',
+    state: ai.length > 0 ? 'found' : 'none',
+    detail: ai.map((g) => g.title).join(', '),
+  });
   return ai.length > 0 ? askProviders(track, ai) : null;
 }
 

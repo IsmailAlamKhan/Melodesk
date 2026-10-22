@@ -39,11 +39,9 @@ export const sqlitePersister: Persister = createAsyncStoragePersister({
 /** Only cache what is worth a fast first paint; never search results or mutations. */
 export function shouldPersistQuery(queryKey: readonly unknown[], data?: unknown): boolean {
   const kind = queryKey[0];
-  if (kind === 'lyrics') {
-    // Lyrics that were found are kept (they show offline and save asking again); a miss is not, since
-    // it may only have been a slow source.
-    const found = data as { text?: string | null; synced?: unknown[] | null } | undefined;
-    return !!found && (!!found.text || !!found.synced?.length);
-  }
+  // Lyrics are kept whether or not anything was found: they show offline and save asking again, and
+  // a song with none would otherwise go through every source (and the AI helper) on each launch. A
+  // miss is looked up again once it is a few minutes old, so a slow source gets another chance.
+  if (kind === 'lyrics') return data !== undefined;
   return kind === 'browse' || kind === 'account' || kind === 'library';
 }

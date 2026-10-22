@@ -9,7 +9,7 @@ import {
 } from '../../data/lyricsOverride';
 import { nextQuery } from '../../player/nextInfo';
 import { usePlayerStore } from '../../player/store';
-import { lyricsSources, type LyricsSource } from '../../core';
+import { lyricsProgress, lyricsSources, type LyricsSource } from '../../core';
 import { loadOffset, saveOffset, useLyricsPrefs, type LyricsPrefs } from './prefs';
 import { activeIndex, rowsFromLyrics, type LyricsData, type LyricsRow } from './rows';
 import { transliterationCaveat, type Caveat } from './transliterate';
@@ -74,6 +74,9 @@ export function useTrackLyrics(): TrackLyrics {
   );
   const lrclibOn = useSyncExternalStore(subscribeTimed, () => timedSource?.isActive() ?? false);
   const signature = useSyncExternalStore(subscribeTimed, () => timedSource?.signature?.() ?? '');
+  // Until the plugins have started, which ones are on is not known: asking then would look the song
+  // up without them and file the answer under the wrong key, so the saved lyrics would not be found.
+  const sourcesReady = useSyncExternalStore(subscribeTimed, () => timedSource?.ready?.() ?? true);
 
   const overrideQuery = useQuery({
     queryKey: ['lyrics-override', videoId],
@@ -90,15 +93,23 @@ export function useTrackLyrics(): TrackLyrics {
 
   const lyrics = useQuery<LyricsData>({
     queryKey: ['lyrics', videoId, signature, override?.title ?? '', override?.artist ?? ''],
-    enabled: ready && videoId !== null && !overrideQuery.isPending,
-    // Lyrics that were found keep for an hour; a miss is tried again after a minute (a source may
-    // simply have been slow).
-    staleTime: (query) => (hasLyrics(query.state.data) ? 1000 * 60 * 60 : 1000 * 60),
+    enabled: ready && sourcesReady && videoId !== null && !overrideQuery.isPending,
+    // Lyrics that were found keep for a day; a miss is tried again after ten minutes (a source
+    // may simply have been slow).
+    staleTime: (query) => (hasLyrics(query.state.data) ? 1000 * 60 * 60 * 24 : 1000 * 60 * 10),
     queryFn: async () => {
+      const id = videoId ?? '';
+      lyricsProgress.begin(id);
+      const youtube = { id: 'youtube', label: 'YouTube Music' } as const;
+      lyricsProgress.step(id, { ...youtube, state: 'running' });
       const next = await qc.query(nextQuery(videoId));
       const own = next.lyricsBrowseId
         ? await fetchLyrics(next.lyricsBrowseId)
         : { text: null, source: null, synced: null };
+      lyricsProgress.step(id, {
+        ...youtube,
+        state: (own.synced ?? own.text) ? 'found' : 'none',
+      });
       if (own.synced) return { ...own, origin: 'youtube' as const };
       // YouTube's web lyrics are usually untimed. If LRCLIB is on, prefer its timed lyrics.
       const t = usePlayerStore.getState().track;

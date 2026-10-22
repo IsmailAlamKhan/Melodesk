@@ -21,6 +21,7 @@ import { describeTranslateError } from '../lyrics/describeError';
 import { interlude, wordFills, wordTimings } from './karaoke';
 import { useLyricsPrefs } from '../lyrics/prefs';
 import type { LyricsRow } from '../lyrics/rows';
+import { LyricsProgress } from '../lyrics/LyricsProgress';
 import { useTrackLyrics } from '../lyrics/useTrackLyrics';
 import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
@@ -257,12 +258,16 @@ function Stage() {
   const sizeIdx = SIZES.indexOf(size);
   const body = (() => {
     if (!track) return <p className="text-xl text-fg-muted">{t('player.nothingPlaying')}</p>;
-    if (lyrics.isPending) return <p className="text-xl text-fg-muted">{t('lyrics.loading')}</p>;
+    if (lyrics.isPending) return <LyricsProgress videoId={track.videoId} />;
     if (lyrics.isError) return <p className="text-xl text-danger">{t('lyrics.loadFailed')}</p>;
     if (!data?.text && !data?.synced)
       return (
         <div className="flex flex-col items-center gap-4 text-center">
-          <p className="text-xl text-fg-muted">{data?.source ?? t('lyrics.none')}</p>
+          {lyrics.isFetching ? (
+            <LyricsProgress videoId={track.videoId} />
+          ) : (
+            <p className="text-xl text-fg-muted">{data?.source ?? t('lyrics.none')}</p>
+          )}
           {!lrclibOn && <TimedBanner />}
         </div>
       );

@@ -29,6 +29,8 @@ export interface LyricsSource {
    * lyrics looked up before that are looked up again.
    */
   signature?: () => string;
+  /** False while the source is still starting up, when what it would answer is not known yet. */
+  ready?: () => boolean;
   /** Whether something can explain a line of the lyrics (a plugin with an AI model, switched on). */
   canExplain?: () => boolean;
   /** An explanation of `line` in plain words, or null when none could be made. */

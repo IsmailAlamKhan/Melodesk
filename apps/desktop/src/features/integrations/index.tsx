@@ -21,6 +21,7 @@ const lrclib: LyricsSource = {
   label: 'LRCLIB',
   isActive: isLyricsProviderOn,
   signature: lyricsSignature,
+  ready: () => usePluginHost.getState().loaded,
   canExplain: canExplainLyrics,
   explain: explainLyric,
   subscribe: (onChange) => usePluginHost.subscribe(onChange),

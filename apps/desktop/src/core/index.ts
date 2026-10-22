@@ -51,3 +51,5 @@ export {
 export type { LevelSource, Levels } from './levels';
 export { createRegistry, lyricsSources } from './services';
 export type { LyricsSource } from './services';
+export { lyricsProgress, useLyricsProgress } from './lyricsProgress';
+export type { LyricsStep, LyricsStepState } from './lyricsProgress';

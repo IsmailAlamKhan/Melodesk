@@ -10,6 +10,7 @@ import { usePositionMs } from '../../player/usePositionMs';
 import { lyricsSources } from '../../core';
 import { ExplanationNote, LineActions, useExplanations } from './LineActions';
 import { LyricsFinder } from './LyricsFinder';
+import { LyricsProgress } from './LyricsProgress';
 import { LyricsToolbar } from './LyricsToolbar';
 
 /** Fills the active line left to right in step with the song, without re-rendering the list. */
@@ -97,14 +98,17 @@ export function LyricsPanel({ large = false }: { large?: boolean } = {}) {
   }, [active]);
 
   if (!videoId) return <div className="p-4 text-sm text-fg-muted">{t('lyrics.playToSee')}</div>;
-  if (lyrics.isPending)
-    return <div className="p-4 text-sm text-fg-muted">{t('lyrics.loading')}</div>;
+  if (lyrics.isPending) return <LyricsProgress videoId={videoId} className="p-4" />;
   if (lyrics.isError)
     return <div className="p-4 text-sm text-danger">{t('lyrics.loadFailed')}</div>;
   if (!data?.text && !data?.synced)
     return (
       <div className="flex flex-col gap-3 p-4 text-sm text-fg-muted">
-        <div>{data?.source ?? t('lyrics.none')}</div>
+        {lyrics.isFetching ? (
+          <LyricsProgress videoId={videoId} />
+        ) : (
+          <div>{data?.source ?? t('lyrics.none')}</div>
+        )}
         {!lrclibOn && <TimedBanner />}
         <LyricsFinder override={override} onSave={setOverride} startOpen />
       </div>

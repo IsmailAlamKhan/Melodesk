@@ -46,3 +46,31 @@ test('lyrics that were found show again after a restart without asking anyone', 
   await expect(page.getByText('Kept line one')).toBeVisible();
   expect(asked).toBe(before);
 });
+
+test('a song nobody has lyrics for is not searched for again on every launch', async ({ page }) => {
+  let asked = 0;
+  await installTauri(page, {
+    youtubeLyrics: false,
+    http: (url) => {
+      if (!url.includes('lrclib.net')) return null;
+      asked += 1;
+      return url.includes('/api/get') ? { status: 404, body: {} } : { status: 200, body: [] };
+    },
+  });
+  await page.goto('/');
+  await openSettings(page, 'Plugins');
+  await page.getByRole('switch', { name: 'Enable LRCLIB lyrics' }).check();
+  await startPlayback(page, { positionS: 2, track });
+  await page.getByRole('button', { name: 'Open now playing' }).click();
+  await expect(page.getByText('No lyrics available for this song.')).toBeVisible();
+  expect(asked).toBeGreaterThan(0);
+  await page.waitForTimeout(3000);
+
+  const before = asked;
+  await page.reload();
+  await startPlayback(page, { positionS: 2, track });
+  await page.getByRole('button', { name: 'Open now playing' }).click();
+  await expect(page.getByText('No lyrics available for this song.')).toBeVisible();
+  await page.waitForTimeout(1500);
+  expect(asked).toBe(before);
+});
