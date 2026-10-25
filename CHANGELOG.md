@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.5.0...melodesk-v0.6.0) (2026-10-25)
+
+
+### Features
+
+* music server (Subsonic/Navidrome), podcasts and internet radio in the local player ([ac8dc15](https://github.com/IsmailAlamKhan/Melodesk/commit/ac8dc15d31dc3a691a660e5cfbd70dbb485c2932))
+
 ## [0.5.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.4.0...melodesk-v0.5.0) (2026-10-25)
 
 
