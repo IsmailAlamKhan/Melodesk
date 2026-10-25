@@ -52,6 +52,8 @@ async function start(page: Page): Promise<void> {
 const primary = (page: Page) => page.getByRole('navigation', { name: 'Primary' });
 
 test('the main screens have no accessibility violations (dark)', async ({ page }) => {
+  // Every screen is scanned by axe; on a shared CI runner that outlasts the default 30 s.
+  test.slow();
   const found: string[] = [];
   await start(page);
   await audit(page, 'home', found);

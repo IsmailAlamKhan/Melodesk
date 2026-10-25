@@ -30,6 +30,7 @@ export function SearchBox() {
   const [active, setActive] = useState(-1);
   const [debounced, setDebounced] = useState('');
   const input = useRef<HTMLInputElement>(null);
+  const closeTimer = useRef(0);
   const suggestions = useSuggestions(debounced);
   const qc = useQueryClient();
   const recent = useQuery({
@@ -123,8 +124,19 @@ export function SearchBox() {
             setOpen(true);
             setActive(-1);
           }}
-          onFocus={() => setOpen(true)}
-          onBlur={() => window.setTimeout(() => setOpen(false), 120)}
+          onFocus={() => {
+            window.clearTimeout(closeTimer.current);
+            setOpen(true);
+          }}
+          // A moment's grace so a click on a row lands before the list goes. Only if focus did not
+          // come back in that time: closing a list the box has focus on would take it from under
+          // a user who clicked away and straight back.
+          onBlur={() => {
+            window.clearTimeout(closeTimer.current);
+            closeTimer.current = window.setTimeout(() => {
+              if (document.activeElement !== input.current) setOpen(false);
+            }, 120);
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') choose(active);
             else if (e.key === 'ArrowDown')
