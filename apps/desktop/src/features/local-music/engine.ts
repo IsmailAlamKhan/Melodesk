@@ -370,7 +370,11 @@ export function startLocalPlayer(): () => void {
       if (to.trackId !== track.id) clearDeck(to);
       await loadInto(to, track);
       if (token !== loadToken) return;
-      await g?.resume().catch(() => undefined);
+      // Never wait long on this: where there is no sound device the context may not start at all.
+      await Promise.race([
+        g?.resume().catch(() => undefined),
+        new Promise((resolve) => window.setTimeout(resolve, 400)),
+      ]);
       to.audio.currentTime = 0;
       to.audio.volume = from.audio.volume;
       to.audio.muted = from.audio.muted;

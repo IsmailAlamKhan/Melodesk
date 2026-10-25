@@ -149,10 +149,11 @@ test('starting something on YouTube stops the local song', async ({ page }) => {
   await row(page, 'First Light').click();
   await expect(footer(page).getByText('First Light')).toBeVisible();
   await page.getByRole('link', { name: 'Home' }).first().click();
-  await page
-    .getByRole('button', { name: /^Play / })
-    .first()
-    .click({ force: true });
+  // Wait for the page to be there: a button found while it was still loading is gone by the click.
+  await expect(page.getByRole('heading', { name: 'Indian Music' })).toBeVisible();
+  const card = page.getByRole('button', { name: /^Play / }).first();
+  await card.scrollIntoViewIfNeeded();
+  await card.click({ force: true });
   await expect
     .poll(async () =>
       (await sentCommands(page)).some(

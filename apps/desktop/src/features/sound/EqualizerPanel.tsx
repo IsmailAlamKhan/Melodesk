@@ -74,7 +74,7 @@ export function EqualizerPanel({ compact = false }: { compact?: boolean }) {
             className={cn(
               'h-8 rounded-full px-3 text-xs font-medium transition-colors',
               preset === p.id
-                ? 'bg-accent text-accent-fg'
+                ? 'bg-accent-soft text-accent'
                 : 'bg-bg-overlay text-fg hover:bg-accent-soft',
             )}
           >
