@@ -153,10 +153,6 @@ pub fn setup<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
             about,
         })
     };
-    #[cfg(not(target_os = "macos"))]
-    {
-        let _ = Submenu::<R>::with_items; // keep the import used on all platforms
-    }
 
     app.manage(NativeState {
         now_playing: Mutex::new(NowPlaying::default()),
@@ -370,7 +366,7 @@ pub fn open_mini_player<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
         w.set_focus().map_err(|e| e.to_string())?;
         return Ok(());
     }
-    let mut builder = WebviewWindowBuilder::new(
+    let builder = WebviewWindowBuilder::new(
         &app,
         crate::player::MINI_LABEL,
         WebviewUrl::App("index.html?window=mini".into()),
@@ -383,9 +379,7 @@ pub fn open_mini_player<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
     .resizable(true)
     .skip_taskbar(true);
     #[cfg(target_os = "macos")]
-    {
-        builder = builder.transparent(true);
-    }
+    let builder = builder.transparent(true);
     builder.build().map_err(|e| e.to_string())?;
     Ok(())
 }
