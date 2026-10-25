@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.3.0...melodesk-v0.4.0) (2026-10-25)
+
+
+### Features
+
+* equalizer, even volume, crossfade, gapless and real visuals for local music, plus a tag editor ([646eafe](https://github.com/IsmailAlamKhan/Melodesk/commit/646eafe96df4b8eddb84a2e67e390d94d0431026))
+
+
+### Bug Fixes
+
+* sound presets pass the contrast check; the local engine does not wait on a stuck audio context; steadier e2e ([56dedc9](https://github.com/IsmailAlamKhan/Melodesk/commit/56dedc955eab7fdc350e2376c1b001e37c677309))
+
 ## [0.3.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.2.0...melodesk-v0.3.0) (2026-10-25)
 
 
