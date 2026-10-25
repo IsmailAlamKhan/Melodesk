@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.2.0...melodesk-v0.3.0) (2026-10-25)
+
+
+### Features
+
+* local music, played in the same player as YouTube Music ([986f875](https://github.com/IsmailAlamKhan/Melodesk/commit/986f87544301803539fc998f738a79844e8383a5))
+
 ## [0.2.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.1.0...melodesk-v0.2.0) (2026-10-25)
 
 
