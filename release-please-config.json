@@ -5,9 +5,17 @@
     ".": {
       "package-name": "melodesk",
       "extra-files": [
-        "apps/desktop/package.json",
-        "apps/desktop/src-tauri/tauri.conf.json",
-        "apps/desktop/src-tauri/Cargo.toml"
+        { "type": "json", "path": "apps/desktop/package.json", "jsonpath": "$.version" },
+        {
+          "type": "json",
+          "path": "apps/desktop/src-tauri/tauri.conf.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "toml",
+          "path": "apps/desktop/src-tauri/Cargo.toml",
+          "jsonpath": "$.package.version"
+        }
       ]
     }
   }
