@@ -81,6 +81,7 @@ pub fn run() {
             local::local_lyrics_sidecar,
             local::local_set_active,
             local::local_report,
+            local::local_write_tags,
             native_modules,
         ])
         .setup(|app| {
@@ -134,6 +135,12 @@ fn migrations() -> Vec<tauri_plugin_sql::Migration> {
             version: 2,
             description: "create the local music index",
             sql: include_str!("../migrations/0002_local_music.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 3,
+            description: "keep ReplayGain data for local songs",
+            sql: include_str!("../migrations/0003_local_replaygain.sql"),
             kind: MigrationKind::Up,
         },
     ]

@@ -20,6 +20,7 @@ fn main() {
             "local_lyrics_sidecar",
             "local_set_active",
             "local_report",
+            "local_write_tags",
             "native_modules",
         ]),
     ))

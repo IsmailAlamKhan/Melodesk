@@ -95,6 +95,8 @@ export interface LocalFixture {
   year?: number | null;
   durationMs?: number;
   lyrics?: string | null;
+  replayGainDb?: number | null;
+  replayPeak?: number | null;
 }
 
 export interface LocalMock {
@@ -141,7 +143,8 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
   await page.exposeFunction('__nodeLib', (kind: string, query: string, values: unknown[]) => {
     if (!lib) {
       lib = new DatabaseSync(':memory:');
-      lib.exec(readFileSync(join(here, '../src-tauri/migrations/0002_local_music.sql'), 'utf8'));
+      for (const file of ['0002_local_music.sql', '0003_local_replaygain.sql'])
+        lib.exec(readFileSync(join(here, '../src-tauri/migrations', file), 'utf8'));
     }
     const bound: (string | number | null)[] = [];
     const text = query.replace(/\$(\d+)/gu, (_m, n: string) => {
@@ -338,6 +341,8 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
               genre: null,
               durationMs: 200_000,
               lyrics: null,
+              replayGainDb: null,
+              replayPeak: null,
               ...f,
               mtime: 1,
               size: 1,
@@ -355,6 +360,28 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
         case 'local_artwork': {
           const has = (localMock()?.art ?? []).includes(String(args['path']));
           return has ? png() : new ArrayBuffer(0);
+        }
+        case 'local_write_tags': {
+          const edit = args['edit'] as Record<string, unknown>;
+          const file = (localMock()?.files ?? []).find((f) => f.path === args['path']);
+          sent.push({ type: 'local_write_tags', path: args['path'], edit });
+          if (!file) throw new Error('not in your music folders');
+          return {
+            albumArtist: null,
+            trackNo: null,
+            discNo: null,
+            year: null,
+            genre: null,
+            durationMs: 200_000,
+            lyrics: null,
+            replayGainDb: null,
+            replayPeak: null,
+            ...file,
+            ...edit,
+            mtime: 2,
+            size: 1,
+            hasArt: false,
+          };
         }
         case 'local_lyrics_sidecar':
           return localMock()?.sidecars?.[String(args['path'])] ?? null;

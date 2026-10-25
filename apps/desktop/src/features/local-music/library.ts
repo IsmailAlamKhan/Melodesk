@@ -31,6 +31,8 @@ export interface ScannedTrack {
   size: number;
   hasArt: boolean;
   lyrics: string | null;
+  replayGainDb: number | null;
+  replayPeak: number | null;
 }
 
 export interface LocalTrack {
@@ -47,6 +49,8 @@ export interface LocalTrack {
   durationMs: number;
   hasArt: boolean;
   lyrics: string | null;
+  replayGainDb: number | null;
+  replayPeak: number | null;
 }
 
 interface Row {
@@ -63,10 +67,12 @@ interface Row {
   duration_ms: number;
   has_art: number;
   lyrics: string | null;
+  rg_gain: number | null;
+  rg_peak: number | null;
 }
 
 const COLUMNS =
-  'id, path, title, artist, album, album_artist, track_no, disc_no, year, genre, duration_ms, has_art, lyrics';
+  'id, path, title, artist, album, album_artist, track_no, disc_no, year, genre, duration_ms, has_art, lyrics, rg_gain, rg_peak';
 
 const toTrack = (r: Row): LocalTrack => ({
   id: r.id,
@@ -82,6 +88,8 @@ const toTrack = (r: Row): LocalTrack => ({
   durationMs: r.duration_ms,
   hasArt: r.has_art === 1,
   lyrics: r.lyrics,
+  replayGainDb: r.rg_gain,
+  replayPeak: r.rg_peak,
 });
 
 /** The album a song is shown under, and who it is credited to (the album artist, else the artist). */
@@ -92,7 +100,7 @@ const ORDER_IN_ALBUM = 'ORDER BY COALESCE(disc_no, 1), COALESCE(track_no, 9999),
 
 export const UNKNOWN_ALBUM = 'Unknown album';
 
-// SQLite allows at least 999 bound values per statement in every build; a row takes 14.
+// SQLite allows at least 999 bound values per statement in every build; a row takes 16.
 const UPSERT_ROWS = 60;
 const DELETE_ROWS = 500;
 
@@ -122,18 +130,21 @@ export async function upsertTracks(
         t.size,
         t.hasArt ? 1 : 0,
         t.lyrics,
+        t.replayGainDb,
+        t.replayPeak,
       );
-      const base = r * 14;
-      const marks = Array.from({ length: 14 }, (_x, k) => `$${String(base + k + 1)}`).join(', ');
+      const base = r * 16;
+      const marks = Array.from({ length: 16 }, (_x, k) => `$${String(base + k + 1)}`).join(', ');
       return `(${marks}, ${String(now)})`;
     });
     await c.execute(
-      `INSERT INTO local_tracks (path, title, artist, album, album_artist, track_no, disc_no, year, genre, duration_ms, mtime, size, has_art, lyrics, added_at)
+      `INSERT INTO local_tracks (path, title, artist, album, album_artist, track_no, disc_no, year, genre, duration_ms, mtime, size, has_art, lyrics, rg_gain, rg_peak, added_at)
        VALUES ${rows.join(', ')}
        ON CONFLICT(path) DO UPDATE SET title = excluded.title, artist = excluded.artist, album = excluded.album,
          album_artist = excluded.album_artist, track_no = excluded.track_no, disc_no = excluded.disc_no,
          year = excluded.year, genre = excluded.genre, duration_ms = excluded.duration_ms, mtime = excluded.mtime,
-         size = excluded.size, has_art = excluded.has_art, lyrics = excluded.lyrics`,
+         size = excluded.size, has_art = excluded.has_art, lyrics = excluded.lyrics,
+         rg_gain = excluded.rg_gain, rg_peak = excluded.rg_peak`,
       values,
     );
   }

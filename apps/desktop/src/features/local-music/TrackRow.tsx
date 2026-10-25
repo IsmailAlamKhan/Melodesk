@@ -1,7 +1,7 @@
 import * as ContextMenu from '@radix-ui/react-context-menu';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { cn } from '@melodesk/ui';
-import { ListEnd, ListStart, MoreHorizontal, Play } from 'lucide-react';
+import { ListEnd, ListStart, MoreHorizontal, Pencil, Play } from 'lucide-react';
 import { useMemo } from 'react';
 import { LiveBars } from '../../app/components/LiveBars';
 import {
@@ -15,6 +15,7 @@ import { usePlayerStore } from '../../player/store';
 import { LOCAL_ID_PREFIX } from '../../player/sourceIds';
 import { localPlayer } from './engine';
 import type { LocalTrack } from './library';
+import { editTags } from './TagEditor';
 
 export const clock = (ms: number): string => {
   const s = Math.round(ms / 1000);
@@ -51,6 +52,7 @@ export function useTrackEntries(track: LocalTrack, onPlay: () => void): MenuEntr
         icon: <ListEnd />,
         run: () => localPlayer()?.enqueue([track], 'end'),
       },
+      { key: 'edit', label: t('local.edit.menu'), icon: <Pencil />, run: () => editTags(track) },
     ],
     [track, onPlay, t],
   );

@@ -37,6 +37,30 @@ skipped with a message).
   gets what the local player is doing through `local:snapshot`.
 - One source plays at a time. There is no queue that mixes the two.
 
+## Sound
+
+Settings → Sound (and the Equalizer tab in Now Playing) has a 10-band equalizer with presets, "Even
+out the volume" and crossfade. They apply to local songs on every system, because the files are the
+app's own and so their sound can be processed (YouTube Music's sound can't on macOS and Linux; see
+[architecture.md](architecture.md)).
+
+- Every audio element goes through a Web Audio graph (`features/local-music/dsp.ts`): per-song
+  loudness gain → fade gain → preamp → 10 EQ bands → analyser → output.
+- Even volume uses the file's ReplayGain tags (`REPLAYGAIN_TRACK_GAIN`/`PEAK`, read by the scan and kept
+  in the index), never boosting a song past clipping. Files without tags are left alone.
+- Two audio elements alternate. The next song is read ahead into the idle one, so it starts with no
+  wait. With crossfade off it is started about 30 ms before the end (no audible gap); with crossfade on,
+  it fades in over the end of the current one.
+- The visuals (Visualizer tab, glows, bars) read the analyser, so for local songs they follow the real
+  sound, not just the rhythm.
+
+## Editing tags
+
+"Edit info…" in a song's menu writes title, artist, album, album artist, track, disc, year, genre and
+lyrics into the file's own tag (`local_write_tags`, with `lofty`). The sound is not touched. WAV files
+have no place for lyrics; the editor says so (use a `.lrc` file beside it).
+
 ## Not done yet
 
-Gapless playback, crossfade and an equalizer for local songs; cue sheets; editing tags; a mixed queue.
+Cue sheets, loudness analysis for files without ReplayGain tags, and a queue that mixes local and
+YouTube songs.

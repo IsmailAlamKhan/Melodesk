@@ -5,6 +5,7 @@ import { startLocalMusic } from './start';
 import { LocalAlbumPage, LocalArtistPage } from './LocalDetail';
 import { LocalMusicSection } from './LocalSettings';
 import { LocalPage } from './LocalPage';
+import { TagEditorHost } from './TagEditor';
 
 /** Play the music files on this computer, next to YouTube Music, in the same player. */
 export default defineFeature({
@@ -18,6 +19,7 @@ export default defineFeature({
       { path: '/local/album', element: <LocalAlbumPage /> },
       { path: '/local/artist', element: <LocalArtistPage /> },
     ],
+    overlays: [{ id: 'tag-editor', component: TagEditorHost }],
     nav: [{ id: 'local', to: '/local', label: 'nav.local', icon: HardDrive, order: 35 }],
     commands: () => [
       {

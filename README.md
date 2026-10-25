@@ -61,7 +61,7 @@ Planned and in progress; ticked items work today.
 - [x] Full-screen Now Playing with synced lyrics
 - [x] Karaoke mode: big sing-along lyrics, words fill in time, countdown through instrumental breaks, timing nudge
 - [x] Cover art kept for offline use (capped at 100 MB, clearable in Settings)
-- [x] Local music: play the audio files on your computer in the same player, with albums, artists, search, queue, lyrics (saved beside the file, in its tags, or from the lyric sources) and stats; see [docs/local-music.md](docs/local-music.md)
+- [x] Local music: play the audio files on your computer in the same player, with albums, artists, search, queue, lyrics (saved beside the file, in its tags, or from the lyric sources) and stats, a 10-band equalizer, even volume (ReplayGain), crossfade and gapless playback, real-sound visuals and a tag editor; see [docs/local-music.md](docs/local-music.md)
 - [ ] Mini player (built, not yet checked on screen)
 - [ ] Last.fm / ListenBrainz scrobbling, Discord Rich Presence (built as opt-in plugins, not yet checked against real accounts)
 - [x] Material 3 Expressive colour: a full tonal scheme generated from your accent (or the album art), light / dark / AMOLED themes, three contrast levels, and smooth colour transitions

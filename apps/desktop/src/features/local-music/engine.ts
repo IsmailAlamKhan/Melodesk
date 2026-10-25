@@ -5,6 +5,10 @@
  * stats, the sleep timer and the keyboard shortcuts therefore work on it without knowing the
  * difference. `player/router.ts` sends the playback commands here while it is the active source.
  *
+ * Two audio elements (decks) are used so the next song can be loaded ahead and started the moment
+ * the current one ends (gapless) or fade in over it (crossfade). Both go through a Web Audio graph
+ * (dsp.ts) for the equalizer, loudness leveling and the analyser the visuals read.
+ *
  * One source plays at a time: starting a local song pauses the web player, and starting anything on
  * YouTube stops this one (`yieldToYouTube`).
  */
@@ -12,6 +16,8 @@ import type { PlayerCommand, QueueItem, QueueState, Track } from '@melodesk/brid
 import { invoke } from '@tauri-apps/api/core';
 import { emitTo, listen } from '@tauri-apps/api/event';
 import { toast } from '../../app/toast';
+import { useAudioPrefs } from '../../audio/store';
+import { setLevelSource } from '../../core';
 import { kvGet, kvSet } from '../../data/kv';
 import { t } from '../../i18n';
 import { registerLocalPlayback } from '../../player/router';
@@ -19,6 +25,8 @@ import { LOCAL_ID_PREFIX } from '../../player/sourceIds';
 import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
 import { getCover } from './covers';
+import { AudioGraph, replayGainFactor, type DeckNodes } from './dsp';
+import { createAnalyserSource } from './levels';
 import type { LocalTrack } from './library';
 import {
   addToQueue,
@@ -60,6 +68,8 @@ export function canPlayFile(path: string): boolean {
 }
 
 const STATE_EVERY_MS = 250;
+/** With no crossfade, the next song is started this long before the end (a gap of no more than a blink). */
+const GAPLESS_LEAD_S = 0.03;
 const VOLUME_KEY = 'local:volume';
 
 const toQueueItem = (track: LocalTrack): QueueItem => ({
@@ -86,22 +96,86 @@ let player: LocalPlayer | null = null;
 export const localPlayer = (): LocalPlayer | null => player;
 
 export function startLocalPlayer(): () => void {
-  const audio = new Audio();
-  audio.preload = 'auto';
+  interface Deck {
+    audio: HTMLAudioElement;
+    blobUrl: string | null;
+    /** Which library song is loaded in it. */
+    trackId: number | null;
+    nodes: DeckNodes | null;
+  }
+  const newDeck = (): Deck => {
+    const audio = new Audio();
+    audio.preload = 'auto';
+    return { audio, blobUrl: null, trackId: null, nodes: null };
+  };
+  const decks: [Deck, Deck] = [newDeck(), newDeck()];
+  let cur = 0;
+  const deckAt = (i: number): Deck => {
+    const d = decks[i];
+    if (!d) throw new Error('no such deck');
+    return d;
+  };
+  const deck = (): Deck => deckAt(cur);
+  const other = (): Deck => deckAt(1 - cur);
+  const audio = (): HTMLAudioElement => deck().audio;
+  const eachAudio = (fn: (a: HTMLAudioElement) => void): void => {
+    for (const d of decks) fn(d.audio);
+  };
+
+  let graph: AudioGraph | null | undefined;
+  let offLevels: (() => void) | null = null;
   let queue: Queue<LocalTrack> = emptyQueue();
-  let blobUrl: string | null = null;
   let loadToken = 0;
+  let preloadToken = 0;
   let failures = 0;
   let lastState = 0;
   let wasPlaying = false;
   let rate = 1;
   let alive = true;
+  /** A crossfade or hand-over is under way: nothing else starts one. */
+  let crossing = false;
+  let gaplessTimer = 0;
+  let stopOldTimer = 0;
 
   const store = usePlayerStore;
   const active = (): boolean => store.getState().source === 'local';
   const current = (): LocalTrack | null => queue.items[queue.index] ?? null;
+  const prefs = () => useAudioPrefs.getState();
 
-  // --- what the rest of the app sees -------------------------------------------------------
+  // --- the sound path -------------------------------------------------------------------------
+
+  /** The loudness correction for a song, if leveling is on. */
+  const levelFor = (track: LocalTrack | undefined): number =>
+    prefs().normalize && track ? replayGainFactor(track.replayGainDb, track.replayPeak) : 1;
+
+  const applySound = (): void => {
+    if (!graph) return;
+    const p = prefs();
+    graph.setEq(p.eqEnabled, p.preampDb, p.gainsDb);
+    for (const d of decks) {
+      const track = queue.items.find((q) => q.id === d.trackId);
+      if (d.nodes) graph.setNow(d.nodes.level, levelFor(track));
+    }
+  };
+
+  /** The Web Audio graph, made on first use (after a click, as browsers insist). */
+  const ensureGraph = (): AudioGraph | null => {
+    if (graph !== undefined) return graph;
+    graph = AudioGraph.create();
+    if (graph) {
+      try {
+        for (const d of decks) d.nodes = graph.attach(d.audio);
+        applySound();
+        offLevels = setLevelSource(createAnalyserSource(graph));
+      } catch {
+        // An element that cannot be routed plays on its own, without the equalizer.
+        graph = null;
+      }
+    }
+    return graph;
+  };
+
+  // --- what the rest of the app sees ----------------------------------------------------------
 
   const flags = () => ({
     likeStatus: null,
@@ -132,14 +206,15 @@ export function startLocalPlayer(): () => void {
   };
 
   const publishState = (): void => {
-    const playing = !audio.paused && !audio.ended;
+    const a = audio();
+    const playing = !a.paused && !a.ended;
     store.setState({
       state: {
         playing,
-        position: audio.currentTime,
-        duration: Number.isFinite(audio.duration) ? audio.duration : 0,
-        volume: audio.volume,
-        muted: audio.muted,
+        position: a.currentTime,
+        duration: Number.isFinite(a.duration) ? a.duration : 0,
+        volume: a.volume,
+        muted: a.muted,
         sampledAt: Date.now(),
       },
     });
@@ -185,28 +260,44 @@ export function startLocalPlayer(): () => void {
     mirror();
   };
 
-  // --- taking over from, and giving back to, the YouTube player -----------------------------
+  // --- taking over from, and giving back to, the YouTube player -------------------------------
 
   const activate = (): void => {
     if (active()) return;
     void sendCommand({ type: 'pause' }).catch(() => undefined);
     store.setState({ source: 'local' });
     void invoke('local_set_active', { active: true }).catch(() => undefined);
+    if (graph && !offLevels) offLevels = setLevelSource(createAnalyserSource(graph));
   };
 
-  const release = (): void => {
-    if (blobUrl) URL.revokeObjectURL(blobUrl);
-    blobUrl = null;
-    audio.removeAttribute('src');
-    audio.load();
+  /** Put a deck away: stopped, its file let go, its fade back to full. */
+  const clearDeck = (d: Deck): void => {
+    d.audio.pause();
+    if (d.blobUrl) URL.revokeObjectURL(d.blobUrl);
+    d.blobUrl = null;
+    d.trackId = null;
+    d.audio.removeAttribute('src');
+    d.audio.load();
+    if (graph && d.nodes) graph.setNow(d.nodes.fade, 1);
+  };
+
+  const cancelTimers = (): void => {
+    window.clearTimeout(gaplessTimer);
+    window.clearTimeout(stopOldTimer);
+    gaplessTimer = 0;
+    stopOldTimer = 0;
+    crossing = false;
   };
 
   const deactivate = (): void => {
     loadToken += 1;
-    audio.pause();
-    release();
+    preloadToken += 1;
+    cancelTimers();
+    for (const d of decks) clearDeck(d);
     queue = emptyQueue();
     wasPlaying = false;
+    offLevels?.();
+    offLevels = null;
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = null;
       navigator.mediaSession.playbackState = 'none';
@@ -218,19 +309,53 @@ export function startLocalPlayer(): () => void {
     void sendCommand({ type: 'requestState' }).catch(() => undefined);
   };
 
-  // --- playing -----------------------------------------------------------------------------
+  // --- playing --------------------------------------------------------------------------------
 
   const readFile = async (track: LocalTrack): Promise<Blob> => {
     const buffer = await invoke<ArrayBuffer>('local_read_file', { path: track.path });
     return new Blob([buffer], { type: mimeFor(track.path) ?? 'audio/mpeg' });
   };
 
-  const playIndex = async (index: number): Promise<void> => {
+  /** Load a song into a deck (nothing to do if it is already there). */
+  const loadInto = async (d: Deck, track: LocalTrack): Promise<void> => {
+    if (d.trackId === track.id && d.blobUrl) return;
+    const blob = await readFile(track);
+    if (d.blobUrl) URL.revokeObjectURL(d.blobUrl);
+    d.blobUrl = URL.createObjectURL(blob);
+    d.audio.src = d.blobUrl;
+    d.trackId = track.id;
+    d.audio.playbackRate = rate;
+    if (graph && d.nodes) graph.setNow(d.nodes.level, levelFor(track));
+  };
+
+  /** Read the song after the current one into the idle deck, so it can start at once. */
+  const preloadNext = (): void => {
+    if (!alive || !active() || crossing) return;
+    const next = nextIndex(queue);
+    if (next === null || queue.repeat === 'one') return;
+    const track = queue.items[next];
+    const idle = other();
+    if (!track || !canPlayFile(track.path) || idle.trackId === track.id) return;
+    const token = ++preloadToken;
+    void loadInto(idle, track)
+      .then(() => {
+        // Whatever happened meanwhile (a skip, a stop) decides whether it is still wanted.
+        if (token !== preloadToken || crossing) clearDeck(idle);
+      })
+      .catch(() => {
+        idle.trackId = null;
+      });
+  };
+
+  const playIndex = async (index: number, fade = 0): Promise<void> => {
     const track = queue.items[index];
     if (!track) return;
     activate();
+    window.clearTimeout(gaplessTimer);
+    gaplessTimer = 0;
     queue = { ...queue, index };
     const token = ++loadToken;
+    preloadToken += 1;
     publishQueue();
     publishTrack(track, null);
     void getCover(track.path).then((art) => {
@@ -238,14 +363,43 @@ export function startLocalPlayer(): () => void {
     });
     try {
       if (!canPlayFile(track.path)) throw new Error('format');
-      const blob = await readFile(track);
+      const g = ensureGraph();
+      const from = deck();
+      const to = other();
+      // A song that is already loaded in the idle deck (read ahead) starts without waiting.
+      if (to.trackId !== track.id) clearDeck(to);
+      await loadInto(to, track);
       if (token !== loadToken) return;
-      release();
-      blobUrl = URL.createObjectURL(blob);
-      audio.src = blobUrl;
-      audio.playbackRate = rate;
-      await audio.play();
+      await g?.resume().catch(() => undefined);
+      to.audio.currentTime = 0;
+      to.audio.volume = from.audio.volume;
+      to.audio.muted = from.audio.muted;
+      to.audio.playbackRate = rate;
+      window.clearTimeout(stopOldTimer);
+      const overlapping =
+        !!g && fade > 0 && !from.audio.paused && !from.audio.ended && !!from.nodes;
+      if (g && overlapping && to.nodes && from.nodes) {
+        crossing = true;
+        g.setNow(to.nodes.fade, 0);
+        g.fadeTo(to.nodes.fade, 1, fade);
+        g.fadeTo(from.nodes.fade, 0, fade);
+        stopOldTimer = window.setTimeout(
+          () => {
+            clearDeck(from);
+            crossing = false;
+            preloadNext();
+          },
+          fade * 1000 + 80,
+        );
+      } else {
+        crossing = false;
+        clearDeck(from);
+        if (g && to.nodes) g.setNow(to.nodes.fade, 1);
+      }
+      cur = 1 - cur;
+      await to.audio.play();
       failures = 0;
+      preloadNext();
     } catch (err) {
       if (token !== loadToken) return;
       failures += 1;
@@ -268,57 +422,107 @@ export function startLocalPlayer(): () => void {
     else if (queue.items.length > 0) void playIndex(0);
   };
 
+  /** Near the end of a song: start the next one, fading over it or exactly at its end. */
+  const maybeHandOver = (): void => {
+    if (crossing || gaplessTimer || !active()) return;
+    const next = nextIndex(queue);
+    if (next === null || queue.repeat === 'one') return;
+    const a = audio();
+    if (!(a.duration > 0) || a.paused) return;
+    const remaining = a.duration - a.currentTime;
+    const fade = graph ? prefs().crossfadeSeconds : 0;
+    const nextTrack = queue.items[next];
+    if (fade > 0 && a.duration > fade * 2 + 1) {
+      if (remaining <= fade) void playIndex(next, fade);
+    } else if (other().trackId === nextTrack?.id && remaining < 1) {
+      // Read ahead and ready: start it a hair before this one ends, so there is no silence.
+      gaplessTimer = window.setTimeout(
+        () => {
+          gaplessTimer = 0;
+          void playIndex(next);
+        },
+        Math.max(0, (remaining - GAPLESS_LEAD_S) * 1000),
+      );
+    }
+  };
+
   const handle = (command: PlayerCommand): void => {
+    const a = audio();
     switch (command.type) {
       case 'play':
-        if (audio.ended) audio.currentTime = 0;
-        void audio.play().catch(() => undefined);
+        if (a.ended) a.currentTime = 0;
+        void graph?.resume().catch(() => undefined);
+        void a.play().catch(() => undefined);
         break;
       case 'pause':
-        audio.pause();
+        eachAudio((x) => {
+          x.pause();
+        });
         break;
       case 'toggle':
-        if (audio.paused) {
-          if (audio.ended) audio.currentTime = 0;
-          void audio.play().catch(() => undefined);
-        } else audio.pause();
+        if (a.paused) {
+          if (a.ended) a.currentTime = 0;
+          void graph?.resume().catch(() => undefined);
+          void a.play().catch(() => undefined);
+        } else
+          eachAudio((x) => {
+            x.pause();
+          });
         break;
       case 'next':
         goNext();
         break;
       case 'previous': {
-        const step = previousStep(queue, audio.currentTime);
+        const step = previousStep(queue, a.currentTime);
         if (step.type === 'go') void playIndex(step.index);
-        else audio.currentTime = 0;
+        else a.currentTime = 0;
         break;
       }
       case 'seek':
-        audio.currentTime = Math.min(command.seconds, audio.duration || command.seconds);
+        a.currentTime = Math.min(command.seconds, a.duration || command.seconds);
+        window.clearTimeout(gaplessTimer);
+        gaplessTimer = 0;
         break;
       case 'setVolume':
-        audio.volume = command.volume;
-        audio.muted = false;
+        eachAudio((x) => {
+          x.volume = command.volume;
+          x.muted = false;
+        });
         break;
       case 'setMuted':
-        audio.muted = command.muted;
+        eachAudio((x) => {
+          x.muted = command.muted;
+        });
         break;
-      case 'toggleMute':
-        audio.muted = !audio.muted;
+      case 'toggleMute': {
+        const muted = !a.muted;
+        eachAudio((x) => {
+          x.muted = muted;
+        });
         break;
-      case 'volumeStep':
-        audio.volume = Math.min(1, Math.max(0, audio.volume + command.delta));
+      }
+      case 'volumeStep': {
+        const volume = Math.min(1, Math.max(0, a.volume + command.delta));
+        eachAudio((x) => {
+          x.volume = volume;
+        });
         break;
+      }
       case 'setShuffle':
         queue = setShuffle(queue, command.enabled);
         publishQueue();
+        preloadNext();
         break;
       case 'setRepeat':
         queue = { ...queue, repeat: command.mode };
         publishQueue();
+        preloadNext();
         break;
       case 'setPlaybackRate':
         rate = command.rate;
-        audio.playbackRate = rate;
+        eachAudio((x) => {
+          x.playbackRate = rate;
+        });
         publishQueue();
         break;
       case 'queueSelect':
@@ -327,15 +531,21 @@ export function startLocalPlayer(): () => void {
       case 'queueMove':
         queue = moveItem(queue, command.from, command.to);
         publishQueue();
+        preloadNext();
         break;
       case 'queueRemove': {
         const removed = removeItem(queue, command.index);
         queue = removed.queue;
         if (queue.items.length === 0) {
-          audio.pause();
+          eachAudio((x) => {
+            x.pause();
+          });
           publishQueue();
         } else if (removed.removedCurrent) void playIndex(queue.index);
-        else publishQueue();
+        else {
+          publishQueue();
+          preloadNext();
+        }
         break;
       }
       default:
@@ -343,7 +553,7 @@ export function startLocalPlayer(): () => void {
     }
   };
 
-  // --- the audio element --------------------------------------------------------------------
+  // --- the audio elements ---------------------------------------------------------------------
 
   const onTime = (): void => {
     const now = Date.now();
@@ -351,6 +561,7 @@ export function startLocalPlayer(): () => void {
       lastState = now;
       publishState();
     }
+    maybeHandOver();
   };
   const onState = (): void => {
     lastState = Date.now();
@@ -358,8 +569,10 @@ export function startLocalPlayer(): () => void {
   };
   const onEnded = (): void => {
     if (queue.repeat === 'one') {
-      audio.currentTime = 0;
-      void audio.play().catch(() => undefined);
+      audio().currentTime = 0;
+      void audio()
+        .play()
+        .catch(() => undefined);
       return;
     }
     const next = nextIndex(queue);
@@ -368,9 +581,10 @@ export function startLocalPlayer(): () => void {
   };
   const onVolume = (): void => {
     onState();
-    void kvSet(VOLUME_KEY, String(audio.volume)).catch(() => undefined);
+    void kvSet(VOLUME_KEY, String(audio().volume)).catch(() => undefined);
   };
 
+  // Only the deck that is current speaks for the player; the other is fading out or waiting.
   const listeners: [string, () => void][] = [
     ['timeupdate', onTime],
     ['play', onState],
@@ -381,14 +595,32 @@ export function startLocalPlayer(): () => void {
     ['ended', onEnded],
     ['ratechange', onState],
   ];
-  for (const [name, fn] of listeners) audio.addEventListener(name, fn);
+  const bound: [HTMLAudioElement, string, EventListener][] = [];
+  for (const d of decks)
+    for (const [name, fn] of listeners) {
+      const wrapped: EventListener = (e) => {
+        if (e.target === audio()) fn();
+      };
+      d.audio.addEventListener(name, wrapped);
+      bound.push([d.audio, name, wrapped]);
+    }
 
   void kvGet(VOLUME_KEY)
     .then((v) => {
       const n = Number(v);
-      if (v !== null && Number.isFinite(n)) audio.volume = Math.min(1, Math.max(0, n));
+      if (v !== null && Number.isFinite(n))
+        eachAudio((x) => {
+          x.volume = Math.min(1, Math.max(0, n));
+        });
     })
     .catch(() => undefined);
+
+  // Equalizer, leveling and crossfade settings: applied as they change.
+  void useAudioPrefs.getState().load();
+  const offPrefs = useAudioPrefs.subscribe(() => {
+    applySound();
+    preloadNext();
+  });
 
   if ('mediaSession' in navigator) {
     const bind = (action: MediaSessionAction, fn: MediaSessionActionHandler): void => {
@@ -444,6 +676,7 @@ export function startLocalPlayer(): () => void {
       }
       queue = addToQueue(queue, tracks, where);
       publishQueue();
+      preloadNext();
       toast(where === 'next' ? t('toast.willPlayNext') : t('toast.addedToQueue'));
     },
     current,
@@ -454,12 +687,14 @@ export function startLocalPlayer(): () => void {
 
   return () => {
     alive = false;
-    for (const [name, fn] of listeners) audio.removeEventListener(name, fn);
+    for (const [target, name, fn] of bound) target.removeEventListener(name, fn);
+    offPrefs();
     void offCommand.then((off) => {
       off();
     });
     unregister();
     if (active()) deactivate();
+    offLevels?.();
     player = null;
   };
 }

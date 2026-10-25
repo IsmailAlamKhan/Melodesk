@@ -20,9 +20,8 @@ import {
 /** The real index table in an in-memory SQLite, standing in for the app's database. */
 function fakeDb(): LibraryDb {
   const sqlite = new DatabaseSync(':memory:');
-  sqlite.exec(
-    readFileSync(resolve(__dirname, '../../../src-tauri/migrations/0002_local_music.sql'), 'utf8'),
-  );
+  for (const file of ['0002_local_music.sql', '0003_local_replaygain.sql'])
+    sqlite.exec(readFileSync(resolve(__dirname, '../../../src-tauri/migrations', file), 'utf8'));
   const prepare = (sql: string, bindings: unknown[]) => {
     // The plugin's numbered $1 placeholders, turned into plain ? with the values in order of use.
     const values: unknown[] = [];
@@ -59,6 +58,8 @@ const track = (over: Partial<ScannedTrack> & { path: string }): ScannedTrack => 
   size: 1,
   hasArt: false,
   lyrics: null,
+  replayGainDb: null,
+  replayPeak: null,
   ...over,
 });
 
@@ -171,5 +172,13 @@ describe('the local library', () => {
     expect(likePattern('50%_off\\')).toBe('%50\\%\\_off\\\\%');
     expect(await listAlbums('joy', db)).toHaveLength(1);
     expect(await listArtists('joy', db)).toHaveLength(1);
+  });
+
+  it('keeps the loudness data of a song', async () => {
+    const db = fakeDb();
+    await upsertTracks([track({ path: '/1', replayGainDb: -7.5, replayPeak: 0.97 })], db);
+    const [song] = await listSongs('', db);
+    expect(song?.replayGainDb).toBe(-7.5);
+    expect(song?.replayPeak).toBe(0.97);
   });
 });

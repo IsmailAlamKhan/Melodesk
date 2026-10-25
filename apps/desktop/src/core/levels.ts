@@ -46,6 +46,7 @@ const current = emptyLevels();
 const scratch = emptyLevels();
 const listeners = new Set<(levels: Levels) => void>();
 let source: LevelSource | null = null;
+const sources: LevelSource[] = [];
 let raf = 0;
 let idleTimer = 0;
 let lastFrame = 0;
@@ -101,15 +102,21 @@ if (typeof document !== 'undefined')
     schedule();
   });
 
-/** Make `next` the source of levels (null for none); returns a function that removes it. */
+/**
+ * Make `next` the source of levels (null clears them all). Sources stack: the newest is used, and when
+ * it is removed the one before it is back (a local song's real levels over the simulated ones).
+ * Returns a function that removes it.
+ */
 export function setLevelSource(next: LevelSource | null): () => void {
-  source = next;
+  if (next === null) sources.length = 0;
+  else sources.push(next);
+  source = sources.at(-1) ?? null;
   schedule();
   return () => {
-    if (source === next) {
-      source = null;
-      schedule();
-    }
+    const at = next ? sources.indexOf(next) : -1;
+    if (at >= 0) sources.splice(at, 1);
+    source = sources.at(-1) ?? null;
+    schedule();
   };
 }
 

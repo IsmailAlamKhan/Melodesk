@@ -199,3 +199,61 @@ test('the local music pages have no accessibility violations', async ({ page }) 
   found.push(...(await scan('album')));
   expect(found).toEqual([]);
 });
+
+test('a song’s tags can be edited, and the library shows the change', async ({ page }) => {
+  await open(page);
+  await addMusicFolder(page);
+  await row(page, 'Solo Walk').click({ button: 'right' });
+  await page.getByRole('menuitem', { name: 'Edit info…' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Edit song info' });
+  await expect(dialog.getByText(/changes the tags stored inside the file/u)).toBeVisible();
+  await dialog.getByLabel('Title').fill('Solo Stroll');
+  await dialog.getByLabel('Year').fill('2022');
+  await dialog.getByRole('button', { name: 'Save to file' }).click();
+  await expect(dialog).toBeHidden();
+  await expect(row(page, 'Solo Stroll')).toBeVisible();
+  await expect(row(page, 'Solo Walk')).toHaveCount(0);
+  const sent = (await sentCommands(page)).find((c) => c['type'] === 'local_write_tags');
+  expect(sent).toMatchObject({
+    path: '/music/Beta/01 Solo.flac',
+    edit: { title: 'Solo Stroll', year: 2022, artist: 'Brook', album: 'Beta' },
+  });
+});
+
+test('a song fades into the next one when crossfade is on', async ({ page }) => {
+  await page.addInitScript(() => {
+    const prefs = {
+      eqEnabled: false,
+      preampDb: 0,
+      gainsDb: Array(10).fill(0),
+      normalize: false,
+      crossfadeSeconds: 2,
+    };
+    localStorage.setItem('__mockKv', JSON.stringify([['audio:prefs', JSON.stringify(prefs)]]));
+  });
+  // A 6 s song with a 2 s crossfade hands over after about 4 s, well before it would end.
+  await open(page, { clip: 6 });
+  await addMusicFolder(page);
+  await row(page, 'First Light').click();
+  await expect(footer(page).getByText('First Light')).toBeVisible();
+  await expect(footer(page).getByText('Second Wind')).toBeVisible({ timeout: 5200 });
+});
+
+test('the sound settings keep the equalizer, even volume and crossfade', async ({ page }) => {
+  await open(page);
+  await page.getByRole('link', { name: 'Settings' }).first().click();
+  const eq = page.getByRole('switch', { name: 'Equalizer' }).first();
+  await expect(eq).not.toBeChecked();
+  await page.getByRole('button', { name: 'Bass boost' }).click();
+  await expect(eq).toBeChecked();
+  await page.getByRole('switch', { name: 'Even out the volume' }).check();
+  await expect
+    .poll(async () =>
+      page.evaluate(() => {
+        const kv = JSON.parse(localStorage.getItem('__mockKv') ?? '[]') as [string, string][];
+        const raw = kv.find(([k]) => k === 'audio:prefs')?.[1];
+        return raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
+      }),
+    )
+    .toMatchObject({ eqEnabled: true, normalize: true, gainsDb: [6, 5, 4, 2, 0, 0, 0, 0, 0, 0] });
+});

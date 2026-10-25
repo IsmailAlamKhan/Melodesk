@@ -12,11 +12,12 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::time::UNIX_EPOCH;
 
-use lofty::config::ParseOptions;
+use lofty::config::{ParseOptions, WriteOptions};
 use lofty::file::{AudioFile, TaggedFileExt};
 use lofty::picture::PictureType;
 use lofty::probe::Probe;
-use lofty::tag::{Accessor, ItemKey};
+use lofty::tag::items::Timestamp;
+use lofty::tag::{Accessor, ItemKey, Tag, TagExt};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, Runtime, State};
 use walkdir::WalkDir;
@@ -75,6 +76,9 @@ pub struct ScannedTrack {
     pub size: u64,
     pub has_art: bool,
     pub lyrics: Option<String>,
+    /// ReplayGain track gain in dB and track peak (1.0 is full scale), when the file carries them.
+    pub replay_gain_db: Option<f64>,
+    pub replay_peak: Option<f64>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -122,6 +126,16 @@ fn mtime_ms(meta: &fs::Metadata) -> i64 {
         .unwrap_or(0)
 }
 
+/// A ReplayGain number as tags write it: "-6.54 dB", "+3.1dB" or a bare "0.98" for a peak.
+fn parse_number(text: &str) -> Option<f64> {
+    let t = text
+        .trim()
+        .trim_end_matches("dB")
+        .trim_end_matches("db")
+        .trim();
+    t.parse::<f64>().ok().filter(|n| n.is_finite())
+}
+
 fn clean(s: &str) -> Option<String> {
     let t = s.trim();
     (!t.is_empty()).then(|| t.chars().take(512).collect())
@@ -161,6 +175,8 @@ fn read_track(path: &Path, meta: &fs::Metadata) -> Option<ScannedTrack> {
         lyrics: get(ItemKey::Lyrics)
             .or_else(|| get(ItemKey::UnsyncLyrics))
             .map(|l| l.chars().take(100_000).collect()),
+        replay_gain_db: get(ItemKey::ReplayGainTrackGain).and_then(|g| parse_number(&g)),
+        replay_peak: get(ItemKey::ReplayGainTrackPeak).and_then(|g| parse_number(&g)),
     })
 }
 
@@ -337,6 +353,102 @@ fn sidecar_lyrics(song: &Path) -> Option<String> {
     None
 }
 
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TagEdit {
+    pub title: String,
+    pub artist: String,
+    pub album: Option<String>,
+    pub album_artist: Option<String>,
+    pub track_no: Option<u32>,
+    pub disc_no: Option<u32>,
+    pub year: Option<u32>,
+    pub genre: Option<String>,
+    pub lyrics: Option<String>,
+}
+
+/// Put the edited fields into the file's own tag (made if it has none). An empty field is removed.
+fn write_tags(path: &Path, edit: &TagEdit) -> Result<(), String> {
+    let tagged = lofty::read_from_path(path).map_err(|e| e.to_string())?;
+    let mut tag = tagged
+        .primary_tag()
+        .or_else(|| tagged.first_tag())
+        .cloned()
+        .unwrap_or_else(|| Tag::new(tagged.primary_tag_type()));
+    let text = |s: &Option<String>| s.as_deref().and_then(clean);
+    match clean(&edit.title) {
+        Some(v) => tag.set_title(v),
+        None => tag.remove_title(),
+    }
+    match clean(&edit.artist) {
+        Some(v) => tag.set_artist(v),
+        None => tag.remove_artist(),
+    }
+    match text(&edit.album) {
+        Some(v) => tag.set_album(v),
+        None => tag.remove_album(),
+    }
+    match text(&edit.genre) {
+        Some(v) => tag.set_genre(v),
+        None => tag.remove_genre(),
+    }
+    match edit.track_no {
+        Some(n) => tag.set_track(n),
+        None => tag.remove_track(),
+    }
+    match edit.disc_no {
+        Some(n) => tag.set_disk(n),
+        None => tag.remove_disk(),
+    }
+    match edit.year.and_then(|y| u16::try_from(y).ok()) {
+        Some(year) => tag.set_date(Timestamp {
+            year,
+            ..Default::default()
+        }),
+        None => tag.remove_date(),
+    }
+    match text(&edit.album_artist) {
+        Some(v) => {
+            tag.insert_text(ItemKey::AlbumArtist, v);
+        }
+        None => tag.remove_key(ItemKey::AlbumArtist),
+    }
+    match edit
+        .lyrics
+        .as_deref()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+    {
+        Some(v) => {
+            tag.insert_text(ItemKey::Lyrics, v.chars().take(100_000).collect());
+        }
+        None => tag.remove_key(ItemKey::Lyrics),
+    }
+    tag.save_to_path(path, WriteOptions::default())
+        .map_err(|e| e.to_string())
+}
+
+/// Change the tags written inside a library file. Returns what is in it afterwards, for the index.
+#[tauri::command]
+pub fn local_write_tags<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, LocalState>,
+    path: String,
+    edit: TagEdit,
+) -> Result<ScannedTrack, String> {
+    let roots = roots_of(&state, &app);
+    let real = within_roots(Path::new(&path), &roots).ok_or("not in your music folders")?;
+    if !has_audio_extension(&real) {
+        return Err("not an audio file".into());
+    }
+    write_tags(&real, &edit)?;
+    let meta = fs::metadata(&real).map_err(|e| e.to_string())?;
+    // The index knows the file by the path it was scanned under.
+    let mut track = read_track(&real, &meta).ok_or("the file could not be read after saving")?;
+    track.path = path;
+    Ok(track)
+}
+
 /// The UI says whether a local song is the one playing, so native controls know where to send
 /// their commands.
 #[tauri::command]
@@ -361,6 +473,101 @@ mod tests {
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         fs::canonicalize(dir).unwrap()
+    }
+
+    #[test]
+    fn reads_replaygain_numbers_the_way_tags_write_them() {
+        assert_eq!(parse_number("-6.54 dB"), Some(-6.54));
+        assert_eq!(parse_number("+3.10dB"), Some(3.1));
+        assert_eq!(parse_number(" 0.987654 "), Some(0.987654));
+        assert_eq!(parse_number("loud"), None);
+        assert_eq!(parse_number("NaN"), None);
+    }
+
+    /// A real, playable WAV file: a second of silence.
+    fn silent_wav(path: &Path) {
+        let rate: u32 = 8000;
+        let data = vec![128u8; rate as usize];
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(b"RIFF");
+        bytes.extend_from_slice(&(36 + data.len() as u32).to_le_bytes());
+        bytes.extend_from_slice(b"WAVEfmt ");
+        bytes.extend_from_slice(&16u32.to_le_bytes());
+        bytes.extend_from_slice(&1u16.to_le_bytes()); // PCM
+        bytes.extend_from_slice(&1u16.to_le_bytes()); // mono
+        bytes.extend_from_slice(&rate.to_le_bytes());
+        bytes.extend_from_slice(&rate.to_le_bytes());
+        bytes.extend_from_slice(&1u16.to_le_bytes());
+        bytes.extend_from_slice(&8u16.to_le_bytes());
+        bytes.extend_from_slice(b"data");
+        bytes.extend_from_slice(&(data.len() as u32).to_le_bytes());
+        bytes.extend_from_slice(&data);
+        fs::write(path, bytes).unwrap();
+    }
+
+    #[test]
+    fn written_tags_read_back_and_the_audio_is_untouched() {
+        let dir = scratch("tags");
+        let file = dir.join("song.wav");
+        silent_wav(&file);
+        let before = read_track(&file, &fs::metadata(&file).unwrap()).unwrap();
+        assert_eq!(before.title, "song");
+        let edit = TagEdit {
+            title: "  New Title ".into(),
+            artist: "Some Artist".into(),
+            album: Some("The Album".into()),
+            album_artist: Some("Various".into()),
+            track_no: Some(7),
+            disc_no: Some(2),
+            year: Some(1999),
+            genre: Some("Folk".into()),
+            lyrics: Some("[00:01.00]hello".into()),
+        };
+        write_tags(&file, &edit).unwrap();
+        let after = read_track(&file, &fs::metadata(&file).unwrap()).unwrap();
+        assert_eq!(after.title, "New Title");
+        assert_eq!(after.artist, "Some Artist");
+        assert_eq!(after.album.as_deref(), Some("The Album"));
+        assert_eq!(after.album_artist.as_deref(), Some("Various"));
+        assert_eq!(after.track_no, Some(7));
+        assert_eq!(after.disc_no, Some(2));
+        assert_eq!(after.year, Some(1999));
+        assert_eq!(after.genre.as_deref(), Some("Folk"));
+        // A WAV file's tags (RIFF INFO) have no place for lyrics; the editor says so.
+        assert_eq!(after.lyrics, None);
+        // The sound is the same length: only the tag changed.
+        assert_eq!(after.duration_ms, before.duration_ms);
+    }
+
+    #[test]
+    fn an_emptied_field_is_removed() {
+        let dir = scratch("tags-clear");
+        let file = dir.join("a.wav");
+        silent_wav(&file);
+        let full = TagEdit {
+            title: "T".into(),
+            artist: "A".into(),
+            album: Some("Al".into()),
+            album_artist: None,
+            track_no: Some(3),
+            disc_no: None,
+            year: None,
+            genre: Some("G".into()),
+            lyrics: None,
+        };
+        write_tags(&file, &full).unwrap();
+        let emptied = TagEdit {
+            album: Some("  ".into()),
+            track_no: None,
+            genre: None,
+            ..full
+        };
+        write_tags(&file, &emptied).unwrap();
+        let after = read_track(&file, &fs::metadata(&file).unwrap()).unwrap();
+        assert_eq!(after.album, None);
+        assert_eq!(after.track_no, None);
+        assert_eq!(after.genre, None);
+        assert_eq!(after.title, "T");
     }
 
     #[test]

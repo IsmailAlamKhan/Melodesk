@@ -1,6 +1,6 @@
 import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
-import { DEFAULT_AUDIO, toConfig, useAudioPrefs } from './store';
+import { DEFAULT_AUDIO, toConfig, useAudioPrefs } from '../../audio/store';
 
 /**
  * Loads the saved audio settings and keeps the player's audio engine in step with them. Returns a
