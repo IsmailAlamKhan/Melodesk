@@ -10,7 +10,7 @@ not here, that is a bug: please open an issue.
 | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `music.youtube.com` (inside the player window)                             | Everything YouTube Music's own web app does: playback, your account's feed, search, likes | Melodesk is a window around the official web player. Sign-in happens on Google's own page inside that window, and the app never sees your password or cookies |
 | `i.ytimg.com`, `*.googleusercontent.com`, `*.ggpht.com`, `www.gstatic.com` | Requests for cover art, sent without a `Referer`                                          | Showing covers. A copy is kept on your computer so they show offline                                                                                          |
-| `github.com/melodesk/melodesk`                                             | A request for the update manifest (`latest.json`)                                         | Checking for a new version, only when you press "Check for updates"                                                                                           |
+| `github.com/IsmailAlamKhan/Melodesk`                                       | A request for the update manifest (`latest.json`)                                         | Checking for a new version, only when you press "Check for updates"                                                                                           |
 
 ## Only if you turn it on
 
