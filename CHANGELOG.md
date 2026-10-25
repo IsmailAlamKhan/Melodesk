@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.4.0...melodesk-v0.5.0) (2026-10-25)
+
+
+### Features
+
+* import and export playlists, back up and restore, smart local playlists, and a local control API ([7385416](https://github.com/IsmailAlamKhan/Melodesk/commit/7385416b9aed3d332dbe14814368c287511a99bb))
+
 ## [0.4.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.3.0...melodesk-v0.4.0) (2026-10-25)
 
 
