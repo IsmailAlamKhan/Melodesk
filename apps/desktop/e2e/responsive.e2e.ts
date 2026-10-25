@@ -159,9 +159,6 @@ test('a playlist page fits and lists tracks in one column set', async ({ page })
     .click();
   await expect(page.getByRole('row').first()).toBeVisible();
   await page.waitForTimeout(400);
-  await page.screenshot({
-    path: '/private/tmp/claude-501/-Volumes-OtherStuff-Development-personal-projects-yt-desktop/5cd0deb8-b1b3-4153-b686-f6ec330ada20/scratchpad/m-detail.png',
-  });
   expect(await overflowing(page), 'playlist').toEqual([]);
 });
 

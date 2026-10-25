@@ -1,14 +1,11 @@
 name: CI
 
-# Everything that is checked on every push and pull request runs on Linux, which is cheap. The macOS
-# and Windows runners (ten and two times the price on a private repository) join for the Rust job
-# only on the weekly schedule or when started by hand; the release build exercises it too.
+# The repository is public, so runner minutes are free: every push and pull request is checked on
+# macOS, Windows and Linux.
 on:
   push:
     branches: [main]
   pull_request:
-  schedule:
-    - cron: '0 6 * * 1'
   workflow_dispatch:
 
 concurrency:
@@ -59,7 +56,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON((github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && '["ubuntu-24.04","macos-14","windows-2022"]' || '["ubuntu-24.04"]') }}
+        os: [macos-14, windows-2022, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4

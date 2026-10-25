@@ -26,7 +26,7 @@ export const lrclib = definePlugin({
   },
   setup(ctx) {
     const fetch = ctx.fetch;
-    const headers = { 'Lrclib-Client': 'Melodesk (https://github.com/melodesk/melodesk)' };
+    const headers = { 'Lrclib-Client': 'Melodesk (https://github.com/IsmailAlamKhan/Melodesk)' };
     return {
       lyricsProvider: async (track) => {
         if (!fetch) return null;
