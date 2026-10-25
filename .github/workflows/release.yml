@@ -2,7 +2,8 @@ name: Release
 
 # release-please opens/updates a release PR from Conventional Commits; merging it creates the
 # tag and GitHub release, which this workflow then fills with the macOS installer (universal
-# .dmg) and the updater manifest (latest.json). Nothing is built until that PR is merged.
+# .dmg), the Windows installers (.msi and NSIS .exe) and the updater manifest (latest.json).
+# Nothing is built until that PR is merged.
 
 on:
   push:
@@ -37,6 +38,8 @@ jobs:
         include:
           - os: macos-14
             args: --target universal-apple-darwin
+          - os: windows-2022
+            args: ''
     runs-on: ${{ matrix.os }}
     env:
       # A step's own `if` cannot see that step's env, so the certificate check reads it from here.
@@ -50,13 +53,13 @@ jobs:
           cache: pnpm
       - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: aarch64-apple-darwin,x86_64-apple-darwin
+          targets: ${{ matrix.os == 'macos-14' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: apps/desktop/src-tauri
       - run: pnpm install --frozen-lockfile
       - name: Import Apple certificate
-        if: env.APPLE_CERTIFICATE != ''
+        if: runner.os == 'macOS' && env.APPLE_CERTIFICATE != ''
         env:
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
@@ -78,6 +81,9 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Windows code signing is not set up: the installers are unsigned, so SmartScreen warns on
+          # first run. See https://v2.tauri.app/distribute/sign/windows/ (a certificate, or Azure
+          # Trusted Signing) to add it.
         with:
           projectPath: apps/desktop
           tagName: ${{ needs.release-please.outputs.tag_name }}
