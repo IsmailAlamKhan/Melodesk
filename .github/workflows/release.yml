@@ -9,6 +9,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Build and attach installers for this existing release tag (e.g. melodesk-v0.2.0)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -31,7 +36,7 @@ jobs:
 
   build:
     needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    if: needs.release-please.outputs.release_created == 'true' || inputs.tag != ''
     strategy:
       fail-fast: false
       matrix:
@@ -51,8 +56,11 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      # The repository pins its Rust version in rust-toolchain.toml; install that one with the extra
+      # targets, or the build installs it bare and cannot build the second macOS architecture.
       - uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: 1.99.1
           targets: ${{ matrix.os == 'macos-14' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
       - uses: Swatinem/rust-cache@v2
         with:
@@ -86,8 +94,8 @@ jobs:
           # Trusted Signing) to add it.
         with:
           projectPath: apps/desktop
-          tagName: ${{ needs.release-please.outputs.tag_name }}
-          releaseName: Melodesk ${{ needs.release-please.outputs.tag_name }}
+          tagName: ${{ inputs.tag || needs.release-please.outputs.tag_name }}
+          releaseName: Melodesk ${{ inputs.tag || needs.release-please.outputs.tag_name }}
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true
