@@ -5,3 +5,7 @@ target
 pnpm-lock.yaml
 apps/desktop/src-tauri/gen
 apps/desktop/src-tauri/icons
+
+# Rewritten by release-please on every release PR, in its own formatting
+CHANGELOG.md
+apps/desktop/src-tauri/tauri.conf.json
