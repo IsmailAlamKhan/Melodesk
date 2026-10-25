@@ -98,8 +98,12 @@ Download the installer for your system from the
 
 The installers are not signed with a paid developer certificate, so the first launch shows a warning:
 
-- **macOS:** Gatekeeper says the app can't be verified. Open the `.dmg`, drag Melodesk to Applications,
-  then right-click it and choose **Open** once.
+- **macOS:** Gatekeeper says the app can't be verified. Open the `.dmg`, drag Melodesk to Applications and
+  open it once (it will be refused). Then go to **System Settings → Privacy & Security**, scroll down to
+  the message about Melodesk and choose **Open Anyway**, and confirm. On macOS 14 and older,
+  right-clicking the app and choosing **Open** also works. If you prefer the Terminal, this removes the
+  quarantine mark instead:
+  `xattr -dr com.apple.quarantine /Applications/Melodesk.app`
 - **Windows:** SmartScreen says the app is unrecognised. Choose **More info**, then **Run anyway**.
 
 To update, press **Check for updates** in Settings → About & updates (Melodesk never checks on its own).
