@@ -1,14 +1,17 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Melodesk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "app.melodesk.desktop",
   "build": {
     "beforeDevCommand": "pnpm --filter @melodesk/bridge build && pnpm --filter @melodesk/desktop dev:web",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "pnpm --filter @melodesk/bridge build && pnpm --filter @melodesk/desktop build:web",
     "frontendDist": "../dist",
-    "features": ["discord", "shortcuts"]
+    "features": [
+      "discord",
+      "shortcuts"
+    ]
   },
   "app": {
     "withGlobalTauri": false,
@@ -41,7 +44,9 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": ["melodesk"]
+        "schemes": [
+          "melodesk"
+        ]
       }
     },
     "updater": {
