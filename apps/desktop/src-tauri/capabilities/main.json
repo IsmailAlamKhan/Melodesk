@@ -30,6 +30,8 @@
     "allow-local-set-active",
     "allow-local-report",
     "allow-local-write-tags",
+    "allow-control-start",
+    "allow-control-stop",
     "dialog:allow-open",
     "core:window:allow-set-always-on-top",
     "core:window:allow-set-size",
@@ -46,6 +48,7 @@
     "updater:default",
     "dialog:allow-save",
     "fs:allow-write-text-file",
+    "fs:allow-read-text-file",
     {
       "identifier": "http:default",
       "allow": [

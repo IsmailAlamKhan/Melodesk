@@ -39,6 +39,13 @@ Everything below is off until you switch it on, and each one says in Settings wh
   (title, artist, album, length, lyrics) is remembered in the local database so the library opens at
   once. The files are never changed, copied or uploaded, and the app can read nothing outside the
   folders you chose.
+- **Importing a playlist** reads the file you choose on this computer. The title and artist of each
+  song are then searched in YouTube Music like any search you type, and the playlist is made in your
+  account. The file itself is not uploaded.
+- **Backups** are files you save yourself. They hold your settings (and, if you tick it, your listening
+  history) but never passwords, keys or tokens.
+- The **control API**, if you switch it on, listens on this computer only (`127.0.0.1`) and answers only
+  requests with your secret token; see [control-api.md](control-api.md). It is off by default.
 - The **colours of a page** are worked out from its artwork on your computer.
 
 ## What the code does not do

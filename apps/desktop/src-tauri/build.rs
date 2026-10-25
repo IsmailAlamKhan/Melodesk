@@ -21,6 +21,8 @@ fn main() {
             "local_set_active",
             "local_report",
             "local_write_tags",
+            "control_start",
+            "control_stop",
             "native_modules",
         ]),
     ))

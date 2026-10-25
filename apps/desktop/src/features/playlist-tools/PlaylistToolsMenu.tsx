@@ -183,6 +183,15 @@ export function PlaylistToolsMenu({
             <Download className="size-4" />
             {t('tools.exportJson')}
           </DropdownMenu.Item>
+          <DropdownMenu.Item
+            className={itemClass}
+            onSelect={() =>
+              void exportPlaylist(title, tracks, 'm3u8').catch((e: unknown) => toast(String(e)))
+            }
+          >
+            <Download className="size-4" />
+            {t('tools.exportM3u')}
+          </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>

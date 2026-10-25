@@ -4,6 +4,7 @@
 //! surface. All playback happens inside the official music.youtube.com web player, which
 //! runs in its own webview window (see [`player`]).
 
+mod control;
 mod deeplink;
 #[cfg(feature = "discord")]
 mod discord;
@@ -82,12 +83,15 @@ pub fn run() {
             local::local_set_active,
             local::local_report,
             local::local_write_tags,
+            control::control_start,
+            control::control_stop,
             native_modules,
         ])
         .setup(|app| {
             let handle = app.handle().clone();
             let settings = settings::load(&handle);
             app.manage(local::LocalState::default());
+            app.manage(control::ControlState::default());
             app.manage(settings::SettingsState(std::sync::Mutex::new(
                 settings.clone(),
             )));

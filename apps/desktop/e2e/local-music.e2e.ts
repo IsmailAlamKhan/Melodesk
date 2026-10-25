@@ -258,3 +258,29 @@ test('the sound settings keep the equalizer, even volume and crossfade', async (
     )
     .toMatchObject({ eqEnabled: true, normalize: true, gainsDb: [6, 5, 4, 2, 0, 0, 0, 0, 0, 0] });
 });
+
+test('smart playlists follow their rules and play', async ({ page }) => {
+  await open(page);
+  await addMusicFolder(page);
+  await page.getByRole('tab', { name: 'Playlists' }).click();
+  await expect(page.getByRole('heading', { name: 'No smart playlists yet' })).toBeVisible();
+  await page.getByRole('button', { name: 'Add some to start with' }).click();
+  await page.getByRole('link', { name: 'Never played' }).click();
+  await expect(page.getByRole('heading', { name: 'Never played' })).toBeVisible();
+  await expect(page.getByRole('row')).toHaveCount(5);
+  await page.getByRole('main').getByRole('button', { name: 'Play', exact: true }).click();
+  await expect(footer(page).getByRole('button', { name: 'Pause' })).toBeVisible();
+
+  // Make one of our own, with a live count of what matches.
+  await page.getByRole('link', { name: 'Local music', exact: true }).first().click();
+  await page.getByRole('tab', { name: 'Playlists' }).click();
+  await page.getByRole('button', { name: 'New smart playlist' }).click();
+  const dialog = page.getByRole('dialog', { name: 'New smart playlist' });
+  await dialog.getByLabel('Name').fill('Brook only');
+  await dialog.getByLabel('Title, artist, album or genre contains').fill('brook');
+  await expect(dialog.getByText('1 songs match right now')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Save' }).click();
+  await page.getByRole('link', { name: 'Brook only' }).click();
+  await expect(page.getByRole('row')).toHaveCount(1);
+  await expect(row(page, 'Solo Walk')).toBeVisible();
+});

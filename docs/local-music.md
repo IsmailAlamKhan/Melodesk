@@ -37,6 +37,13 @@ skipped with a message).
   gets what the local player is doing through `local:snapshot`.
 - One source plays at a time. There is no queue that mixes the two.
 
+## Smart playlists
+
+The Playlists tab holds rule-based playlists: words, genre, year, how often and how lately a song was
+played, how new it is, an order and a limit. They are worked out when opened, from the library and the
+listening history (`features/local-music/smart.ts` turns the rules into one SQL query), so "Never played"
+or "Forgotten favourites" always match what you listen to. A few are offered to start from.
+
 ## Sound
 
 Settings → Sound (and the Equalizer tab in Now Playing) has a 10-band equalizer with presets, "Even

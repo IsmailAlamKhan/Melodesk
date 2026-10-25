@@ -61,6 +61,10 @@ Planned and in progress; ticked items work today.
 - [x] Full-screen Now Playing with synced lyrics
 - [x] Karaoke mode: big sing-along lyrics, words fill in time, countdown through instrumental breaks, timing nudge
 - [x] Cover art kept for offline use (capped at 100 MB, clearable in Settings)
+- [x] Import a playlist from a CSV (Spotify exports too), M3U/M3U8, JSON or a plain list: each song is looked up in YouTube Music and the ones found become a playlist in your account; playlists also export as CSV, JSON or M3U8
+- [x] Smart playlists for local music (rules like never played, added this month, forgotten favourites) that update themselves
+- [x] An optional control API on this computer (off by default, token-protected, localhost only) for Stream Deck, Home Assistant and scripts; see [docs/control-api.md](docs/control-api.md)
+- [x] Back up and restore your settings (and, if you like, listening history) as a file; keys and tokens are never put in it
 - [x] Local music: play the audio files on your computer in the same player, with albums, artists, search, queue, lyrics (saved beside the file, in its tags, or from the lyric sources) and stats, a 10-band equalizer, even volume (ReplayGain), crossfade and gapless playback, real-sound visuals and a tag editor; see [docs/local-music.md](docs/local-music.md)
 - [ ] Mini player (built, not yet checked on screen)
 - [ ] Last.fm / ListenBrainz scrobbling, Discord Rich Presence (built as opt-in plugins, not yet checked against real accounts)

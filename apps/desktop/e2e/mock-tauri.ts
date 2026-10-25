@@ -55,6 +55,10 @@ function innertubeResponse(
       return fixture('browse-home');
     case 'search':
       return fixture('search-daft-punk');
+    case 'playlist/create':
+      return { playlistId: 'PLimported1' };
+    case 'browse/edit_playlist':
+      return { status: 'STATUS_SUCCEEDED' };
     case 'music/get_search_suggestions':
       return fixture('search-suggestions');
     case 'next':
@@ -81,6 +85,8 @@ export interface MockOptions {
   youtubeLyrics?: boolean;
   /** The user's own music: the files a scan finds, and what reading them gives. */
   local?: LocalMock;
+  /** A playlist file the picker offers (Import a playlist). */
+  importFile?: { path: string; text: string };
 }
 
 /** A song as the scan reports it (see `ScannedTrack` in src-tauri/src/local.rs). */
@@ -143,7 +149,7 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
   await page.exposeFunction('__nodeLib', (kind: string, query: string, values: unknown[]) => {
     if (!lib) {
       lib = new DatabaseSync(':memory:');
-      for (const file of ['0002_local_music.sql', '0003_local_replaygain.sql'])
+      for (const file of ['0001_init.sql', '0002_local_music.sql', '0003_local_replaygain.sql'])
         lib.exec(readFileSync(join(here, '../src-tauri/migrations', file), 'utf8'));
     }
     const bound: (string | number | null)[] = [];
@@ -194,9 +200,13 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
   await page.addInitScript((modules) => {
     (window as unknown as Record<string, unknown>)['__nativeModules'] = modules;
   }, opts.nativeModules ?? null);
-  await page.addInitScript((local) => {
-    (window as unknown as Record<string, unknown>)['__localMock'] = local;
-  }, opts.local ?? null);
+  await page.addInitScript(
+    ([local, file]) => {
+      (window as unknown as Record<string, unknown>)['__localMock'] = local;
+      (window as unknown as Record<string, unknown>)['__importFile'] = file;
+    },
+    [opts.local ?? null, opts.importFile ?? null] as const,
+  );
   await page.addInitScript(() => {
     type Handler = (e: { event: string; id: number; payload: unknown }) => void;
     const w = window as unknown as Record<string, unknown> & {
@@ -248,6 +258,8 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
       return id;
     };
 
+    const importFile = (): { path: string; text: string } | null =>
+      (w['__importFile'] as { path: string; text: string } | null) ?? null;
     const localMock = (): LocalMock | null => (w['__localMock'] as LocalMock | null) ?? null;
     /** A silent WAV of the given length: real audio the browser can load and play. */
     const clip = (seconds: number): ArrayBuffer => {
@@ -319,8 +331,19 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
           }
           return w.__nodeSql(q, v);
         }
-        case 'plugin:dialog|open':
-          return localMock()?.pickFolder ?? null;
+        case 'plugin:dialog|open': {
+          const options = (args['options'] ?? {}) as { directory?: boolean };
+          if (options.directory) return localMock()?.pickFolder ?? null;
+          return importFile()?.path ?? null;
+        }
+        case 'plugin:dialog|save':
+          return '/home/me/saved-file';
+        case 'plugin:fs|write_text_file':
+          sent.push({ type: 'write_text_file' });
+          return null;
+        case 'plugin:fs|read_text_file':
+          sent.push({ type: 'read_text_file', path: args['path'] });
+          return new TextEncoder().encode(importFile()?.text ?? '').buffer;
         case 'local_scan': {
           const lm = localMock();
           const roots = args['roots'] as string[];

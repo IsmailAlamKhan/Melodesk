@@ -81,6 +81,19 @@ export function toCsv(title: string, tracks: Track[]): string {
   return `# ${title}\n${rows.join('\n')}\n`;
 }
 
+/** An M3U8 playlist whose entries are the songs' YouTube Music links, with title and artist in the EXTINF line. */
+export function toM3u8(title: string, tracks: Track[]): string {
+  const lines = ['#EXTM3U', `#PLAYLIST:${title}`];
+  for (const t of tracks) {
+    const artist = t.artists.map((a) => a.name).join(', ');
+    lines.push(
+      `#EXTINF:${String(Math.round(t.durationSeconds ?? -1))},${artist ? `${artist} - ` : ''}${t.title}`,
+      `https://music.youtube.com/watch?v=${t.videoId}`,
+    );
+  }
+  return `${lines.join('\n')}\n`;
+}
+
 export function toJson(title: string, tracks: Track[]): string {
   return JSON.stringify(
     {
@@ -104,7 +117,7 @@ export function toJson(title: string, tracks: Track[]): string {
 export async function exportPlaylist(
   title: string,
   tracks: Track[],
-  format: 'csv' | 'json',
+  format: 'csv' | 'json' | 'm3u8',
 ): Promise<void> {
   const safe = title.replace(/[\\/:*?"<>|]+/gu, ' ').trim() || 'playlist';
   const path = await save({
@@ -112,6 +125,12 @@ export async function exportPlaylist(
     filters: [{ name: format.toUpperCase(), extensions: [format] }],
   });
   if (!path) return;
-  await writeTextFile(path, format === 'csv' ? toCsv(title, tracks) : toJson(title, tracks));
+  const text =
+    format === 'csv'
+      ? toCsv(title, tracks)
+      : format === 'm3u8'
+        ? toM3u8(title, tracks)
+        : toJson(title, tracks);
+  await writeTextFile(path, text);
   toast(t('toast.exported', { count: tracks.length }));
 }

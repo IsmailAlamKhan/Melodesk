@@ -8,10 +8,11 @@ import { useLocalCover } from './covers';
 import { useAlbums, useArtists, useFolders, useSongs, useTrackCount } from './hooks';
 import { albumTracks, type AlbumSummary, type ArtistSummary } from './library';
 import { addFolder, rescan, useScanStatus } from './scan';
+import { PlaylistsTab } from './SmartPlaylists';
 import { playList, TrackRow } from './TrackRow';
 
-type Tab = 'songs' | 'albums' | 'artists';
-const TABS: Tab[] = ['songs', 'albums', 'artists'];
+type Tab = 'songs' | 'albums' | 'artists' | 'playlists';
+const TABS: Tab[] = ['songs', 'albums', 'artists', 'playlists'];
 
 /** The scrolling page the app lays its routes into (long lists are windowed against it). */
 const scroller = (): HTMLElement | null => document.querySelector('main');
@@ -163,6 +164,7 @@ export function LocalPage() {
           {tab === 'songs' && <SongList query={urlQuery} />}
           {tab === 'albums' && <AlbumGrid query={urlQuery} />}
           {tab === 'artists' && <ArtistList query={urlQuery} />}
+          {tab === 'playlists' && <PlaylistsTab />}
         </>
       )}
     </div>
