@@ -6,8 +6,12 @@
 > sponsored by Google LLC or YouTube.** YouTube and YouTube Music are trademarks of Google LLC.
 > Melodesk does not download media, block ads, or bypass any YouTube protections.
 
-> Status: pre-alpha. The architecture is proven (our own UI drives the official web player);
-> feature parity is in progress. See [docs/roadmap.md](docs/roadmap.md).
+[![CI](https://github.com/IsmailAlamKhan/Melodesk/actions/workflows/ci.yml/badge.svg)](https://github.com/IsmailAlamKhan/Melodesk/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/IsmailAlamKhan/Melodesk)](https://github.com/IsmailAlamKhan/Melodesk/releases/latest)
+
+> Status: early release (0.x). The app is developed and tested on macOS; Windows installers are built but have
+> not been run on a real Windows machine yet, and Linux is not built by CI. See
+> [docs/roadmap.md](docs/roadmap.md).
 
 <p align="center">
   <img src="docs/screenshots/home.png" alt="Home feed with shelves and the player bar" width="49%">
@@ -62,10 +66,11 @@ Planned and in progress; ticked items work today.
 - [x] Material 3 Expressive colour: a full tonal scheme generated from your accent (or the album art), light / dark / AMOLED themes, three contrast levels, and smooth colour transitions
 - [x] Density and right-to-left layout
 - [x] Translation framework with English strings; see [docs/translating.md](docs/translating.md)
-- [x] Listening stats (with a streak, favourite time of day, new artists and a copyable summary), command palette, plugins, lyrics romanization and translation
-- [x] Lyrics for covers and unusual titles: guesses of the real song, more sources (LRCLIB, NetEase, lyrics.ovh), an optional local AI helper (Ollama) and a "look up another song" box; per-line actions (explain a line with the local AI, copy it, or copy it as a picture)
+- [x] Listening stats (with a streak, favourite time of day, new artists and a copyable summary) and monthly or yearly recaps that compare with the period before, command palette, plugins, lyrics romanization and translation
+- [x] Theme presets you can share as a short code, on top of the accent, light / dark / AMOLED and contrast choices
+- [x] Lyrics for covers and unusual titles: guesses of the real song, more sources (LRCLIB, NetEase, lyrics.ovh), an optional local AI helper (Ollama) and a "look up another song" box; a live list of where it is looking while it searches; lyrics (found or not) and AI explanations are kept on this computer; per-line actions (explain a line with the local AI, copy it, or copy it as a picture)
 - [x] Music visuals that move with playback (a Visualizer tab, glows and bars; on macOS and Linux they follow the rhythm rather than the sound, see docs/architecture.md)
-- [x] Continue listening, a sleep timer that fades out, an offline banner, and a Reload player button when the page gets stuck
+- [x] Continue listening, a sleep timer that fades out, an offline banner, and a Reload player button when the page gets stuck; the "Continue watching?" prompt is kept from pausing the music
 - [x] Responsive layout from phone-sized windows up, a modular feature system (docs/extending.md) and an accessibility audit in the tests
 
 ## What it can't do, and why
@@ -82,7 +87,23 @@ We would rather say so than ship something that breaks playback.
 
 ## Install
 
-Pre-built installers will be published on the Releases page once Phase 1 is complete.
+Download the installer for your system from the
+[latest release](https://github.com/IsmailAlamKhan/Melodesk/releases/latest):
+
+| System                          | File                                                                     |
+| ------------------------------- | ------------------------------------------------------------------------ |
+| macOS (Apple Silicon and Intel) | `Melodesk_<version>_universal.dmg`                                       |
+| Windows                         | `Melodesk_<version>_x64-setup.exe` or `Melodesk_<version>_x64_en-US.msi` |
+| Linux                           | not published yet; [build from source](#build-from-source)               |
+
+The installers are not signed with a paid developer certificate, so the first launch shows a warning:
+
+- **macOS:** Gatekeeper says the app can't be verified. Open the `.dmg`, drag Melodesk to Applications,
+  then right-click it and choose **Open** once.
+- **Windows:** SmartScreen says the app is unrecognised. Choose **More info**, then **Run anyway**.
+
+To update, press **Check for updates** in Settings → About & updates (Melodesk never checks on its own).
+Every update is verified against a signing key before it is installed.
 
 ## Build from source
 
@@ -102,6 +123,17 @@ Useful scripts: `pnpm test`, `pnpm test:e2e`, `pnpm typecheck`, `pnpm lint`, `pn
 `pnpm screenshots`. End-to-end tests run the real UI in headless Chromium against a mocked Tauri
 backend (the built app is loaded from disk, so no server or network is needed); the first time, run
 `pnpm --filter @melodesk/desktop exec playwright install chromium`.
+
+To build an installer for your own system: `pnpm --filter @melodesk/desktop tauri build`. The updater
+packages need the signing key; to build without it, add
+`--config '{"bundle":{"createUpdaterArtifacts":false}}'`.
+
+## Releases
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/). release-please keeps a
+release pull request open with the changelog and the next version; merging it publishes the release
+and builds the macOS and Windows installers. CI checks every push on macOS, Windows and Linux. See
+[docs/releasing.md](docs/releasing.md).
 
 ## Privacy
 
