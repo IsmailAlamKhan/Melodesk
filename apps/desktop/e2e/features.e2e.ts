@@ -59,13 +59,15 @@ test('a feature takes its settings page with it', async ({ page }) => {
   await openFeatures(page);
   const pages = page.getByRole('navigation', { name: 'Settings pages' });
   await expect(pages.getByRole('link', { name: 'Storage' })).toBeVisible();
-  // Two features have sections on the Storage page; it is gone only when both are off.
+  // Several features have sections on the Storage page; it is gone only when all are off.
   await toggle(page, 'Offline cover art').uncheck();
   await expect(pages.getByRole('link', { name: 'Storage' })).toBeVisible();
   await toggle(page, 'Local music').uncheck();
+  await toggle(page, 'Backup and restore').uncheck();
   await expect(pages.getByRole('link', { name: 'Storage' })).toHaveCount(0);
   await toggle(page, 'Offline cover art').check();
   await toggle(page, 'Local music').check();
+  await toggle(page, 'Backup and restore').check();
   await expect(pages.getByRole('link', { name: 'Storage' })).toBeVisible();
   await pages.getByRole('link', { name: 'Storage' }).click();
   await expect(page.getByRole('heading', { name: 'Storage' })).toBeVisible();

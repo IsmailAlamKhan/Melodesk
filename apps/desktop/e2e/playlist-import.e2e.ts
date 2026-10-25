@@ -31,8 +31,18 @@ test('a playlist file is matched to YouTube Music songs and made into a playlist
     (c) => c['type'] === 'data' && c['endpoint'] === 'playlist/create',
   ) as { body: { videoIds: string[] } };
   expect(created.body.videoIds).toHaveLength(1);
-  // It lands on the new playlist's page.
-  await expect(page).toHaveURL(/\/playlist\/PLimported1/u);
+  // It lands on the new playlist's page (the app keeps its address in memory, so the proof is that the
+  // page asked for it).
+  await expect
+    .poll(async () =>
+      (await sentCommands(page)).some(
+        (c) =>
+          c['type'] === 'data' &&
+          c['endpoint'] === 'browse' &&
+          (c['body'] as { browseId?: string }).browseId === 'VLPLimported1',
+      ),
+    )
+    .toBe(true);
 });
 
 test('a file with no songs says so', async ({ page }) => {
