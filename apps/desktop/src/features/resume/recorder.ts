@@ -1,4 +1,5 @@
 import { usePlayerStore } from '../../player/store';
+import { isLocalId } from '../../player/sourceIds';
 import { endpointFor, save, worthResuming } from './saved';
 
 const EVERY_MS = 15_000;
@@ -12,6 +13,8 @@ export function startResumeRecorder(): () => void {
   const write = (): void => {
     const { track, state, queue } = usePlayerStore.getState();
     if (!track?.videoId || !state || Date.now() - changedAt < SETTLE_MS) return;
+    // Only a YouTube song can be started again from here.
+    if (isLocalId(track.videoId)) return;
     const position =
       state.position + (state.playing ? Math.max(0, Date.now() - state.sampledAt) / 1000 : 0);
     if (!worthResuming(position, state.duration)) return;

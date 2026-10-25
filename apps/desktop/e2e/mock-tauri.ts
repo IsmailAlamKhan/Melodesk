@@ -5,6 +5,7 @@
  * read what the UI sent with `sentCommands()`.
  */
 import { readFileSync } from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Page } from '@playwright/test';
@@ -78,6 +79,34 @@ export interface MockOptions {
   nativeModules?: string[];
   /** False for a song YouTube Music has no lyrics for (default: it has plain ones). */
   youtubeLyrics?: boolean;
+  /** The user's own music: the files a scan finds, and what reading them gives. */
+  local?: LocalMock;
+}
+
+/** A song as the scan reports it (see `ScannedTrack` in src-tauri/src/local.rs). */
+export interface LocalFixture {
+  path: string;
+  title: string;
+  artist: string;
+  album: string | null;
+  albumArtist?: string | null;
+  trackNo?: number | null;
+  discNo?: number | null;
+  year?: number | null;
+  durationMs?: number;
+  lyrics?: string | null;
+}
+
+export interface LocalMock {
+  files: LocalFixture[];
+  /** What the folder picker answers (default: cancelled). */
+  pickFolder?: string;
+  /** `.lrc` or `.txt` text stored beside a file, by the file's path. */
+  sidecars?: Record<string, string>;
+  /** Files that have a cover picture. */
+  art?: string[];
+  /** How long each file plays (a silent clip), in seconds (default 3). */
+  clipSeconds?: number;
 }
 
 /** Every cover is replaced with a generated gradient: hermetic tests, and no third-party artwork in screenshots. */
@@ -107,6 +136,23 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
   await page.exposeFunction('__nodeData', (endpoint: string, body: Record<string, unknown>) =>
     innertubeResponse(endpoint, body, opts.youtubeLyrics ?? true),
   );
+  // The real index table, in the test process, so the library's SQL runs against a real SQLite.
+  let lib: DatabaseSync | null = null;
+  await page.exposeFunction('__nodeLib', (kind: string, query: string, values: unknown[]) => {
+    if (!lib) {
+      lib = new DatabaseSync(':memory:');
+      lib.exec(readFileSync(join(here, '../src-tauri/migrations/0002_local_music.sql'), 'utf8'));
+    }
+    const bound: (string | number | null)[] = [];
+    const text = query.replace(/\$(\d+)/gu, (_m, n: string) => {
+      bound.push(values[Number(n) - 1] as string | number | null);
+      return '?';
+    });
+    const statement = lib.prepare(text);
+    return kind === 'select'
+      ? (statement.all(...bound) as unknown[])
+      : (statement.run(...bound), []);
+  });
   await page.exposeFunction(
     '__nodeSql',
     (query: string, values: unknown[]) => opts.sql?.(query, values) ?? [],
@@ -145,12 +191,16 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
   await page.addInitScript((modules) => {
     (window as unknown as Record<string, unknown>)['__nativeModules'] = modules;
   }, opts.nativeModules ?? null);
+  await page.addInitScript((local) => {
+    (window as unknown as Record<string, unknown>)['__localMock'] = local;
+  }, opts.local ?? null);
   await page.addInitScript(() => {
     type Handler = (e: { event: string; id: number; payload: unknown }) => void;
     const w = window as unknown as Record<string, unknown> & {
       __nodeData: (e: string, b: unknown) => Promise<unknown>;
       __nodeHttp: (u: string) => Promise<{ status: number; body: string }>;
       __nodeSql: (q: string, v: unknown[]) => Promise<unknown[]>;
+      __nodeLib: (kind: string, q: string, v: unknown[]) => Promise<unknown[]>;
     };
     let nextId = 1;
     const listeners = new Map<string, { id: number; handler: number }[]>();
@@ -195,6 +245,38 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
       return id;
     };
 
+    const localMock = (): LocalMock | null => (w['__localMock'] as LocalMock | null) ?? null;
+    /** A silent WAV of the given length: real audio the browser can load and play. */
+    const clip = (seconds: number): ArrayBuffer => {
+      const rate = 8000;
+      const n = rate * seconds;
+      const buf = new ArrayBuffer(44 + n);
+      const dv = new DataView(buf);
+      const tag = (o: number, text: string): void => {
+        for (let i = 0; i < text.length; i += 1) dv.setUint8(o + i, text.charCodeAt(i));
+      };
+      tag(0, 'RIFF');
+      dv.setUint32(4, 36 + n, true);
+      tag(8, 'WAVE');
+      tag(12, 'fmt ');
+      dv.setUint32(16, 16, true);
+      dv.setUint16(20, 1, true);
+      dv.setUint16(22, 1, true);
+      dv.setUint32(24, rate, true);
+      dv.setUint32(28, rate, true);
+      dv.setUint16(32, 1, true);
+      dv.setUint16(34, 8, true);
+      tag(36, 'data');
+      dv.setUint32(40, n, true);
+      new Uint8Array(buf, 44).fill(128);
+      return buf;
+    };
+    const png = (): ArrayBuffer => {
+      const b64 =
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+      return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer;
+    };
+
     const invoke = async (cmd: string, args: Record<string, unknown> = {}): Promise<unknown> => {
       switch (cmd) {
         case 'plugin:event|listen': {
@@ -208,12 +290,17 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
         }
         case 'plugin:event|unlisten':
         case 'plugin:event|emit':
+        case 'plugin:event|emit_to':
           return null;
         case 'plugin:sql|load':
           return args['db'];
         case 'plugin:sql|execute': {
           const q = String(args['query']);
           const v = args['values'] as unknown[];
+          if (/local_tracks/iu.test(q)) {
+            await w.__nodeLib('execute', q, v);
+            return [1, 0];
+          }
           if (/INSERT INTO settings/iu.test(q)) kv.set(String(v[0]), String(v[1]));
           if (/DELETE FROM settings/iu.test(q)) kv.delete(String(v[0]));
           persistKv();
@@ -222,12 +309,59 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
         case 'plugin:sql|select': {
           const q = String(args['query']);
           const v = args['values'] as unknown[];
+          if (/local_tracks/iu.test(q)) return w.__nodeLib('select', q, v);
           if (/FROM settings WHERE key/iu.test(q)) {
             const val = kv.get(String(v[0]));
             return val === undefined ? [] : [{ value: val }];
           }
           return w.__nodeSql(q, v);
         }
+        case 'plugin:dialog|open':
+          return localMock()?.pickFolder ?? null;
+        case 'local_scan': {
+          const lm = localMock();
+          const roots = args['roots'] as string[];
+          const known = new Map(
+            (args['known'] as { path: string; mtime: number; size: number }[]).map((k) => [
+              k.path,
+              `${String(k.mtime)}:${String(k.size)}`,
+            ]),
+          );
+          const files = (lm?.files ?? []).filter((f) => roots.some((r) => f.path.startsWith(r)));
+          const changed = files
+            .filter((f) => known.get(f.path) !== `1:1`)
+            .map((f) => ({
+              albumArtist: null,
+              trackNo: null,
+              discNo: null,
+              year: null,
+              genre: null,
+              durationMs: 200_000,
+              lyrics: null,
+              ...f,
+              mtime: 1,
+              size: 1,
+              hasArt: (lm?.art ?? []).includes(f.path),
+            }));
+          sent.push({ type: 'local_scan', roots, changed: changed.length });
+          if (changed.length > 0) emit('local:scan-batch', changed);
+          emit('local:scan-progress', files.length);
+          return { seen: files.map((f) => f.path), added: changed.length, failed: 0 };
+        }
+        case 'local_read_file': {
+          sent.push({ type: 'local_read_file', path: args['path'] });
+          return clip(localMock()?.clipSeconds ?? 3);
+        }
+        case 'local_artwork': {
+          const has = (localMock()?.art ?? []).includes(String(args['path']));
+          return has ? png() : new ArrayBuffer(0);
+        }
+        case 'local_lyrics_sidecar':
+          return localMock()?.sidecars?.[String(args['path'])] ?? null;
+        case 'local_set_active':
+        case 'local_report':
+          sent.push({ type: cmd, ...args });
+          return null;
         case 'get_settings':
           return settings;
         case 'plugin:opener|open_url':

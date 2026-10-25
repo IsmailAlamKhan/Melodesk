@@ -1,6 +1,8 @@
 import { cn } from '@melodesk/ui';
 import { Link, useNavigate } from 'react-router';
 import { useTrackArtists } from '../../player/nextInfo';
+import { isLocalId } from '../../player/sourceIds';
+import { usePlayerStore } from '../../player/store';
 
 /**
  * The current track's artists as links to their pages. Until YouTube has said which artists they
@@ -18,8 +20,11 @@ export function ArtistLinks({
   onNavigate?: () => void;
 }) {
   const artists = useTrackArtists();
+  const local = usePlayerStore((s) => isLocalId(s.track?.videoId));
   const navigate = useNavigate();
   const link = cn('hover:text-fg hover:underline', className);
+  // Nothing to link: an empty button would be a control with no name.
+  if (!byline.trim()) return <span className={className} />;
   if (artists.length === 0)
     return (
       <button
@@ -27,7 +32,12 @@ export function ArtistLinks({
         className={link}
         onClick={() => {
           onNavigate?.();
-          void navigate(`/search?q=${encodeURIComponent(byline.split(' • ')[0] ?? '')}`);
+          // A local song's artist has a page of its own; YouTube's is found by searching.
+          void navigate(
+            local
+              ? `/local/artist?artist=${encodeURIComponent(byline)}`
+              : `/search?q=${encodeURIComponent(byline.split(' • ')[0] ?? '')}`,
+          );
         }}
       >
         {byline}

@@ -24,6 +24,7 @@ import { ArtistLinks } from '../../app/components/ArtistLinks';
 import { BeatRing } from '../../app/components/BeatRing';
 import { Marquee } from '../../app/components/Marquee';
 import { setLikeStatus } from '../../player/like';
+import { isLocalId } from '../../player/sourceIds';
 import { useNowPlaying } from './store';
 import { FeatureBoundary, Img, Slot, useLevelVars, useSlot } from '../../core';
 
@@ -276,7 +277,7 @@ export function NowPlayingView() {
                       onNavigate={() => close(false)}
                     />
                   </div>
-                  {track?.videoId && (
+                  {track?.videoId && !isLocalId(track.videoId) && (
                     <IconButton
                       label={liked ? t('player.removeLike') : t('player.like')}
                       aria-pressed={liked}

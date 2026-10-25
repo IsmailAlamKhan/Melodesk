@@ -14,6 +14,12 @@ fn main() {
             "discord_clear",
             "open_mini_player",
             "set_native_labels",
+            "local_scan",
+            "local_read_file",
+            "local_artwork",
+            "local_lyrics_sidecar",
+            "local_set_active",
+            "local_report",
             "native_modules",
         ]),
     ))

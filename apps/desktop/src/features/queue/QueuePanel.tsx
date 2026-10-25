@@ -30,6 +30,7 @@ import { Img, Slot } from '../../core';
 export function QueuePanel() {
   const t = useT();
   const queue = usePlayerStore((s) => s.queue);
+  const source = usePlayerStore((s) => s.source);
   // Items mirror the page's queue; a local override shows the reorder immediately until the page confirms.
   const fromPage = useMemo(
     () => (queue?.items ?? []).map((it, i) => ({ ...it, id: `${it.videoId}-${String(i)}` })),
@@ -66,14 +67,19 @@ export function QueuePanel() {
           <div className="truncate text-sm font-medium">{queue.title ?? 'Queue'}</div>
         </div>
         <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 text-xs text-fg-muted">
-            {t('queue.autoplay')}
-            <input
-              type="checkbox"
-              checked={queue.autoplay}
-              onChange={(e) => void sendCommand({ type: 'setAutoplay', enabled: e.target.checked })}
-            />
-          </label>
+          {/* Autoplay is YouTube's radio; a folder of songs has no such thing. */}
+          {source === 'youtube' && (
+            <label className="flex items-center gap-2 text-xs text-fg-muted">
+              {t('queue.autoplay')}
+              <input
+                type="checkbox"
+                checked={queue.autoplay}
+                onChange={(e) =>
+                  void sendCommand({ type: 'setAutoplay', enabled: e.target.checked })
+                }
+              />
+            </label>
+          )}
           <Slot name="queue.header" />
         </div>
       </header>

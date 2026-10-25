@@ -35,6 +35,10 @@ Everything below is off until you switch it on, and each one says in Settings wh
   lyrics lookups** and the offline cover cache are local files, in the app's data folder. Recent
   searches can be cleared from the search box. Lyrics, found or not, are kept so they show again (even offline)
   without asking the sources again, and so are the AI explanations of lyric lines you asked for.
+- **Local music**: the folders you add are read on this computer only. What is written in the files
+  (title, artist, album, length, lyrics) is remembered in the local database so the library opens at
+  once. The files are never changed, copied or uploaded, and the app can read nothing outside the
+  folders you chose.
 - The **colours of a page** are worked out from its artwork on your computer.
 
 ## What the code does not do

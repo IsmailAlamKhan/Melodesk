@@ -283,6 +283,11 @@ pub fn create_player_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()>
 
 /// Fire-and-forget variant for native callers (tray, shortcuts, MPRIS); errors are logged.
 pub fn dispatch<R: Runtime>(app: &AppHandle<R>, command: PlayerCommand) {
+    // A local song is playing: the UI's own player takes the command, not the YouTube page.
+    if crate::local::is_active(app) {
+        crate::local::forward(app, &command);
+        return;
+    }
     if let Err(e) = player_command(app.clone(), command) {
         eprintln!("[player] {e}");
     }
@@ -348,7 +353,10 @@ pub fn bridge_emit<R: Runtime>(
     }
     #[cfg(debug_assertions)]
     dev::observe(&event, &bytes);
-    crate::native::observe(window.app_handle(), &event);
+    // While a local song plays, the tray follows it (see `local_report`), not the idle web player.
+    if !crate::local::is_active(window.app_handle()) {
+        crate::native::observe(window.app_handle(), &event);
+    }
     let app = window.app_handle();
     if app.get_webview_window(MINI_LABEL).is_some() {
         app.emit_to(MINI_LABEL, BRIDGE_EVENT_CHANNEL, event.clone())?;

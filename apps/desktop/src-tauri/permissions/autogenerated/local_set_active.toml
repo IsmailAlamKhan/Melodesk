@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-local-set-active"
+description = "Enables the local_set_active command without any pre-configured scope."
+commands.allow = ["local_set_active"]
+
+[[permission]]
+identifier = "deny-local-set-active"
+description = "Denies the local_set_active command without any pre-configured scope."
+commands.deny = ["local_set_active"]

@@ -46,7 +46,7 @@ export function startHistoryRecorder(): () => void {
               t.title,
               t.artist,
               t.album,
-              t.artworkUrl,
+              t.artworkUrl?.startsWith('https://') ? t.artworkUrl : null,
               s.state?.duration ? Math.round(s.state.duration) : null,
               now,
             ],

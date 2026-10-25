@@ -24,7 +24,15 @@ export interface PlayerStore {
   queue: QueueState | null;
   flags: PlayerFlags | null;
   audio: AudioStatus;
+  /**
+   * Whose song is playing. `youtube` is the web player in the hidden window; `local` is a file from
+   * the music folders, played by the local player (features/local-music). While it is `local` the
+   * web player's track, state, queue and flags events are ignored.
+   */
+  source: PlaybackSource;
 }
+
+export type PlaybackSource = 'youtube' | 'local';
 
 export const usePlayerStore = create<PlayerStore>(() => ({
   ready: false,
@@ -40,4 +48,5 @@ export const usePlayerStore = create<PlayerStore>(() => ({
   queue: null,
   flags: null,
   audio: { status: 'off', reason: null },
+  source: 'youtube',
 }));

@@ -8,6 +8,7 @@ import {
   type LyricsOverride,
 } from '../../data/lyricsOverride';
 import { nextQuery } from '../../player/nextInfo';
+import { isLocalId } from '../../player/sourceIds';
 import { usePlayerStore } from '../../player/store';
 import { lyricsProgress, lyricsSources, type LyricsSource } from '../../core';
 import { loadOffset, saveOffset, useLyricsPrefs, type LyricsPrefs } from './prefs';
@@ -93,7 +94,9 @@ export function useTrackLyrics(): TrackLyrics {
 
   const lyrics = useQuery<LyricsData>({
     queryKey: ['lyrics', videoId, signature, override?.title ?? '', override?.artist ?? ''],
-    enabled: ready && sourcesReady && videoId !== null && !overrideQuery.isPending,
+    // A local song does not wait for the web player, and YouTube has nothing to say about it.
+    enabled:
+      (ready || isLocalId(videoId)) && sourcesReady && videoId !== null && !overrideQuery.isPending,
     // Lyrics that were found keep for a day; a miss is tried again after ten minutes (a source
     // may simply have been slow).
     staleTime: (query) => (hasLyrics(query.state.data) ? 1000 * 60 * 60 * 24 : 1000 * 60 * 10),
@@ -102,10 +105,9 @@ export function useTrackLyrics(): TrackLyrics {
       lyricsProgress.begin(id);
       const youtube = { id: 'youtube', label: 'YouTube Music' } as const;
       lyricsProgress.step(id, { ...youtube, state: 'running' });
-      const next = await qc.query(nextQuery(videoId));
-      const own = next.lyricsBrowseId
-        ? await fetchLyrics(next.lyricsBrowseId)
-        : { text: null, source: null, synced: null };
+      const none = { text: null, source: null, synced: null };
+      const next = isLocalId(videoId) ? null : await qc.query(nextQuery(videoId));
+      const own = next?.lyricsBrowseId ? await fetchLyrics(next.lyricsBrowseId) : none;
       lyricsProgress.step(id, {
         ...youtube,
         state: (own.synced ?? own.text) ? 'found' : 'none',

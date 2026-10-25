@@ -10,6 +10,7 @@ mod discord;
 #[cfg(not(feature = "discord"))]
 #[path = "discord_off.rs"]
 mod discord;
+mod local;
 #[cfg(target_os = "linux")]
 mod media;
 mod native;
@@ -74,11 +75,18 @@ pub fn run() {
             discord::discord_clear,
             native::open_mini_player,
             native::set_native_labels,
+            local::local_scan,
+            local::local_read_file,
+            local::local_artwork,
+            local::local_lyrics_sidecar,
+            local::local_set_active,
+            local::local_report,
             native_modules,
         ])
         .setup(|app| {
             let handle = app.handle().clone();
             let settings = settings::load(&handle);
+            app.manage(local::LocalState::default());
             app.manage(settings::SettingsState(std::sync::Mutex::new(
                 settings.clone(),
             )));
@@ -115,10 +123,18 @@ pub fn run() {
 
 fn migrations() -> Vec<tauri_plugin_sql::Migration> {
     use tauri_plugin_sql::{Migration, MigrationKind};
-    vec![Migration {
-        version: 1,
-        description: "create settings and history tables",
-        sql: include_str!("../migrations/0001_init.sql"),
-        kind: MigrationKind::Up,
-    }]
+    vec![
+        Migration {
+            version: 1,
+            description: "create settings and history tables",
+            sql: include_str!("../migrations/0001_init.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 2,
+            description: "create the local music index",
+            sql: include_str!("../migrations/0002_local_music.sql"),
+            kind: MigrationKind::Up,
+        },
+    ]
 }

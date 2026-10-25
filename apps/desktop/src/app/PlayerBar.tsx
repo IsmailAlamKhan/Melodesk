@@ -44,10 +44,13 @@ export function PlayerBar() {
   const track = usePlayerStore((s) => s.track);
   const queue = usePlayerStore((s) => s.queue);
   const flags = usePlayerStore((s) => s.flags);
+  // Liking and the video picture belong to YouTube Music songs.
+  const fromYouTube = usePlayerStore((s) => s.source === 'youtube');
   const artRgb = useArtworkColor(track?.artworkUrl ?? null);
   const canOpenNowPlaying = useHasAction('nowPlaying.open');
 
-  const disabled = !ready || !state || !track;
+  // A local song plays without the web player, so its controls do not wait for it.
+  const disabled = (!ready && fromYouTube) || !state || !track;
   const playing = state?.playing ?? false;
   const volume = state?.volume ?? 1;
   const muted = state?.muted ?? false;
@@ -125,7 +128,7 @@ export function PlayerBar() {
             className="mt-0.5 block max-w-full truncate text-[13px] text-fg-muted"
           />
         </div>
-        {track && (
+        {track && fromYouTube && (
           <div className="ms-1 flex shrink-0 items-center max-rail:hidden">
             <IconButton
               label={like === 'LIKE' ? t('player.removeLike') : t('player.like')}
@@ -226,7 +229,7 @@ export function PlayerBar() {
       </div>
 
       <div className="hidden items-center justify-end gap-1 wide:flex">
-        {track && (
+        {track && fromYouTube && (
           <IconButton
             label={flags?.isVideo ? t('player.switchToSong') : t('player.switchToVideo')}
             size="sm"

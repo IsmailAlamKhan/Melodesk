@@ -233,6 +233,16 @@ controls and any ads are untouched. Closing the window hides it, and the UI swit
 so frames are not decoded for a window nobody can see. The selectors it depends on are in
 `selectors.v1.ts`; if YouTube changes its markup the window shows the normal page, which still plays.
 
+## Local music
+
+Besides the YouTube player the app has a second source, the user's own audio files (see
+[local-music.md](local-music.md)). They play in an audio element of the main window, and the local
+player writes the same `track`, `state`, `queue` and `flags` into the player store as the bridge, so
+every screen that shows playback works on both. `usePlayerStore().source` says which one is playing;
+`player/router.ts` routes playback commands to it, and while it is `local` the web player's own
+events are ignored. Rust only walks folders, reads tags and cover art, and hands out the bytes of files
+inside the chosen folders (`src-tauri/src/local.rs`).
+
 ## "Continue watching?"
 
 YouTube pauses playback and asks "Video paused. Continue watching?" after a while without mouse or

@@ -5,13 +5,24 @@ import {
   BridgeEventSchema,
   type PlayerCommand,
 } from '@melodesk/bridge/protocol';
+import { emitTo } from '@tauri-apps/api/event';
 import { rejectAllPending, resolveDataResponse } from './data';
-import { usePlayerStore } from './store';
+import { localPlayback, routeCommand } from './router';
+import { usePlayerStore, type PlayerStore } from './store';
 
 const REJECTED_EVENTS_BEFORE_DEGRADED = 10;
 
 /** Send a command to the player webview. Rust re-validates it before evaluating anything. */
 export async function sendCommand(command: PlayerCommand): Promise<void> {
+  const route = routeCommand(command, usePlayerStore.getState().source);
+  if (route === 'local') {
+    // The local player lives in the main window; another window (the mini player) asks it.
+    const player = localPlayback();
+    if (player) player.handle(command);
+    else await emitTo('main', 'local:command', command);
+    return;
+  }
+  if (route === 'takeover') localPlayback()?.yieldToYouTube();
   await invoke('player_command', { command });
 }
 
@@ -32,6 +43,13 @@ export function subscribeToPlayer(): void {
     if (!payload && usePlayerStore.getState().flags?.isVideo)
       void sendCommand({ type: 'setVideoMode', video: false }).catch(() => undefined);
   });
+  // The mini player is another window: the main window sends it what a local song is doing.
+  void listen<Partial<Pick<PlayerStore, 'source' | 'track' | 'state' | 'queue' | 'flags'>>>(
+    'local:snapshot',
+    ({ payload }) => {
+      usePlayerStore.setState(payload);
+    },
+  );
   void listen<unknown>(BRIDGE_EVENT_CHANNEL, ({ payload }) => {
     const parsed = BridgeEventSchema.safeParse(payload);
     if (!parsed.success) {
@@ -47,6 +65,12 @@ export function subscribeToPlayer(): void {
       return;
     }
     const ev = parsed.data;
+    // A local song is playing: what the idle web player says about itself is not what to show.
+    if (
+      usePlayerStore.getState().source === 'local' &&
+      (ev.type === 'track' || ev.type === 'state' || ev.type === 'queue' || ev.type === 'flags')
+    )
+      return;
     switch (ev.type) {
       case 'ready': {
         const wasReady = usePlayerStore.getState().ready;

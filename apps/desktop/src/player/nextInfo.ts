@@ -1,6 +1,7 @@
 import { queryOptions, useQuery } from '@tanstack/react-query';
 import { fetchNext } from '../data/innertube';
 import { routeForEndpoint } from './actions';
+import { isLocalId } from './sourceIds';
 import { usePlayerStore } from './store';
 
 /** What YouTube says about what is playing (up next, lyrics tab, the artists with their pages). */
@@ -20,7 +21,10 @@ export interface ArtistLink {
 export function useTrackArtists(): ArtistLink[] {
   const videoId = usePlayerStore((s) => s.track?.videoId ?? null);
   const ready = usePlayerStore((s) => s.ready);
-  const { data } = useQuery({ ...nextQuery(videoId), enabled: ready && videoId !== null });
+  const { data } = useQuery({
+    ...nextQuery(videoId),
+    enabled: ready && videoId !== null && !isLocalId(videoId),
+  });
   const current = data?.items.find(
     (i) => (i.kind === 'song' || i.kind === 'video') && i.videoId === videoId,
   );

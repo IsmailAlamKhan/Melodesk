@@ -7,6 +7,8 @@ const CORS_SUFFIXES = ['googleusercontent.com', 'ggpht.com', 'ytimg.com'];
 
 export function supportsCors(url: string | null | undefined): boolean {
   if (!url) return false;
+  // A cover read from a local file is made by the app itself: same origin, nothing to ask.
+  if (url.startsWith('blob:')) return true;
   try {
     const host = new URL(url).hostname;
     return CORS_SUFFIXES.some((s) => host === s || host.endsWith(`.${s}`));

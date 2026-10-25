@@ -42,8 +42,10 @@ serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = "=1.0.154"
 thiserror = "=2.0.21"
 anyhow = "=1.0.104"
-log = "=0.4.29"
+log = "=0.4.34"
 url = "=2.5.8"
+lofty = "=0.25.4"
+walkdir = "=2.5.0"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = { version = "=2.4.1", optional = true }
