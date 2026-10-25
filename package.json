@@ -2,7 +2,7 @@
   "name": "melodesk-monorepo",
   "private": true,
   "type": "module",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Melodesk — an open-source native desktop client for YouTube Music (not affiliated with Google or YouTube)",
   "license": "MIT",
   "packageManager": "pnpm@10.29.3",
