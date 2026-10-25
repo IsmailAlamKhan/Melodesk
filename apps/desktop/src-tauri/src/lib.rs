@@ -15,6 +15,7 @@ mod local;
 #[cfg(target_os = "linux")]
 mod media;
 mod native;
+mod net;
 mod player;
 mod settings;
 mod shortcuts;
@@ -85,6 +86,10 @@ pub fn run() {
             local::local_write_tags,
             control::control_start,
             control::control_stop,
+            net::net_allow,
+            net::net_text,
+            net::net_bytes,
+            net::radio_open,
             native_modules,
         ])
         .setup(|app| {
@@ -92,6 +97,7 @@ pub fn run() {
             let settings = settings::load(&handle);
             app.manage(local::LocalState::default());
             app.manage(control::ControlState::default());
+            app.manage(net::NetState::default());
             app.manage(settings::SettingsState(std::sync::Mutex::new(
                 settings.clone(),
             )));

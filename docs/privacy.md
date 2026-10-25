@@ -35,6 +35,13 @@ Everything below is off until you switch it on, and each one says in Settings wh
   lyrics lookups** and the offline cover cache are local files, in the app's data folder. Recent
   searches can be cleared from the search box. Lyrics, found or not, are kept so they show again (even offline)
   without asking the sources again, and so are the AI explanations of lyric lines you asked for.
+- **A music server** you add is contacted at the address you give, with your user name and a one-time
+  token made from your password (never the password). Nothing else is sent, and only the hosts you add
+  can be reached. See [network-sources.md](network-sources.md).
+- **Podcasts** contact the feeds you follow (and the hosts they name for audio and pictures) and, when
+  you search, `itunes.apple.com` with what you typed. **Radio** contacts the stations you add and, when
+  you search, `de1.api.radio-browser.info` with what you typed. Nothing else is sent; see
+  [network-sources.md](network-sources.md).
 - **Local music**: the folders you add are read on this computer only. What is written in the files
   (title, artist, album, length, lyrics) is remembered in the local database so the library opens at
   once. The files are never changed, copied or uploaded, and the app can read nothing outside the

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-net-bytes"
+description = "Enables the net_bytes command without any pre-configured scope."
+commands.allow = ["net_bytes"]
+
+[[permission]]
+identifier = "deny-net-bytes"
+description = "Denies the net_bytes command without any pre-configured scope."
+commands.deny = ["net_bytes"]

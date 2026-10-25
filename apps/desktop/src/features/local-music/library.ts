@@ -51,6 +51,23 @@ export interface LocalTrack {
   lyrics: string | null;
   replayGainDb: number | null;
   replayPeak: number | null;
+  /** Set for songs from a server, a feed or a station instead of a file on this computer. */
+  remote?: RemoteSource;
+}
+
+/** Where a song that is not a local file comes from (see remote.ts). */
+export interface RemoteSource {
+  /** What to fetch: the song or episode, or the live stream. */
+  url: string;
+  coverUrl?: string;
+  /** Its type, for checking that this system can play it. */
+  mime?: string;
+  /** A radio station: it never ends, so it is played as it arrives rather than fetched first. */
+  live?: boolean;
+  /** Where to remember how far the listener got (podcast episodes). */
+  resumeKey?: string;
+  /** Fetched through trackers and CDNs the feed does not name (podcast episodes): redirects may go to any public https address. */
+  openRedirects?: boolean;
 }
 
 interface Row {

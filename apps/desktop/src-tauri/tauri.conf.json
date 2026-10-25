@@ -36,7 +36,7 @@
         "style-src": "'self' 'unsafe-inline'",
         "img-src": "'self' data: blob: https://*.googleusercontent.com https://*.ggpht.com https://i.ytimg.com https://www.gstatic.com https://music.youtube.com",
         "font-src": "'self'",
-        "media-src": "'self' blob:",
+        "media-src": "'self' blob: http://127.0.0.1:*",
         "connect-src": "'self' blob: ipc: http://ipc.localhost https://*.googleusercontent.com https://*.ggpht.com https://i.ytimg.com https://www.gstatic.com"
       },
       "freezePrototype": false

@@ -52,7 +52,17 @@ export function useTrackEntries(track: LocalTrack, onPlay: () => void): MenuEntr
         icon: <ListEnd />,
         run: () => localPlayer()?.enqueue([track], 'end'),
       },
-      { key: 'edit', label: t('local.edit.menu'), icon: <Pencil />, run: () => editTags(track) },
+      // Tags live in files; a song from a server has none to edit here.
+      ...(track.remote
+        ? []
+        : [
+            {
+              key: 'edit',
+              label: t('local.edit.menu'),
+              icon: <Pencil />,
+              run: () => editTags(track),
+            },
+          ]),
     ],
     [track, onPlay, t],
   );

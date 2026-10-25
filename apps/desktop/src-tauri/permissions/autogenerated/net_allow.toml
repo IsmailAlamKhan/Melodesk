@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-net-allow"
+description = "Enables the net_allow command without any pre-configured scope."
+commands.allow = ["net_allow"]
+
+[[permission]]
+identifier = "deny-net-allow"
+description = "Denies the net_allow command without any pre-configured scope."
+commands.deny = ["net_allow"]

@@ -67,7 +67,16 @@ export function canPlayFile(path: string): boolean {
   return probe.canPlayType(mime) !== '';
 }
 
+/** Whether this system can play the song: a file by its type, a server's song by what it says it is. */
+export function canPlayTrack(track: LocalTrack): boolean {
+  if (!track.remote) return canPlayFile(track.path);
+  if (track.remote.live) return true;
+  probe ??= document.createElement('audio');
+  return probe.canPlayType(track.remote.mime ?? 'audio/mpeg') !== '';
+}
+
 const STATE_EVERY_MS = 250;
+const RESUME_EVERY_MS = 10_000;
 /** With no crossfade, the next song is started this long before the end (a gap of no more than a blink). */
 const GAPLESS_LEAD_S = 0.03;
 const VOLUME_KEY = 'local:volume';
@@ -277,6 +286,7 @@ export function startLocalPlayer(): () => void {
     d.blobUrl = null;
     d.trackId = null;
     d.audio.removeAttribute('src');
+    d.audio.removeAttribute('crossorigin');
     d.audio.load();
     if (graph && d.nodes) graph.setNow(d.nodes.fade, 1);
   };
@@ -312,13 +322,33 @@ export function startLocalPlayer(): () => void {
   // --- playing --------------------------------------------------------------------------------
 
   const readFile = async (track: LocalTrack): Promise<Blob> => {
+    if (track.remote) {
+      const buffer = await invoke<ArrayBuffer>('net_bytes', {
+        url: track.remote.url,
+        openRedirects: track.remote.openRedirects ?? false,
+      });
+      return new Blob([buffer], { type: track.remote.mime ?? 'audio/mpeg' });
+    }
     const buffer = await invoke<ArrayBuffer>('local_read_file', { path: track.path });
     return new Blob([buffer], { type: mimeFor(track.path) ?? 'audio/mpeg' });
   };
 
   /** Load a song into a deck (nothing to do if it is already there). */
   const loadInto = async (d: Deck, track: LocalTrack): Promise<void> => {
-    if (d.trackId === track.id && d.blobUrl) return;
+    if (d.trackId === track.id && (d.blobUrl ?? track.remote?.live)) return;
+    if (track.remote?.live) {
+      // A station never ends, so it cannot be fetched first: the audio element plays it as it comes,
+      // through a relay on this computer (which sends the headers the sound graph needs).
+      const relay = await invoke<string>('radio_open', { url: track.remote.url });
+      if (d.blobUrl) URL.revokeObjectURL(d.blobUrl);
+      d.blobUrl = null;
+      d.audio.crossOrigin = 'anonymous';
+      d.audio.src = relay;
+      d.trackId = track.id;
+      d.audio.playbackRate = 1;
+      if (graph && d.nodes) graph.setNow(d.nodes.level, 1);
+      return;
+    }
     const blob = await readFile(track);
     if (d.blobUrl) URL.revokeObjectURL(d.blobUrl);
     d.blobUrl = URL.createObjectURL(blob);
@@ -335,7 +365,7 @@ export function startLocalPlayer(): () => void {
     if (next === null || queue.repeat === 'one') return;
     const track = queue.items[next];
     const idle = other();
-    if (!track || !canPlayFile(track.path) || idle.trackId === track.id) return;
+    if (!track || track.remote?.live || !canPlayTrack(track) || idle.trackId === track.id) return;
     const token = ++preloadToken;
     void loadInto(idle, track)
       .then(() => {
@@ -345,6 +375,24 @@ export function startLocalPlayer(): () => void {
       .catch(() => {
         idle.trackId = null;
       });
+  };
+
+  /** An episode picks up where the listener stopped (if it was a good while in, and not nearly over). */
+  const resumeWhereLeftOff = async (el: HTMLAudioElement, track: LocalTrack): Promise<void> => {
+    const key = track.remote?.resumeKey;
+    if (!key) return;
+    const saved = Number(await kvGet(`resume:ep:${key}`).catch(() => null));
+    if (!(saved > 5)) return;
+    if (!(el.duration > 0))
+      await new Promise<void>((resolve) => {
+        const done = (): void => {
+          el.removeEventListener('loadedmetadata', done);
+          resolve();
+        };
+        el.addEventListener('loadedmetadata', done);
+        window.setTimeout(done, 2000);
+      });
+    if (el.duration > 0 && saved < el.duration - 15) el.currentTime = saved;
   };
 
   const playIndex = async (index: number, fade = 0): Promise<void> => {
@@ -358,11 +406,13 @@ export function startLocalPlayer(): () => void {
     preloadToken += 1;
     publishQueue();
     publishTrack(track, null);
-    void getCover(track.path).then((art) => {
-      if (token === loadToken && alive) publishTrack(track, art);
-    });
+    const coverKey = track.remote ? track.remote.coverUrl : track.path;
+    if (coverKey)
+      void getCover(coverKey).then((art) => {
+        if (token === loadToken && alive) publishTrack(track, art);
+      });
     try {
-      if (!canPlayFile(track.path)) throw new Error('format');
+      if (!canPlayTrack(track)) throw new Error('format');
       const g = ensureGraph();
       const from = deck();
       const to = other();
@@ -376,6 +426,7 @@ export function startLocalPlayer(): () => void {
         new Promise((resolve) => window.setTimeout(resolve, 400)),
       ]);
       to.audio.currentTime = 0;
+      await resumeWhereLeftOff(to.audio, track);
       to.audio.volume = from.audio.volume;
       to.audio.muted = from.audio.muted;
       to.audio.playbackRate = rate;
@@ -559,7 +610,21 @@ export function startLocalPlayer(): () => void {
 
   // --- the audio elements ---------------------------------------------------------------------
 
+  let lastResumeSave = 0;
+  const rememberPlace = (): void => {
+    const key = current()?.remote?.resumeKey;
+    const a = audio();
+    if (!key || !(a.duration > 0)) return;
+    const now = Date.now();
+    if (now - lastResumeSave < RESUME_EVERY_MS) return;
+    lastResumeSave = now;
+    // Near the end it counts as heard: the next time starts from the top.
+    const place = a.currentTime > a.duration - 15 ? 0 : Math.floor(a.currentTime);
+    void kvSet(`resume:ep:${key}`, String(place)).catch(() => undefined);
+  };
+
   const onTime = (): void => {
+    rememberPlace();
     const now = Date.now();
     if (now - lastState >= STATE_EVERY_MS) {
       lastState = now;
@@ -572,6 +637,8 @@ export function startLocalPlayer(): () => void {
     publishState();
   };
   const onEnded = (): void => {
+    const key = current()?.remote?.resumeKey;
+    if (key) void kvSet(`resume:ep:${key}`, '0').catch(() => undefined);
     if (queue.repeat === 'one') {
       audio().currentTime = 0;
       void audio()

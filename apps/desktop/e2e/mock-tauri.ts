@@ -85,6 +85,10 @@ export interface MockOptions {
   youtubeLyrics?: boolean;
   /** The user's own music: the files a scan finds, and what reading them gives. */
   local?: LocalMock;
+  /** A Subsonic-compatible server: the content of each API method's answer. */
+  server?: { methods: Record<string, Record<string, unknown>>; password?: string };
+  /** Answers to web requests that the UI makes through the app (feeds, stations): address -> text. */
+  web?: Record<string, string>;
   /** A playlist file the picker offers (Import a playlist). */
   importFile?: { path: string; text: string };
 }
@@ -201,11 +205,13 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
     (window as unknown as Record<string, unknown>)['__nativeModules'] = modules;
   }, opts.nativeModules ?? null);
   await page.addInitScript(
-    ([local, file]) => {
+    ([local, file, server, web]) => {
       (window as unknown as Record<string, unknown>)['__localMock'] = local;
       (window as unknown as Record<string, unknown>)['__importFile'] = file;
+      (window as unknown as Record<string, unknown>)['__serverMock'] = server;
+      (window as unknown as Record<string, unknown>)['__webMock'] = web;
     },
-    [opts.local ?? null, opts.importFile ?? null] as const,
+    [opts.local ?? null, opts.importFile ?? null, opts.server ?? null, opts.web ?? null] as const,
   );
   await page.addInitScript(() => {
     type Handler = (e: { event: string; id: number; payload: unknown }) => void;
@@ -258,6 +264,10 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
       return id;
     };
 
+    const serverMock = (): NonNullable<MockOptions['server']> | null =>
+      (w['__serverMock'] as NonNullable<MockOptions['server']> | null) ?? null;
+    const webMock = (): Record<string, string> =>
+      (w['__webMock'] as Record<string, string> | null) ?? {};
     const importFile = (): { path: string; text: string } | null =>
       (w['__importFile'] as { path: string; text: string } | null) ?? null;
     const localMock = (): LocalMock | null => (w['__localMock'] as LocalMock | null) ?? null;
@@ -336,6 +346,45 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
           if (options.directory) return localMock()?.pickFolder ?? null;
           return importFile()?.path ?? null;
         }
+        case 'net_allow':
+          sent.push({ type: 'net_allow', hosts: args['hosts'] });
+          return null;
+        case 'net_text': {
+          const url = new URL(String(args['url']));
+          sent.push({ type: 'net_text', url: url.origin + url.pathname });
+          const web = webMock()[url.origin + url.pathname];
+          if (web !== undefined) return web;
+          const server = serverMock();
+          const method = /\/rest\/(\w+)\.view$/u.exec(url.pathname)?.[1];
+          if (!server || !method) throw new Error('that address is not one you added');
+          const bad = server.password !== undefined && url.searchParams.get('t') === null;
+          const content = server.methods[method];
+          if (bad || !content)
+            return JSON.stringify({
+              'subsonic-response': {
+                status: 'failed',
+                error: { code: 40, message: 'Wrong username or password' },
+              },
+            });
+          return JSON.stringify({
+            'subsonic-response': { status: 'ok', version: '1.16.1', ...content },
+          });
+        }
+        case 'net_bytes': {
+          const url = new URL(String(args['url']));
+          sent.push({
+            type: 'net_bytes',
+            url: url.origin + url.pathname,
+            id: url.searchParams.get('id'),
+            openRedirects: args['openRedirects'] ?? false,
+          });
+          return url.pathname.endsWith('getCoverArt.view')
+            ? png()
+            : clip(localMock()?.clipSeconds ?? 3);
+        }
+        case 'radio_open':
+          sent.push({ type: 'radio_open', url: args['url'] });
+          return 'http://127.0.0.1:9/r/00000000000000000000000000000000';
         case 'plugin:dialog|save':
           return '/home/me/saved-file';
         case 'plugin:fs|write_text_file':

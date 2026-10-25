@@ -23,6 +23,10 @@ fn main() {
             "local_write_tags",
             "control_start",
             "control_stop",
+            "net_allow",
+            "net_text",
+            "net_bytes",
+            "radio_open",
             "native_modules",
         ]),
     ))

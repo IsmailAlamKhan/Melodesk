@@ -41,8 +41,13 @@ async function shrink(blob: Blob): Promise<Blob> {
   }
 }
 
+/** A cover can be asked for by the file it is in, or by the web address it is at (a server's cover). */
+const isWeb = (key: string): boolean => /^https?:\/\//u.test(key);
+
 async function load(path: string): Promise<string | null> {
-  const buffer = await invoke<ArrayBuffer>('local_artwork', { path });
+  const buffer = isWeb(path)
+    ? await invoke<ArrayBuffer>('net_bytes', { url: path })
+    : await invoke<ArrayBuffer>('local_artwork', { path });
   if (buffer.byteLength === 0) return null;
   const bytes = new Uint8Array(buffer);
   const blob = await shrink(new Blob([bytes], { type: sniff(bytes) }));

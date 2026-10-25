@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-radio-open"
+description = "Enables the radio_open command without any pre-configured scope."
+commands.allow = ["radio_open"]
+
+[[permission]]
+identifier = "deny-radio-open"
+description = "Denies the radio_open command without any pre-configured scope."
+commands.deny = ["radio_open"]

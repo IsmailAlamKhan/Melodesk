@@ -62,6 +62,8 @@ Planned and in progress; ticked items work today.
 - [x] Karaoke mode: big sing-along lyrics, words fill in time, countdown through instrumental breaks, timing nudge
 - [x] Cover art kept for offline use (capped at 100 MB, clearable in Settings)
 - [x] Import a playlist from a CSV (Spotify exports too), M3U/M3U8, JSON or a plain list: each song is looked up in YouTube Music and the ones found become a playlist in your account; playlists also export as CSV, JSON or M3U8
+- [x] Play from your own Subsonic-compatible server (Navidrome, Airsonic, Gonic…) in the same player; see [docs/network-sources.md](docs/network-sources.md)
+- [x] Podcasts by feed or iTunes search (your place is remembered) and internet radio (add a station or search radio-browser.info), in the same player
 - [x] Smart playlists for local music (rules like never played, added this month, forgotten favourites) that update themselves
 - [x] An optional control API on this computer (off by default, token-protected, localhost only) for Stream Deck, Home Assistant and scripts; see [docs/control-api.md](docs/control-api.md)
 - [x] Back up and restore your settings (and, if you like, listening history) as a file; keys and tokens are never put in it
