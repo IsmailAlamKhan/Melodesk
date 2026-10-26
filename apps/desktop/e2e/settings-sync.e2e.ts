@@ -137,8 +137,8 @@ test('the Melodesk sync server: start, see the code, and everything sent is unre
     },
   });
   await open(page);
-  // The address the build comes with is filled in.
-  await expect(page.getByLabel('Server address')).toHaveValue('https://sync.example.com');
+  // The server comes with the app: there is no address to type, unless you want your own.
+  await expect(page.getByLabel('Server address')).toHaveCount(0);
   await page.getByRole('button', { name: /Start syncing/u }).click();
   const code = page.getByLabel('Your sync code').last();
   await expect(code).toHaveText(/^[A-Z2-7]{4}(-[A-Z2-7]{4}){4}$/u);
@@ -186,4 +186,16 @@ test('an address with no sync server on it is said so', async ({ page }) => {
   await expect(
     page.getByRole('alert').filter({ hasText: 'no Melodesk sync server' }),
   ).toBeVisible();
+});
+
+test('with a server built in, your own can still be used', async ({ page }) => {
+  await installTauri(page, {
+    sync: { folder: '/unused', server: { url: 'https://sync.example.com' } },
+  });
+  await open(page);
+  await expect(page.getByLabel('Server address')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Use my own server instead' }).click();
+  await expect(page.getByLabel('Server address')).toBeVisible();
+  await page.getByRole('button', { name: 'Use the Melodesk server' }).click();
+  await expect(page.getByLabel('Server address')).toHaveCount(0);
 });

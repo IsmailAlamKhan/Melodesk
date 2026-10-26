@@ -32,8 +32,10 @@ export function SyncSection() {
     githubAvailable,
     signIn,
     serverUrl,
+    serverDefault,
     shownCode,
   } = useSync();
+  const [customServer, setCustomServer] = useState(false);
   const [address, setAddress] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
   const [typedCode, setTypedCode] = useState('');
@@ -131,17 +133,20 @@ export function SyncSection() {
                 {t('sync.server.title')}
               </h3>
               <p className="text-xs text-fg-muted">{t('sync.server.body')}</p>
-              <label className="flex flex-col gap-1 text-xs text-fg-muted">
-                {t('sync.server.address')}
-                <input
-                  className={inputClass}
-                  value={serverAddress}
-                  placeholder="https://your-project.vercel.app"
-                  onChange={(e) => {
-                    setAddress(e.target.value);
-                  }}
-                />
-              </label>
+              {/* Normally the Melodesk server is built in and there is nothing to type. */}
+              {(serverDefault === null || customServer) && (
+                <label className="flex flex-col gap-1 text-xs text-fg-muted">
+                  {t('sync.server.address')}
+                  <input
+                    className={inputClass}
+                    value={serverAddress}
+                    placeholder="https://your-server.example.com"
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                    }}
+                  />
+                </label>
+              )}
               {joining && (
                 <label className="flex flex-col gap-1 text-xs text-fg-muted">
                   {t('sync.server.codeLabel')}
@@ -206,6 +211,18 @@ export function SyncSection() {
                   </>
                 )}
               </div>
+              {serverDefault !== null && (
+                <button
+                  type="button"
+                  className="self-start text-xs text-fg-subtle underline-offset-2 hover:underline"
+                  onClick={() => {
+                    setCustomServer((c) => !c);
+                    setAddress(null);
+                  }}
+                >
+                  {customServer ? t('sync.server.useDefault') : t('sync.server.useOwn')}
+                </button>
+              )}
             </div>
           </>
         ) : (

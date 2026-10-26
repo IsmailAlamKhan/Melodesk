@@ -985,8 +985,8 @@
   "whatsNew.v0_11_0.a": "Settings sync is one click now: if this computer has iCloud Drive, OneDrive, Dropbox or Google Drive, Settings → Storage offers it. Nothing to install and no folder to pick.",
   "whatsNew.v0_11_0.b": "Sync can also go through a GitHub account, signing in with a code (no GitHub app or command line needed).",
   "sync.where.server": "Syncing through the Melodesk sync server, encrypted end to end.",
-  "sync.server.title": "Melodesk sync server (everything, including sign-ins)",
-  "sync.server.body": "Keeps your whole configuration the same on every computer: the settings above plus plugin sign-ins (Last.fm, ListenBrainz…) and your music server. It is encrypted on this computer with a sync code before it is sent, so the server only ever holds unreadable data. You run the server yourself (see apps/sync-server) and type its address here.",
+  "sync.server.title": "Melodesk sync (everything, including sign-ins)",
+  "sync.server.body": "Keeps your whole configuration the same on every computer: the settings above plus plugin sign-ins (Last.fm, ListenBrainz…) and your music server. It is encrypted on this computer with a sync code before it is sent, so Melodesk’s server only ever holds unreadable data. Nothing to set up: start on one computer, then type the code on the others.",
   "sync.server.address": "Server address",
   "sync.server.start": "Start syncing (make a sync code)",
   "sync.server.haveCode": "I already have a sync code",
@@ -1002,5 +1002,7 @@
   "sync.server.noSuchCode": "Nothing is saved under that code. Check it, or start syncing on your other computer first.",
   "sync.server.lostCode": "This computer no longer has the sync code (or it does not fit what is on the server). Stop syncing and join again with your code.",
   "sync.server.conflict": "Another computer changed the settings at the same moment. It will be tried again.",
-  "whatsNew.v0_13_0.a": "Your whole configuration can sync, sign-ins included (Last.fm, ListenBrainz, your music server), through a Melodesk sync server you run yourself. It is encrypted on your computer with a sync code, so the server reads nothing."
+  "whatsNew.v0_13_0.a": "Your whole configuration can sync, sign-ins included (Last.fm, ListenBrainz, your music server). It is encrypted on your computer with a sync code, so Melodesk’s server reads nothing.",
+  "sync.server.useOwn": "Use my own server instead",
+  "sync.server.useDefault": "Use the Melodesk server"
 }

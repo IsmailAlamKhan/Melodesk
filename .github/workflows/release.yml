@@ -105,7 +105,8 @@ jobs:
           # The public client id of Melodesk's OAuth app, for "Sign in with GitHub" in settings sync
           # (see docs/settings-sync.md). Set it as a repository variable; without it sign-in is not offered.
           MELODESK_GITHUB_CLIENT_ID: ${{ vars.MELODESK_GITHUB_CLIENT_ID }}
-          # The address of your Melodesk sync server (apps/sync-server), built in as the default.
+          # Only for a fork that runs its own sync server (apps/sync-server): the app's built-in address
+          # is melodesk.ismailalam.com unless this is set.
           MELODESK_SYNC_URL: ${{ vars.MELODESK_SYNC_URL }}
           # Updater signing (required for latest.json). Generate with `pnpm tauri signer generate`.
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}

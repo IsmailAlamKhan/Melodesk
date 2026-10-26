@@ -15,15 +15,16 @@ computer already has, one click each.
   the macOS Keychain or Windows Credential Manager, and on Linux in a file only you can read. Sign out
   (Stop syncing) forgets it; you can also revoke it at github.com/settings/applications. This works
   between any computers, whatever they run.
-- **The Melodesk sync server** (the only one that syncs **everything**, plugin sign-ins and your music
-  server included): a small server you run yourself (`apps/sync-server`, ready for Vercel; see its
-  README, five minutes). The first computer picks _Start syncing_ and gets a **sync code** to write
-  down; the others pick _I already have a sync code_ and type it. Everything is **encrypted on the
-  computer** with a key made from the code before it is sent (AES-GCM, key from PBKDF2), and kept
-  under an id that is a hash of the code, so the server and whoever runs it hold unreadable text and
-  cannot tell whose it is. The code is kept in the keychain and never leaves the computers; lose it on
-  every computer and the data cannot be read again (there is no reset). Two computers writing at the
-  same moment cannot overwrite each other: the server refuses a stale write and the app merges again.
+- **Melodesk sync** (the only one that syncs **everything**, plugin sign-ins and your music server
+  included): nothing to set up. The first computer picks _Start syncing_ and gets a **sync code** to
+  write down; the others pick _I already have a sync code_ and type it. Everything is **encrypted on
+  the computer** with a key made from the code before it is sent (AES-GCM, key from PBKDF2), and kept
+  on Melodesk's server (`melodesk.ismailalam.com`, code in `apps/sync-server`) under an id that is a
+  hash of the code, so the server and whoever runs it hold unreadable text and cannot tell whose it is.
+  The code is kept in the keychain and never leaves the computers; lose it on every computer and the
+  data cannot be read again (there is no reset). Two computers writing at the same moment cannot
+  overwrite each other: the server refuses a stale write and the app merges again. _Use my own server
+  instead_ points the app at a server you run.
 - **Any other folder**, including a clone of a private git repository (see below), for Syncthing, a
   network share and so on.
 

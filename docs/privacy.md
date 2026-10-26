@@ -43,7 +43,7 @@ Everything below is off until you switch it on, and each one says in Settings wh
   you search, `itunes.apple.com` with what you typed. **Radio** contacts the stations you add and, when
   you search, `de1.api.radio-browser.info` with what you typed. Nothing else is sent; see
   [network-sources.md](network-sources.md).
-- **Melodesk sync server** (optional, a server you run yourself, off until you start it): settings,
+- **Melodesk sync** (optional, off until you start it; Melodesk's server at melodesk.ismailalam.com): settings,
   including plugin sign-ins and your music server, are encrypted on your computer with a code that
   never leaves your computers, and only the encrypted text is sent. The server cannot read it.
 - **Settings sync** writes one file, `melodesk-sync.json`, in a folder you pick, holding preferences, smart

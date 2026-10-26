@@ -18,8 +18,16 @@ use url::Url;
 
 use crate::vault;
 
-/// The address of the server this build uses unless the person types another, set when it is built.
-const DEFAULT_URL: Option<&str> = option_env!("MELODESK_SYNC_URL");
+/// Where Melodesk's own sync server lives (apps/sync-server). A build can point somewhere else with
+/// `MELODESK_SYNC_URL`, which is how a fork uses its own.
+const OFFICIAL_URL: &str = "https://melodesk.ismailalam.com";
+
+fn default_url() -> &'static str {
+    match option_env!("MELODESK_SYNC_URL") {
+        Some(url) if !url.trim().is_empty() => url,
+        _ => OFFICIAL_URL,
+    }
+}
 /// What the code is called in the keychain.
 const CODE_NAME: &str = "sync-server-code";
 const USER_AGENT: &str = concat!("Melodesk/", env!("CARGO_PKG_VERSION"));
@@ -137,7 +145,7 @@ async fn request(
 /// The server address built into this app, if there is one.
 #[tauri::command]
 pub fn sync_server_default() -> Option<String> {
-    DEFAULT_URL.and_then(|u| normalize_url(u).ok())
+    normalize_url(default_url()).ok()
 }
 
 /// Is there a Melodesk sync server at this address? Returns the address as it will be used.
@@ -331,5 +339,13 @@ mod tests {
         );
         assert!(parse_blob("<html>").is_err());
         assert!(parse_blob(r#"{"version":"3"}"#).is_err());
+    }
+
+    #[test]
+    fn the_server_that_comes_with_the_app_is_a_usable_address() {
+        assert_eq!(
+            sync_server_default().as_deref(),
+            Some("https://melodesk.ismailalam.com")
+        );
     }
 }
