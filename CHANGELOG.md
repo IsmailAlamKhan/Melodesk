@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.13.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.12.0...melodesk-v0.13.0) (2026-10-26)
+
+
+### Features
+
+* Melodesk sync server (Vercel) with end-to-end encrypted sync of the full configuration ([cc2249d](https://github.com/IsmailAlamKhan/Melodesk/commit/cc2249d853b8586c6dc9c8772c5b1e7cca255ba8))
+
+
+### Reverts
+
+* remove the paste-a-git-address sync option ([985c602](https://github.com/IsmailAlamKhan/Melodesk/commit/985c602df8346351e0e9a5a0159c97b3e423200c))
+
 ## [0.12.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.11.0...melodesk-v0.12.0) (2026-10-26)
 
 
