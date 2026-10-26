@@ -983,5 +983,13 @@
   "sync.github.expired": "The code ran out before it was used. Try again.",
   "sync.github.signedOut": "GitHub no longer accepts this computer’s sign-in. Stop syncing and sign in again.",
   "whatsNew.v0_11_0.a": "Settings sync is one click now: if this computer has iCloud Drive, OneDrive, Dropbox or Google Drive, Settings → Storage offers it. Nothing to install and no folder to pick.",
-  "whatsNew.v0_11_0.b": "Sync can also go through a GitHub account, signing in with a code (no GitHub app or command line needed)."
+  "whatsNew.v0_11_0.b": "Sync can also go through a GitHub account, signing in with a code (no GitHub app or command line needed).",
+  "sync.repo.summary": "Use a git repository instead (for people who have git)",
+  "sync.repo.label": "Repository address",
+  "sync.repo.hint": "Make an empty private repository first (on GitHub, say). Melodesk keeps its own copy and pulls and pushes with the git and the sign-in this computer already has, such as an SSH key; it never sees a password or token. Needs git installed.",
+  "sync.repo.use": "Use this repository",
+  "sync.repo.cloning": "Connecting…",
+  "sync.repo.invalid": "That is not a repository address Melodesk can use. Use an SSH address like git@github.com:you/melodesk-settings.git, or an https one.",
+  "sync.repo.noGit": "Git is not installed on this computer, so this option cannot be used. Pick a cloud folder instead.",
+  "whatsNew.v0_12_0.a": "Settings sync can use any git repository: paste its SSH address (Settings → Storage → git) and Melodesk clones it and keeps it in step with the git and SSH key you already have."
 }

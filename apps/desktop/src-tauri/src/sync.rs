@@ -23,7 +23,7 @@ use std::time::{Duration, Instant, UNIX_EPOCH};
 use serde::Serialize;
 
 use crate::github::GithubState;
-use tauri::{AppHandle, Runtime, State};
+use tauri::{AppHandle, Manager, Runtime, State};
 
 /// The one file that is read and written.
 const FILE_NAME: &str = "melodesk-sync.json";
@@ -82,7 +82,12 @@ fn git(dir: &Path, args: &[&str]) -> Result<(bool, String), String> {
         .args(args)
         .current_dir(dir)
         .env("GIT_TERMINAL_PROMPT", "0")
-        .env("GIT_SSH_COMMAND", "ssh -o BatchMode=yes")
+        // BatchMode: never wait for a passphrase. accept-new: trust a host the first time it is seen (GitHub
+        // the first time), but refuse it if its key ever changes.
+        .env(
+            "GIT_SSH_COMMAND",
+            "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new",
+        )
         .env("GIT_EDITOR", "true")
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
@@ -386,6 +391,96 @@ pub async fn sync_stamp<R: Runtime>(
     }
 }
 
+/// The folder (inside the app's own data folder) that holds the clone of the settings repository.
+const REPO_DIR: &str = "settings-repo";
+
+/// Whether this is an address of a git repository that we are willing to clone: an SSH one
+/// (`git@github.com:you/repo.git`, `ssh://git@host/path`) or an HTTPS one. Nothing else: not a local
+/// path, and not git's special transports (`ext::` runs commands).
+pub fn valid_repo_url(url: &str) -> bool {
+    let url = url.trim();
+    if url.is_empty()
+        || url.len() > 300
+        || url.starts_with('-')
+        || url.chars().any(char::is_whitespace)
+    {
+        return false;
+    }
+    let host_ok = |h: &str| {
+        !h.is_empty()
+            && h.chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '.' || c == '-')
+    };
+    let path_ok = |p: &str| {
+        !p.is_empty()
+            && !p.contains("..")
+            && p.chars()
+                .all(|c| c.is_ascii_alphanumeric() || "._-/~".contains(c))
+    };
+    if let Some(rest) = url.strip_prefix("git@") {
+        // git@host:owner/repo.git
+        return rest
+            .split_once(':')
+            .is_some_and(|(h, p)| host_ok(h) && path_ok(p.trim_start_matches('/')));
+    }
+    for scheme in ["ssh://", "https://"] {
+        if let Some(rest) = url.strip_prefix(scheme) {
+            let rest = rest.strip_prefix("git@").unwrap_or(rest);
+            return rest
+                .split_once('/')
+                .is_some_and(|(h, p)| host_ok(h.split(':').next().unwrap_or("")) && path_ok(p));
+        }
+    }
+    false
+}
+
+/// Clone `url` into `dir`, or reuse a clone of the same address already there.
+fn clone_repo(url: &str, dir: &Path) -> Result<(), String> {
+    if is_git(dir) {
+        let (ok, origin) = git(dir, &["remote", "get-url", "origin"])?;
+        if ok && origin == url {
+            return Ok(());
+        }
+        // A clone of something else, made by an earlier choice: it is ours to replace.
+        fs::remove_dir_all(dir).map_err(|e| format!("cannot replace the old copy: {e}"))?;
+    }
+    let parent = dir.parent().ok_or("no folder to clone into")?;
+    fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    let name = dir
+        .file_name()
+        .and_then(|n| n.to_str())
+        .ok_or("bad folder name")?;
+    let (ok, message) = git(parent, &["clone", "--", url, name])?;
+    if ok {
+        Ok(())
+    } else {
+        Err(format!("git clone: {}", first_line(&message)))
+    }
+}
+
+/// Sync through a git repository whose address the person pastes: Melodesk clones it into its own data
+/// folder and from then on pulls and pushes, with the git and the sign-in (an SSH key, say) that are
+/// already on this computer. For people who have those; most people use a cloud folder.
+#[tauri::command]
+pub async fn sync_git_clone<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, SyncState>,
+    url: String,
+) -> Result<Chosen, String> {
+    let url = url.trim().to_string();
+    if !valid_repo_url(&url) {
+        return Err("not-a-repo-address".into());
+    }
+    let dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?
+        .join(REPO_DIR);
+    let target = dir.clone();
+    blocking(move || clone_repo(&url, &target)).await?;
+    choose(&state, &dir)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -508,5 +603,61 @@ mod tests {
         git_ok(&root, &["init", "--initial-branch=main"]);
         let err = read_synced(&root).unwrap_err();
         assert!(err.contains("origin"), "{err}");
+    }
+
+    #[test]
+    fn only_ssh_and_https_repository_addresses_are_accepted() {
+        for ok in [
+            "git@github.com:ann/melodesk-settings.git",
+            "ssh://git@example.com/ann/settings.git",
+            "ssh://git@example.com:2222/ann/settings.git",
+            "https://github.com/ann/melodesk-settings.git",
+        ] {
+            assert!(valid_repo_url(ok), "{ok}");
+        }
+        for bad in [
+            "",
+            "/Users/me/repo",
+            "file:///tmp/repo",
+            "ext::sh -c touch% /tmp/x",
+            "--upload-pack=touch /tmp/x",
+            "git@github.com:../etc/passwd",
+            "git@host:ann/repo with space.git",
+            "http://github.com/ann/repo.git",
+            "git@:ann/repo.git",
+            "https:///ann/repo.git",
+        ] {
+            assert!(!valid_repo_url(bad), "{bad}");
+        }
+    }
+
+    #[test]
+    fn a_repository_is_cloned_once_and_reused() {
+        let root = scratch("clone");
+        let remote = root.join("remote.git");
+        fs::create_dir_all(&remote).unwrap();
+        git_ok(&remote, &["init", "--bare", "--initial-branch=main"]);
+        let url = remote.to_str().unwrap();
+        let dir = root.join("data").join(REPO_DIR);
+        clone_repo(url, &dir).unwrap();
+        assert!(is_git(&dir));
+        // The second time the same address is left as it is, even with something in it.
+        fs::write(dir.join("marker"), "x").unwrap();
+        clone_repo(url, &dir).unwrap();
+        assert!(dir.join("marker").exists());
+        // A different address replaces the old copy.
+        let other = root.join("other.git");
+        fs::create_dir_all(&other).unwrap();
+        git_ok(&other, &["init", "--bare", "--initial-branch=main"]);
+        clone_repo(other.to_str().unwrap(), &dir).unwrap();
+        assert!(!dir.join("marker").exists());
+    }
+
+    #[test]
+    fn a_clone_that_fails_says_why() {
+        let root = scratch("clone-fail");
+        let err =
+            clone_repo(root.join("nothing.git").to_str().unwrap(), &root.join("x")).unwrap_err();
+        assert!(err.starts_with("git clone:"), "{err}");
     }
 }

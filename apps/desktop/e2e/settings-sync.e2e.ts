@@ -124,3 +124,21 @@ test('signing in with GitHub shows a code, waits for approval, then syncs throug
     .toBe(true);
   await expect(page.getByText(/Not syncing yet/u)).toBeVisible();
 });
+
+test('a git repository address is cloned and used', async ({ page }) => {
+  await installTauri(page, {
+    sync: { folder: '/unused' },
+    kv: { 'audio:prefs': '{"eqEnabled":true}' },
+  });
+  await open(page);
+  await page.getByText('Use a git repository instead').click();
+  await page.getByLabel('Repository address').fill('/tmp/not-allowed');
+  await page.getByRole('button', { name: 'Use this repository' }).click();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'not a repository address' }),
+  ).toBeVisible();
+  await page.getByLabel('Repository address').fill('git@github.com:ann/melodesk-settings.git');
+  await page.getByRole('button', { name: 'Use this repository' }).click();
+  await expect(page.getByText('Syncing through a folder.')).toBeVisible();
+  await expect(page.getByText(/This folder is a git repository/u)).toBeVisible();
+});
