@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.1](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.13.0...melodesk-v0.13.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* **sync:** the Melodesk server is built in, so nobody types an address ([ece3be7](https://github.com/IsmailAlamKhan/Melodesk/commit/ece3be7d8d63f0a495225a8662baa4610704b0c0))
+
 ## [0.13.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.12.0...melodesk-v0.13.0) (2026-10-26)
 
 
