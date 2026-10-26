@@ -29,6 +29,11 @@ nothing. A fork can run its own and point builds at it with the `MELODESK_SYNC_U
    `{"ok":true,"name":"melodesk-sync","protocol":1}`. If Vercel asks to log in, turn off _Vercel
    Authentication_ for Production under Settings → Deployment Protection.
 
+The Vercel project is connected to this repository with **Root Directory** `apps/sync-server`, so a
+push that changes this folder redeploys the server and any other push is skipped (an _Ignored Build
+Step_). With the Root Directory set, deploy from the CLI at the **repository root**
+(`vercel deploy --prod`), not from inside this folder.
+
 Without storage connected the server still answers but forgets everything when it restarts, so connect it.
 
 ## Privacy
