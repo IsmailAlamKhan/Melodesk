@@ -82,9 +82,30 @@ fn git(dir: &Path, args: &[&str]) -> Result<(bool, String), String> {
     Ok((status.success(), text.trim().to_string()))
 }
 
-/// The first line of a git message, for showing.
+/// The line of a git message that says what went wrong (git also prints progress lines first).
 fn first_line(text: &str) -> String {
-    text.lines().next().unwrap_or("").trim().to_string()
+    text.lines()
+        .find(|l| l.starts_with("fatal:") || l.starts_with("error:"))
+        .or_else(|| text.lines().next())
+        .unwrap_or("")
+        .trim()
+        .to_string()
+}
+
+/// Commit as the person if git knows who they are, else as Melodesk, so a merge or a commit cannot
+/// fail just because this computer has no git identity yet.
+fn identity(dir: &Path) -> Result<Vec<&'static str>, String> {
+    let (_, email) = git(dir, &["config", "user.email"])?;
+    Ok(if email.is_empty() {
+        vec![
+            "-c",
+            "user.name=Melodesk",
+            "-c",
+            "user.email=melodesk@localhost",
+        ]
+    } else {
+        Vec::new()
+    })
 }
 
 /// Bring in what other computers pushed (a no-op when nothing is there yet).
@@ -100,18 +121,19 @@ fn git_pull(dir: &Path) -> Result<(), String> {
     }
     // Where both changed, take the other's lines: the merge of settings that follows keeps the
     // newer value of each one, so nothing is lost.
-    let (ok, message) = git(
-        dir,
-        &[
-            "pull",
-            "--no-rebase",
-            "--no-edit",
-            "-X",
-            "theirs",
-            "origin",
-            &branch,
-        ],
-    )?;
+    let mut args: Vec<&str> = identity(dir)?;
+    args.extend([
+        "-c",
+        "commit.gpgsign=false",
+        "pull",
+        "--no-rebase",
+        "--no-edit",
+        "-X",
+        "theirs",
+        "origin",
+        &branch,
+    ]);
+    let (ok, message) = git(dir, &args)?;
     if ok {
         return Ok(());
     }
@@ -130,19 +152,7 @@ fn git_push(dir: &Path) -> Result<(), String> {
     }
     let (clean, _) = git(dir, &["diff", "--cached", "--quiet"])?;
     if !clean {
-        // Commit as the person if git knows who they are, else as Melodesk, so it cannot fail on that.
-        let (_, email) = git(dir, &["config", "user.email"])?;
-        let identity: &[&str] = if email.is_empty() {
-            &[
-                "-c",
-                "user.name=Melodesk",
-                "-c",
-                "user.email=melodesk@localhost",
-            ]
-        } else {
-            &[]
-        };
-        let mut args = identity.to_vec();
+        let mut args: Vec<&str> = identity(dir)?;
         args.extend([
             "-c",
             "commit.gpgsign=false",
