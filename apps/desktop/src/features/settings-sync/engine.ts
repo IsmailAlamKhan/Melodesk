@@ -1,4 +1,13 @@
-import { buildFile, isSynced, mergeEntries, parseSyncFile, type SyncEntry } from './snapshot';
+import {
+  buildFile,
+  isPluginSettings,
+  isSynced,
+  keepingSecrets,
+  mergeEntries,
+  parseSyncFile,
+  withoutSecrets,
+  type SyncEntry,
+} from './snapshot';
 
 export interface SyncDb {
   select: <T>(sql: string, bindings?: unknown[]) => Promise<T>;
@@ -25,7 +34,11 @@ export async function collectLocal(db: SyncDb): Promise<Record<string, SyncEntry
   );
   const entries: Record<string, SyncEntry> = {};
   for (const r of rows)
-    if (isSynced(r.key)) entries[r.key] = { value: r.value, updatedAt: r.updated_at ?? 0 };
+    if (isSynced(r.key))
+      entries[r.key] = {
+        value: isPluginSettings(r.key) ? withoutSecrets(r.value) : r.value,
+        updatedAt: r.updated_at ?? 0,
+      };
   return entries;
 }
 
@@ -48,9 +61,18 @@ export async function syncOnce(
   for (const key of merged.apply) {
     const entry = merged.entries[key];
     if (!entry) continue;
+    let value = entry.value;
+    if (isPluginSettings(key)) {
+      // Their settings, but this computer's own sign-ins stay as they are.
+      const rows = await db.select<{ value: string }[]>(
+        'SELECT value FROM settings WHERE key = $1',
+        [key],
+      );
+      value = keepingSecrets(value, rows[0]?.value ?? null);
+    }
     await db.execute(
       'INSERT INTO settings (key, value, updated_at) VALUES ($1, $2, $3) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at',
-      [key, entry.value, entry.updatedAt],
+      [key, value, entry.updatedAt],
     );
   }
   const needsFile = remote === null ? Object.keys(merged.entries).length > 0 : merged.writeFile;

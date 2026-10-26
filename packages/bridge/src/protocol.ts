@@ -57,6 +57,8 @@ export const PlayerCommandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('navigate'), path: z.string().regex(/^\/[^\s]*$/) }),
   /** Ask the bridge to re-emit `ready`, `state` and `track`. */
   z.object({ type: z.literal('requestState') }),
+  /** Press the page's own Skip button on an ad that offers one (what the listener would click). */
+  z.object({ type: z.literal('skipAd') }),
   /**
    * Perform an InnerTube request *through the page's own network layer*, so the page attaches
    * its own auth and context. The bridge never sees cookies or tokens. `endpoint` is the path
@@ -157,6 +159,8 @@ export const PlayerFlagsSchema = z.object({
   isVideo: z.boolean(),
   /** An ad is playing: controls should reflect that we cannot skip it. */
   adPlaying: z.boolean(),
+  /** The ad has a Skip button on the page right now (some ads cannot be skipped, others only after a few seconds). */
+  adSkippable: z.boolean().default(false),
 });
 export type PlayerFlags = z.infer<typeof PlayerFlagsSchema>;
 

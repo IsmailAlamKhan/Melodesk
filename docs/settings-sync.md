@@ -11,11 +11,22 @@ computer, with the same synced folder.
 ## What is synced
 
 Appearance (including custom themes), sound, which features are on, lyrics settings and per-song
-lyrics timing, smart playlists, podcast subscriptions and radio stations.
+lyrics timing, smart playlists, podcast subscriptions and radio stations, and which plugins are on
+with their settings.
 
 Not synced, on purpose: folders (paths differ between computers), music servers, passwords, keys and
-tokens, plugin settings, caches and listening history. Use **Back up and restore** (same page) to move
+tokens (a plugin's sign-in, such as a Last.fm session, stays on the computer that made it, so each
+computer signs in once; the rest of a plugin's settings do sync), caches and listening history. Use **Back up and restore** (same page) to move
 those by hand; it never includes passwords either.
+
+## Using GitHub
+
+Make a **private** repository on GitHub, clone it on each computer (any folder), and choose that
+folder. When the folder is a git repository Melodesk runs the `git` that is already on the computer:
+it pulls before it reads, and commits and pushes after it writes. It uses whatever sign-in git
+already has (an SSH key, a credential helper) and never sees or asks for a GitHub password or token;
+git cannot prompt there, so a repository that needs a prompt shows an error instead. Only
+`melodesk-sync.json` is committed. Needs `git` installed and a remote called `origin`.
 
 ## How two copies are merged
 

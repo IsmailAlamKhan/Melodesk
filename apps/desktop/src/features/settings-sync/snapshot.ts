@@ -16,7 +16,43 @@ const SYNCED = [
   /^local:smart$/u,
   /^podcasts:feeds$/u,
   /^radio:stations$/u,
+  // Which plugins are on, and their settings without the sign-ins (see `scrubSecrets`).
+  /^plugin:[^:]+:enabled$/u,
+  /^plugin:[^:]+:settings$/u,
 ];
+
+/** Plugin settings hold sign-ins (a session key, a token): those stay on the computer that made them. */
+export const isPluginSettings = (key: string): boolean => /^plugin:[^:]+:settings$/u.test(key);
+const SECRET_NAME = /key|secret|token|password|passwd|credential/iu;
+
+const parseObject = (value: string): Record<string, unknown> | null => {
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
+};
+
+/** A plugin's saved settings without the fields that look like secrets. */
+export function withoutSecrets(value: string): string {
+  const obj = parseObject(value);
+  if (!obj) return value;
+  return JSON.stringify(
+    Object.fromEntries(Object.entries(obj).filter(([k]) => !SECRET_NAME.test(k))),
+  );
+}
+
+/** The settings that came from another computer, with this computer's own sign-ins kept. */
+export function keepingSecrets(incoming: string, current: string | null): string {
+  const mine = current === null ? null : parseObject(current);
+  const theirs = parseObject(incoming);
+  if (!mine || !theirs) return incoming;
+  const secrets = Object.fromEntries(Object.entries(mine).filter(([k]) => SECRET_NAME.test(k)));
+  return JSON.stringify({ ...theirs, ...secrets });
+}
 
 export const isSynced = (key: string): boolean =>
   key.length < 256 && SYNCED.some((re) => re.test(key));

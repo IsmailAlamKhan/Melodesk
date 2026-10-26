@@ -14,6 +14,12 @@ export const selectors = {
   video: '#movie_player video.html5-main-video, ytmusic-player video',
   /** The "Video paused. Continue watching?" question (see idle-prompt.ts). */
   idlePrompt: 'ytmusic-you-there-renderer, yt-confirm-dialog-renderer, tp-yt-paper-dialog',
+  /**
+   * The page's own "Skip" button on an ad that can be skipped. Only present once the ad allows it.
+   * We never click it by ourselves: only when the listener presses Skip ad in our player bar.
+   */
+  skipAd:
+    '#movie_player .ytp-skip-ad-button, #movie_player .ytp-ad-skip-button, #movie_player .ytp-ad-skip-button-modern',
   /** Present only while logged out. */
   signInLink: 'ytmusic-nav-bar a.sign-in-link, a[href*="accounts.google.com/ServiceLogin"]',
   /** Present only while logged in. */

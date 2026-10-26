@@ -72,3 +72,10 @@ test('a file in the folder that is not ours is left alone', async ({ page }) => 
   const sent = await sentCommands(page);
   expect(sent.some((c) => c['type'] === 'sync_write')).toBe(false);
 });
+
+test('a folder that is a git repository says so', async ({ page }) => {
+  await installTauri(page, { sync: { folder: '/Code/melodesk-settings', git: true } });
+  await open(page);
+  await page.getByRole('button', { name: 'Choose a folder' }).click();
+  await expect(page.getByText(/This folder is a git repository/u)).toBeVisible();
+});

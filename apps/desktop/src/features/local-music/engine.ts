@@ -192,6 +192,7 @@ export function startLocalPlayer(): () => void {
     playbackRate: rate,
     isVideo: false,
     adPlaying: false,
+    adSkippable: false,
   });
 
   const queueState = (): QueueState => ({

@@ -935,7 +935,7 @@
   "feature.settingsSync.name": "Settings sync",
   "feature.settingsSync.description": "Keep settings the same on several computers through a folder you pick, such as one that iCloud Drive, Dropbox or Syncthing already syncs.",
   "sync.title": "Sync settings between computers",
-  "sync.body": "Pick a folder that your cloud storage (iCloud Drive, Dropbox, OneDrive…) or Syncthing already keeps in step. Melodesk writes one small file in it. There is no Melodesk server or account.",
+  "sync.body": "Pick a folder that your cloud storage (iCloud Drive, Dropbox, OneDrive…) or Syncthing already keeps in step, or a clone of a private GitHub repository. Melodesk writes one small file in it. There is no Melodesk server or account.",
   "sync.off": "Not syncing.",
   "sync.choose": "Choose a folder",
   "sync.change": "Change folder",
@@ -945,7 +945,7 @@
   "sync.syncing": "Syncing…",
   "sync.last": "Last synced {time}",
   "sync.never": "Not synced yet.",
-  "sync.what": "Synced: appearance, sound and feature choices, lyrics settings, smart playlists, podcast subscriptions and radio stations. Not synced: folders, servers, passwords, tokens or listening history (use Back up and restore for those).",
+  "sync.what": "Synced: appearance, sound and feature choices, lyrics settings, smart playlists, podcast subscriptions, radio stations, and which plugins are on with their settings. Not synced: folders, servers, passwords, plugin sign-ins and tokens, or listening history (use Back up and restore for those). Each computer signs in to a plugin once.",
   "sync.how": "Each setting keeps its newest change, so changes made on two computers both survive. Keep the computers’ clocks right.",
   "sync.failed": "Could not sync: {error}",
   "sync.notOurs": "The sync file in that folder is not a Melodesk sync file, so it was left alone.",
@@ -957,5 +957,13 @@
   "feature.youtubeMusic.name": "YouTube Music",
   "feature.youtubeMusic.description": "YouTube Music as a source of playback, and the pages that browse it (home, search, library). The official web player does the playing, signing in and ads. Switch it off to close the hidden player and send nothing to YouTube; your own music, servers, podcasts and radio keep working.",
   "whatsNew.section.body": "You are on version {version}. See what each version added.",
-  "whatsNew.section.open": "Show what’s new"
+  "whatsNew.section.open": "Show what’s new",
+  "sync.git": "This folder is a git repository: Melodesk pulls before it reads, and commits and pushes after it writes, using the git on this computer and your own sign-in (an SSH key or credential helper). It never sees a GitHub password or token.",
+  "player.adPlaying": "Ad playing",
+  "player.skipAd": "Skip ad",
+  "player.adNotSkippable": "This ad has no Skip button yet, or cannot be skipped",
+  "whatsNew.v0_10_0.a": "YouTube Music can be switched off in Settings → Features. The hidden player is closed, nothing is sent to YouTube, and the app opens on your own music.",
+  "whatsNew.v0_10_0.b": "Skip ad: when YouTube’s own Skip button is offered on an ad, press Skip ad in the player bar. Nothing is skipped or hidden by itself.",
+  "whatsNew.v0_10_0.c": "Settings sync can use a GitHub repository: pick a clone of a private repo and Melodesk pulls and pushes with your own git sign-in.",
+  "whatsNew.v0_10_0.d": "Plugins sync too: which are on and their settings. Sign-ins and tokens stay on each computer."
 }

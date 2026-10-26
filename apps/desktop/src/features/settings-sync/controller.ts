@@ -13,10 +13,18 @@ const SEND_DELAY_MS = 4000;
 /** How often the folder is looked at for a file another computer wrote. */
 const CHECK_EVERY_MS = 60_000;
 
+/** What `sync_set_folder` says about the folder it was given. */
+interface Chosen {
+  path: string;
+  /** It is a git repository, so syncing goes through git (a clone of a private GitHub repository, say). */
+  git: boolean;
+}
+
 export type SyncStatus = 'off' | 'idle' | 'syncing' | 'error';
 
 interface SyncState {
   folder: string | null;
+  git: boolean;
   status: SyncStatus;
   /** When it last finished, in ms since 1970. */
   lastAt: number | null;
@@ -28,6 +36,7 @@ interface SyncState {
 
 export const useSync = create<SyncState>(() => ({
   folder: null,
+  git: false,
   status: 'off',
   lastAt: null,
   error: null,
@@ -80,11 +89,11 @@ export function syncNow(): Promise<void> {
 
 /** Start syncing with this folder (and remember it on this computer). */
 export async function chooseFolder(path: string): Promise<void> {
-  const shown = await invoke<string | null>('sync_set_folder', { path });
-  if (shown === null) return;
-  await kvSet(FOLDER_KEY, shown);
+  const chosen = await invoke<Chosen | null>('sync_set_folder', { path });
+  if (chosen === null) return;
+  await kvSet(FOLDER_KEY, chosen.path);
   lastStamp = null;
-  useSync.setState({ folder: shown, status: 'idle', error: null });
+  useSync.setState({ folder: chosen.path, git: chosen.git, status: 'idle', error: null });
   await syncNow();
 }
 
@@ -92,7 +101,7 @@ export async function stopSyncing(): Promise<void> {
   await invoke('sync_set_folder', { path: null });
   await kvDel(FOLDER_KEY);
   await kvDel(LAST_KEY);
-  useSync.setState({ folder: null, status: 'off', error: null, lastAt: null });
+  useSync.setState({ folder: null, git: false, status: 'off', error: null, lastAt: null });
 }
 
 /** Pick up where it left off, and keep going: on changes here, when the window is used, and on a timer. */
@@ -132,7 +141,8 @@ export function startSync(): () => void {
     }
     useSync.setState({ folder, lastAt: last ? Number(last) : null, status: 'idle', loaded: true });
     try {
-      await invoke('sync_set_folder', { path: folder });
+      const chosen = await invoke<Chosen | null>('sync_set_folder', { path: folder });
+      useSync.setState({ git: chosen?.git ?? false });
     } catch (err) {
       // The folder is gone (a drive that is not plugged in, a cloud folder that was moved).
       useSync.setState({

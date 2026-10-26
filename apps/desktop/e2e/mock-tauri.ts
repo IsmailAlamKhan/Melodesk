@@ -94,7 +94,7 @@ export interface MockOptions {
   /** Saved settings the app starts with, as the database would have them (only on the first load). */
   kv?: Record<string, string>;
   /** A folder for settings sync: what the picker answers, and the sync file already in it (if any). */
-  sync?: { folder: string; file?: string };
+  sync?: { folder: string; file?: string; git?: boolean };
   /** A playlist file the picker offers (Import a playlist). */
   importFile?: { path: string; text: string };
 }
@@ -256,8 +256,8 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
     );
     const persistAt = (): void =>
       localStorage.setItem('__mockKvAt', JSON.stringify([...changedAt]));
-    const syncMock = (): { folder: string; file?: string } | null =>
-      (w['__syncMock'] as { folder: string; file?: string } | null) ?? null;
+    const syncMock = (): { folder: string; file?: string; git?: boolean } | null =>
+      (w['__syncMock'] as { folder: string; file?: string; git?: boolean } | null) ?? null;
     let syncFile: string | null = syncMock()?.file ?? null;
     let syncStamp = 1;
     let settings = {
@@ -395,7 +395,7 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
           return null;
         case 'sync_set_folder':
           sent.push({ type: 'sync_set_folder', path: args['path'] });
-          return args['path'] ?? null;
+          return args['path'] ? { path: args['path'], git: syncMock()?.git ?? false } : null;
         case 'sync_read':
           return syncFile;
         case 'sync_write':

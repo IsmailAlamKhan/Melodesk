@@ -128,3 +128,51 @@ describe('syncing two computers through a folder', () => {
     await expect(syncOnce(a.db, io, 'a')).rejects.toThrow('not-melodesk-sync-file');
   });
 });
+
+describe('plugins', () => {
+  it('syncs which are on and their settings, but never a sign-in', async () => {
+    const a = computer();
+    const b = computer();
+    const io = folder();
+    a.set('plugin:lastfm:enabled', '1', 100);
+    a.set(
+      'plugin:lastfm:settings',
+      '{"username":"ann","sessionKey":"SECRET-A","apiToken":"T"}',
+      100,
+    );
+    await syncOnce(a.db, io, 'a');
+    expect(io.text()).not.toContain('SECRET-A');
+    expect(io.text()).not.toContain('"apiToken"');
+    expect(io.text()).toContain('"username\\":\\"ann');
+    await syncOnce(b.db, io, 'b');
+    expect(b.get('plugin:lastfm:enabled')).toBe('1');
+    expect(JSON.parse(b.get('plugin:lastfm:settings') ?? '{}')).toEqual({ username: 'ann' });
+  });
+
+  it('keeps this computer’s own sign-in when settings arrive from another', async () => {
+    const a = computer();
+    const b = computer();
+    const io = folder();
+    a.set('plugin:lastfm:settings', '{"username":"ann","scrobble":true}', 300);
+    b.set('plugin:lastfm:settings', '{"username":"old","sessionKey":"MINE"}', 100);
+    await syncOnce(a.db, io, 'a');
+    const got = await syncOnce(b.db, io, 'b');
+    expect(got.applied).toEqual(['plugin:lastfm:settings']);
+    expect(JSON.parse(b.get('plugin:lastfm:settings') ?? '{}')).toEqual({
+      username: 'ann',
+      scrobble: true,
+      sessionKey: 'MINE',
+    });
+  });
+
+  it('does not treat a sign-in alone as a change to send round', async () => {
+    const a = computer();
+    const io = folder();
+    a.set('plugin:lastfm:settings', '{"username":"ann"}', 100);
+    await syncOnce(a.db, io, 'a');
+    const writes = io.writes();
+    a.set('plugin:lastfm:settings', '{"username":"ann","sessionKey":"NEW"}', 500);
+    await syncOnce(a.db, io, 'a');
+    expect(io.writes()).toBe(writes);
+  });
+});

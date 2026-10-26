@@ -127,6 +127,21 @@ export function PlayerBar() {
             byline={track?.artist ?? ''}
             className="mt-0.5 block max-w-full truncate text-[13px] text-fg-muted"
           />
+          {fromYouTube && flags?.adPlaying && (
+            <div className="mt-1 flex items-center gap-2 text-xs text-fg-muted">
+              <span>{t('player.adPlaying')}</span>
+              {/* The page's own Skip button, pressed when asked; the ad is never hidden or blocked. */}
+              <button
+                type="button"
+                disabled={!flags.adSkippable}
+                title={flags.adSkippable ? undefined : t('player.adNotSkippable')}
+                onClick={() => void sendCommand({ type: 'skipAd' })}
+                className="rounded-full bg-bg-overlay px-2.5 py-0.5 font-medium text-fg hover:bg-accent-soft hover:text-accent disabled:pointer-events-none disabled:opacity-50"
+              >
+                {t('player.skipAd')}
+              </button>
+            </div>
+          )}
         </div>
         {track && fromYouTube && (
           <div className="ms-1 flex shrink-0 items-center max-rail:hidden">

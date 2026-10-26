@@ -99,6 +99,8 @@ pub enum PlayerCommand {
     SetVideoMode {
         video: bool,
     },
+    /// Press the page's own Skip button on an ad that offers one.
+    SkipAd,
     /// Relative volume change from global shortcuts (-1..=1).
     VolumeStep {
         delta: f64,

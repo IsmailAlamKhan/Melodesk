@@ -8,7 +8,7 @@ import { chooseFolder, stopSyncing, syncNow, useSync } from './controller';
 /** Keep settings the same on several computers, through a folder that something else already syncs. */
 export function SyncSection() {
   const t = useT();
-  const { folder, status, lastAt, error } = useSync();
+  const { folder, git, status, lastAt, error } = useSync();
   const [problem, setProblem] = useState<string | null>(null);
 
   const pick = async (): Promise<void> => {
@@ -70,6 +70,7 @@ export function SyncSection() {
             </>
           )}
         </div>
+        {git && <p className="text-xs text-fg-muted">{t('sync.git')}</p>}
         <p className="text-xs text-fg-subtle">{t('sync.what')}</p>
         <p className="text-xs text-fg-subtle">{t('sync.how')}</p>
         {shownError && (

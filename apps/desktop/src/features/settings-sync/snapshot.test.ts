@@ -11,6 +11,8 @@ describe('what is synced', () => {
       'lyrics:offset:abc',
       'local:smart',
       'podcasts:feeds',
+      'plugin:lastfm:enabled',
+      'plugin:lastfm:settings',
     ])
       expect(isSynced(k), k).toBe(true);
     for (const k of [
@@ -18,7 +20,7 @@ describe('what is synced', () => {
       'server:config',
       'query-cache',
       'resume:last',
-      'plugin:lastfm:settings',
+      'plugin:lastfm:store:cache',
       'sync:folder',
       'whats-new:seen',
     ])

@@ -227,6 +227,12 @@ export class BridgeController {
         // Only same-origin paths; the schema already rejects anything that is not "/...".
         location.assign(new URL(cmd.path, 'https://music.youtube.com/').toString());
         break;
+      case 'skipAd': {
+        // Only the page's own Skip button, only when it is there, only because the listener asked.
+        const skip = document.querySelector<HTMLElement>(selectors.skipAd);
+        if (skip && skip.offsetParent !== null) skip.click();
+        break;
+      }
       case 'requestState':
         // Before attach there is nothing truthful to report; attach() emits everything.
         if (!this.player) break;
@@ -477,6 +483,8 @@ export class BridgeController {
     emit({ type: 'queue', queue });
   }
 
+  private adTimer = 0;
+
   private emitFlags(force: boolean): void {
     const state = safeCall(() => getStore()?.getState()) as
       { player?: Record<string, unknown>; likeStatus?: Record<string, unknown> } | undefined;
@@ -498,7 +506,16 @@ export class BridgeController {
       ),
       isVideo: state.player?.audioOnly === false,
       adPlaying: state.player?.adPlaying === true,
+      adSkippable:
+        state.player?.adPlaying === true &&
+        (document.querySelector<HTMLElement>(selectors.skipAd)?.offsetParent ?? null) !== null,
     };
+    // The Skip button appears a few seconds into an ad without the page's state changing: look again.
+    if (flags.adPlaying && !flags.adSkippable && !this.adTimer)
+      this.adTimer = window.setTimeout(() => {
+        this.adTimer = 0;
+        this.emitFlags(false);
+      }, 1000);
     const json = JSON.stringify(flags);
     if (!force && json === this.lastFlagsJson) return;
     this.lastFlagsJson = json;

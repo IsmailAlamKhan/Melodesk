@@ -99,7 +99,13 @@ test('light theme with a custom accent', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Indian Music' })).toBeVisible();
   await emit(page, {
     type: 'flags',
-    flags: { likeStatus: 'LIKE', playbackRate: 1, isVideo: false, adPlaying: false },
+    flags: {
+      likeStatus: 'LIKE',
+      playbackRate: 1,
+      isVideo: false,
+      adPlaying: false,
+      adSkippable: false,
+    },
   });
   await shot(page, 'light');
 });
