@@ -26,8 +26,8 @@ test('choosing a folder writes this computer’s settings into it', async ({ pag
     kv: { 'audio:prefs': '{"eqEnabled":true}', 'server:config': 'never synced' },
   });
   await open(page);
-  await expect(page.getByText('Not syncing.')).toBeVisible();
-  await page.getByRole('button', { name: 'Choose a folder' }).click();
+  await expect(page.getByText(/Not syncing yet/u)).toBeVisible();
+  await page.getByRole('button', { name: 'Choose another folder…' }).click();
   await expect(page.getByText('/Cloud/Melodesk')).toBeVisible();
   await expect(page.getByText(/Last synced/u)).toBeVisible();
   // The appearance choices the app saved at start are in the file; folders and servers never are.
@@ -76,6 +76,51 @@ test('a file in the folder that is not ours is left alone', async ({ page }) => 
 test('a folder that is a git repository says so', async ({ page }) => {
   await installTauri(page, { sync: { folder: '/Code/melodesk-settings', git: true } });
   await open(page);
-  await page.getByRole('button', { name: 'Choose a folder' }).click();
+  await page.getByRole('button', { name: 'Choose another folder…' }).click();
   await expect(page.getByText(/This folder is a git repository/u)).toBeVisible();
+});
+
+test('a cloud folder this computer has is one click away', async ({ page }) => {
+  await installTauri(page, {
+    sync: {
+      folder: '/unused',
+      clouds: [
+        { id: 'icloud', name: 'iCloud Drive', path: '/Users/me/iCloud' },
+        { id: 'dropbox', name: 'Dropbox', path: '/Users/me/Dropbox' },
+      ],
+    },
+    kv: { 'audio:prefs': '{"eqEnabled":true}' },
+  });
+  await open(page);
+  await expect(page.getByRole('button', { name: 'Sign in with GitHub' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Use iCloud Drive' }).click();
+  await expect(page.getByText('Syncing through iCloud Drive.')).toBeVisible();
+  await expect(page.getByText('/Users/me/iCloud/Melodesk')).toBeVisible();
+  await expect
+    .poll(async () => (await sentCommands(page)).some((c) => c['type'] === 'sync_write'))
+    .toBe(true);
+});
+
+test('signing in with GitHub shows a code, waits for approval, then syncs through the account', async ({
+  page,
+}) => {
+  await installTauri(page, {
+    sync: { folder: '/unused', github: { code: 'WDJB-MJHT', pendingPolls: 1, login: 'ann' } },
+    kv: { 'audio:prefs': '{"eqEnabled":true}' },
+  });
+  await open(page);
+  await page.getByRole('button', { name: 'Sign in with GitHub' }).click();
+  await expect(page.getByLabel('Code to type at GitHub')).toHaveText('WDJB-MJHT');
+  await expect(page.getByText(/only for permission to use your gists/u)).toBeVisible();
+  await expect(page.getByText('Syncing through GitHub as ann.')).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByLabel('Code to type at GitHub')).toHaveCount(0);
+  await expect
+    .poll(async () => (await sentCommands(page)).some((c) => c['type'] === 'sync_write'))
+    .toBe(true);
+  // Stopping signs out: the token is forgotten.
+  await page.getByRole('button', { name: 'Stop syncing' }).click();
+  await expect
+    .poll(async () => (await sentCommands(page)).some((c) => c['type'] === 'sync_github_sign_out'))
+    .toBe(true);
+  await expect(page.getByText(/Not syncing yet/u)).toBeVisible();
 });

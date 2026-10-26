@@ -55,6 +55,14 @@ tauri-plugin-single-instance = { version = "=2.5.4", features = ["deep-link"] }
 tauri-plugin-updater = "=2.14.0"
 window-vibrancy = "=0.8.1"
 
+# The sign-in for settings sync through GitHub is kept in the system keychain (see src/github.rs).
+# Linux has no keychain every desktop agrees on, so there it is kept in a file only the user can read.
+[target.'cfg(target_os = "macos")'.dependencies]
+keyring = { version = "=3.6.3", default-features = false, features = ["apple-native"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+keyring = { version = "=3.6.3", default-features = false, features = ["windows-native"] }
+
 [target.'cfg(target_os = "linux")'.dependencies]
 souvlaki = { version = "=0.8.3", default-features = false, features = ["use_zbus"] }
 

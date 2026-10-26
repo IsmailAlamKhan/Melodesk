@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-sync-github-poll"
+description = "Enables the sync_github_poll command without any pre-configured scope."
+commands.allow = ["sync_github_poll"]
+
+[[permission]]
+identifier = "deny-sync-github-poll"
+description = "Denies the sync_github_poll command without any pre-configured scope."
+commands.deny = ["sync_github_poll"]

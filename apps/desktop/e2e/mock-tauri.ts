@@ -94,7 +94,15 @@ export interface MockOptions {
   /** Saved settings the app starts with, as the database would have them (only on the first load). */
   kv?: Record<string, string>;
   /** A folder for settings sync: what the picker answers, and the sync file already in it (if any). */
-  sync?: { folder: string; file?: string; git?: boolean };
+  sync?: {
+    folder: string;
+    file?: string;
+    git?: boolean;
+    /** Cloud folders this computer has. */
+    clouds?: { id: string; name: string; path: string }[];
+    /** GitHub sign-in is offered; the code it shows and how many "not yet" answers come first. */
+    github?: { code: string; pendingPolls?: number; login?: string };
+  };
   /** A playlist file the picker offers (Import a playlist). */
   importFile?: { path: string; text: string };
 }
@@ -256,8 +264,15 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
     );
     const persistAt = (): void =>
       localStorage.setItem('__mockKvAt', JSON.stringify([...changedAt]));
-    const syncMock = (): { folder: string; file?: string; git?: boolean } | null =>
-      (w['__syncMock'] as { folder: string; file?: string; git?: boolean } | null) ?? null;
+    type SyncMock = {
+      folder: string;
+      file?: string;
+      git?: boolean;
+      clouds?: { id: string; name: string; path: string }[];
+      github?: { code: string; pendingPolls?: number; login?: string };
+    };
+    const syncMock = (): SyncMock | null => (w['__syncMock'] as SyncMock | null) ?? null;
+    let githubPolls = 0;
     let syncFile: string | null = syncMock()?.file ?? null;
     let syncStamp = 1;
     let settings = {
@@ -392,6 +407,35 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
         }
         case 'youtube_set_enabled':
           sent.push({ type: 'youtube_set_enabled', enabled: args['enabled'] });
+          return null;
+        case 'sync_cloud_options':
+          return syncMock()?.clouds ?? [];
+        case 'sync_use_cloud': {
+          const cloud = syncMock()?.clouds?.find((c) => c.id === args['id']);
+          sent.push({ type: 'sync_use_cloud', id: args['id'] });
+          return cloud ? { path: `${cloud.path}/Melodesk`, git: false } : null;
+        }
+        case 'sync_github_available':
+          return syncMock()?.github !== undefined;
+        case 'sync_github_start':
+          sent.push({ type: 'sync_github_start' });
+          githubPolls = 0;
+          return {
+            userCode: syncMock()?.github?.code ?? 'AAAA-BBBB',
+            verificationUri: 'https://github.com/login/device',
+            interval: 1,
+            expiresIn: 60,
+          };
+        case 'sync_github_poll': {
+          githubPolls += 1;
+          const gh = syncMock()?.github;
+          if (githubPolls <= (gh?.pendingPolls ?? 0)) return { status: 'pending', login: null };
+          return { status: 'done', login: gh?.login ?? null };
+        }
+        case 'sync_github_resume':
+          return false;
+        case 'sync_github_sign_out':
+          sent.push({ type: 'sync_github_sign_out' });
           return null;
         case 'sync_set_folder':
           sent.push({ type: 'sync_set_folder', path: args['path'] });

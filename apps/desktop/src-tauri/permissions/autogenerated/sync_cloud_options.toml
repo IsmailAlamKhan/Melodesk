@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-sync-cloud-options"
+description = "Enables the sync_cloud_options command without any pre-configured scope."
+commands.allow = ["sync_cloud_options"]
+
+[[permission]]
+identifier = "deny-sync-cloud-options"
+description = "Denies the sync_cloud_options command without any pre-configured scope."
+commands.deny = ["sync_cloud_options"]

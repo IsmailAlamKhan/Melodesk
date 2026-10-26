@@ -1,12 +1,36 @@
 # Settings sync
 
-Melodesk can keep your settings the same on several computers. It has no server and no account: you
-pick a folder that something else already keeps in step (iCloud Drive, Dropbox, OneDrive, Google
-Drive for desktop, Syncthing, a network share) and Melodesk reads and writes one small file in it,
-`melodesk-sync.json`.
+Melodesk can keep your settings the same on several computers. It has no server and no account of its
+own, and you install nothing: Settings → Storage → **Sync settings between computers** offers what this
+computer already has, one click each.
 
-Settings → Storage → **Sync settings between computers** → **Choose a folder**. Do the same on each
-computer, with the same synced folder.
+- **iCloud Drive** (comes with macOS), **OneDrive** (comes with Windows), **Dropbox**, **Google Drive**:
+  if the folder is on this computer, Melodesk makes a `Melodesk` folder in it and keeps one small file,
+  `melodesk-sync.json`, there. The computer's own cloud client does the uploading, so Melodesk handles no
+  sign-in. Use the same service on each computer.
+- **GitHub account**: _Sign in with GitHub_ shows a short code, opens github.com/login/device, and you
+  type the code and approve (the way a TV app signs in). Melodesk asks only for the `gist` permission and
+  keeps the file in one **secret gist** on your account (a secret gist is not listed, but anyone with
+  its address can read it; the file holds preferences, never passwords or tokens). The token is kept in
+  the macOS Keychain or Windows Credential Manager, and on Linux in a file only you can read. Sign out
+  (Stop syncing) forgets it; you can also revoke it at github.com/settings/applications. This works
+  between any computers, whatever they run.
+- **Any other folder**, including a clone of a private git repository (see below), for Syncthing, a
+  network share and so on.
+
+Do the same on each computer, with the same service.
+
+### Setting up GitHub sign-in (for whoever builds Melodesk)
+
+GitHub sign-in needs an OAuth app that is registered once. Its _client id_ is public (there is no secret
+to keep), and is built into the app:
+
+1. github.com → Settings → Developer settings → OAuth Apps → New OAuth App. Name `Melodesk`, any
+   homepage, callback URL `http://localhost` (not used).
+2. Tick **Enable Device Flow**, then register.
+3. Copy the **Client ID** and save it as a repository variable named `MELODESK_GITHUB_CLIENT_ID`
+   (Settings → Secrets and variables → Actions → Variables). Releases built after that offer the button;
+   a local build can set the same variable in the environment. Without it the button is not shown.
 
 ## What is synced
 

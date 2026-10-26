@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-sync-github-available"
+description = "Enables the sync_github_available command without any pre-configured scope."
+commands.allow = ["sync_github_available"]
+
+[[permission]]
+identifier = "deny-sync-github-available"
+description = "Denies the sync_github_available command without any pre-configured scope."
+commands.deny = ["sync_github_available"]

@@ -16,11 +16,14 @@ use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant, UNIX_EPOCH};
 
 use serde::Serialize;
-use tauri::State;
+
+use crate::github::GithubState;
+use tauri::{AppHandle, Runtime, State};
 
 /// The one file that is read and written.
 const FILE_NAME: &str = "melodesk-sync.json";
@@ -31,8 +34,39 @@ const MAX_BYTES: u64 = 20 * 1024 * 1024;
 #[derive(Default)]
 pub struct SyncState {
     dir: Mutex<Option<PathBuf>>,
+    /// Syncing goes through the person's GitHub account (see `github.rs`) instead of a folder.
+    github: AtomicBool,
     /// One round at a time: a pull and a push must not run over each other.
-    busy: Mutex<()>,
+    busy: Arc<Mutex<()>>,
+}
+
+impl SyncState {
+    pub(crate) fn use_github(&self) {
+        if let Ok(mut d) = self.dir.lock() {
+            *d = None;
+        }
+        self.github.store(true, Ordering::SeqCst);
+    }
+
+    pub(crate) fn stop(&self) {
+        if let Ok(mut d) = self.dir.lock() {
+            *d = None;
+        }
+        self.github.store(false, Ordering::SeqCst);
+    }
+}
+
+/// Where the sync file is kept right now.
+enum Place {
+    Folder(PathBuf),
+    Github,
+}
+
+fn place(state: &SyncState) -> Result<Place, String> {
+    if state.github.load(Ordering::SeqCst) {
+        return Ok(Place::Github);
+    }
+    folder(state).map(Place::Folder)
 }
 
 /// How long a git command may take (a stuck network should not hang the app).
@@ -173,7 +207,7 @@ fn git_push(dir: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn folder(state: &State<'_, SyncState>) -> Result<PathBuf, String> {
+fn folder(state: &SyncState) -> Result<PathBuf, String> {
     state
         .dir
         .lock()
@@ -239,74 +273,117 @@ fn write_synced(dir: &Path, text: &str) -> Result<(), String> {
 
 #[derive(Serialize)]
 pub struct Chosen {
-    path: String,
+    pub path: String,
     /// The folder is a git repository, so syncing goes through git.
-    git: bool,
+    pub git: bool,
 }
 
-/// Choose the folder (None stops syncing). The folder must exist and be one we can write in.
+/// Make `path` the sync folder: it must exist and be one we can write in.
+pub(crate) fn choose(state: &SyncState, path: &Path) -> Result<Chosen, String> {
+    let real = fs::canonicalize(path).map_err(|e| format!("cannot open that folder: {e}"))?;
+    if !real.is_dir() {
+        return Err("that is not a folder".into());
+    }
+    // Fail now, not at the first sync, if it cannot be written in.
+    let probe = real.join(".melodesk-sync-probe");
+    fs::write(&probe, b"").map_err(|e| format!("cannot write in that folder: {e}"))?;
+    let _ = fs::remove_file(&probe);
+    let chosen = Chosen {
+        path: real.display().to_string(),
+        git: is_git(&real),
+    };
+    state.github.store(false, Ordering::SeqCst);
+    *state
+        .dir
+        .lock()
+        .map_err(|_| "sync lock poisoned".to_string())? = Some(real);
+    Ok(chosen)
+}
+
+/// Choose the folder (None stops syncing).
 #[tauri::command]
 pub fn sync_set_folder(
     state: State<'_, SyncState>,
     path: Option<String>,
 ) -> Result<Option<Chosen>, String> {
-    let chosen = match path {
-        None => None,
-        Some(p) => {
-            let real = fs::canonicalize(&p).map_err(|e| format!("cannot open that folder: {e}"))?;
-            if !real.is_dir() {
-                return Err("that is not a folder".into());
-            }
-            // Fail now, not at the first sync, if it cannot be written in.
-            let probe = real.join(".melodesk-sync-probe");
-            fs::write(&probe, b"").map_err(|e| format!("cannot write in that folder: {e}"))?;
-            let _ = fs::remove_file(&probe);
-            Some(real)
+    match path {
+        None => {
+            state.stop();
+            Ok(None)
         }
-    };
-    let shown = chosen.as_ref().map(|p| Chosen {
-        path: p.display().to_string(),
-        git: is_git(p),
-    });
-    *state
-        .dir
-        .lock()
-        .map_err(|_| "sync lock poisoned".to_string())? = chosen;
-    Ok(shown)
-}
-
-#[tauri::command]
-pub fn sync_read(state: State<'_, SyncState>) -> Result<Option<String>, String> {
-    let dir = folder(&state)?;
-    let _round = state
-        .busy
-        .lock()
-        .map_err(|_| "sync lock poisoned".to_string())?;
-    read_synced(&dir)
-}
-
-#[tauri::command]
-pub fn sync_write(state: State<'_, SyncState>, text: String) -> Result<(), String> {
-    let dir = folder(&state)?;
-    let _round = state
-        .busy
-        .lock()
-        .map_err(|_| "sync lock poisoned".to_string())?;
-    write_synced(&dir, &text)
-}
-
-#[tauri::command]
-pub fn sync_stamp(state: State<'_, SyncState>) -> Result<Option<u64>, String> {
-    let dir = folder(&state)?;
-    let _round = state
-        .busy
-        .lock()
-        .map_err(|_| "sync lock poisoned".to_string())?;
-    // In a git repository the file only changes when something is pulled.
-    if is_git(&dir) {
-        git_pull(&dir)?;
+        Some(p) => choose(&state, Path::new(&p)).map(Some),
     }
-    Ok(stamp_in(&dir))
+}
+
+/// Run blocking work (a file, a git command) off the async runtime's threads.
+async fn blocking<T: Send + 'static>(
+    work: impl FnOnce() -> Result<T, String> + Send + 'static,
+) -> Result<T, String> {
+    tauri::async_runtime::spawn_blocking(work)
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn sync_read<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, SyncState>,
+    gh: State<'_, GithubState>,
+) -> Result<Option<String>, String> {
+    match place(&state)? {
+        Place::Github => crate::github::read(&app, &gh).await,
+        Place::Folder(dir) => {
+            let busy = state.busy.clone();
+            blocking(move || {
+                let _round = busy.lock().map_err(|_| "sync lock poisoned".to_string())?;
+                read_synced(&dir)
+            })
+            .await
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn sync_write<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, SyncState>,
+    gh: State<'_, GithubState>,
+    text: String,
+) -> Result<(), String> {
+    match place(&state)? {
+        Place::Github => crate::github::write(&app, &gh, &text).await,
+        Place::Folder(dir) => {
+            let busy = state.busy.clone();
+            blocking(move || {
+                let _round = busy.lock().map_err(|_| "sync lock poisoned".to_string())?;
+                write_synced(&dir, &text)
+            })
+            .await
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn sync_stamp<R: Runtime>(
+    app: AppHandle<R>,
+    state: State<'_, SyncState>,
+    gh: State<'_, GithubState>,
+) -> Result<Option<u64>, String> {
+    match place(&state)? {
+        Place::Github => crate::github::stamp(&app, &gh).await,
+        Place::Folder(dir) => {
+            let busy = state.busy.clone();
+            blocking(move || {
+                let _round = busy.lock().map_err(|_| "sync lock poisoned".to_string())?;
+                // In a git repository the file only changes when something is pulled.
+                if is_git(&dir) {
+                    git_pull(&dir)?;
+                }
+                Ok(stamp_in(&dir))
+            })
+            .await
+        }
+    }
 }
 
 #[cfg(test)]

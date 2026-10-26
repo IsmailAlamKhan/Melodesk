@@ -4,6 +4,7 @@
 //! surface. All playback happens inside the official music.youtube.com web player, which
 //! runs in its own webview window (see [`player`]).
 
+mod cloud;
 mod control;
 mod deeplink;
 #[cfg(feature = "discord")]
@@ -11,6 +12,7 @@ mod discord;
 #[cfg(not(feature = "discord"))]
 #[path = "discord_off.rs"]
 mod discord;
+mod github;
 mod local;
 #[cfg(target_os = "linux")]
 mod media;
@@ -89,6 +91,13 @@ pub fn run() {
             local::local_write_tags,
             control::control_start,
             control::control_stop,
+            github::sync_github_available,
+            github::sync_github_start,
+            github::sync_github_poll,
+            github::sync_github_resume,
+            github::sync_github_sign_out,
+            cloud::sync_cloud_options,
+            cloud::sync_use_cloud,
             sync::sync_set_folder,
             sync::sync_read,
             sync::sync_write,
@@ -106,6 +115,7 @@ pub fn run() {
             app.manage(control::ControlState::default());
             app.manage(net::NetState::default());
             app.manage(sync::SyncState::default());
+            app.manage(github::GithubState::default());
             app.manage(settings::SettingsState(std::sync::Mutex::new(
                 settings.clone(),
             )));
