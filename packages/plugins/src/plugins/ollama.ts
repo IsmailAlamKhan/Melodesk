@@ -46,6 +46,41 @@ export function buildExplainPrompt(
     .join(' ');
 }
 
+/** What the model is asked to turn a playlist description into: the filter fields, as JSON. */
+export function buildRulesPrompt(description: string): string {
+  return [
+    'You turn a description of a playlist into filter rules for a music library.',
+    `The description is ${JSON.stringify(description.slice(0, 300))}.`,
+    'Reply with JSON only, using only the keys that the description needs:',
+    '{"text": words that must appear in the title, artist, album or genre,',
+    '"genre": one genre, "yearFrom": number, "yearTo": number,',
+    '"minPlays": number, "maxPlays": number (0 = never played),',
+    '"notPlayedDays": number (not played in the last N days), "playedWithinDays": number,',
+    '"addedWithinDays": number, "minMinutes": number, "maxMinutes": number,',
+    '"sort": one of random, mostPlayed, leastPlayed, recentlyAdded, lastPlayed, title, artist,',
+    '"limit": number of songs}.',
+    'Do not name songs. Leave out keys that do not apply.',
+  ].join(' ');
+}
+
+/** The JSON object in a model's reply, or null if it did not give one. */
+export function parseJsonObject(reply: string): Record<string, unknown> | null {
+  const tryParse = (text: string): Record<string, unknown> | null => {
+    try {
+      const v: unknown = JSON.parse(text);
+      return typeof v === 'object' && v !== null && !Array.isArray(v)
+        ? (v as Record<string, unknown>)
+        : null;
+    } catch {
+      return null;
+    }
+  };
+  const whole = tryParse(reply);
+  if (whole) return whole;
+  const m = /\{[\s\S]*\}/u.exec(reply);
+  return m ? tryParse(m[0]) : null;
+}
+
 /** The guesses in a model's reply, or none if it did not follow the shape. */
 export function parseGuesses(reply: string): Guess[] {
   let data: unknown;
@@ -158,6 +193,32 @@ export const ollama = definePlugin({
           status = `Ready · ${model()}`;
           const text = (body.response ?? '').trim();
           return text ? text.slice(0, 800) : null;
+        } catch {
+          status = `Cannot reach Ollama at ${base()}. Is it running?`;
+          return null;
+        }
+      },
+      suggestRules: async (description) => {
+        if (!ctx.fetch) return null;
+        try {
+          const res = await ctx.fetch(`${base()}/api/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: model(),
+              prompt: buildRulesPrompt(description),
+              stream: false,
+              format: 'json',
+              options: { temperature: 0, num_predict: 300 },
+            }),
+          });
+          if (!res.ok) {
+            status = `Ollama answered ${String(res.status)} (is “${model()}” installed?)`;
+            return null;
+          }
+          const body = (await res.json()) as { response?: string };
+          status = `Ready · ${model()}`;
+          return parseJsonObject(body.response ?? '');
         } catch {
           status = `Cannot reach Ollama at ${base()}. Is it running?`;
           return null;

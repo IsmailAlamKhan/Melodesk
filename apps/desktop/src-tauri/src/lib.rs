@@ -76,6 +76,7 @@ pub fn run() {
             discord::discord_set_activity,
             discord::discord_clear,
             native::open_mini_player,
+            native::open_lyrics_overlay,
             native::set_native_labels,
             local::local_scan,
             local::local_read_file,

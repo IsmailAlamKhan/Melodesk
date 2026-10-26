@@ -383,3 +383,32 @@ pub fn open_mini_player<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
     builder.build().map_err(|e| e.to_string())?;
     Ok(())
 }
+
+/// The window label of the floating lyrics overlay.
+const LYRICS_OVERLAY_LABEL: &str = "lyrics-overlay";
+
+/// A transparent, always-on-top strip that shows the line being sung, on top of other windows.
+/// Its content is our own UI (`?window=lyrics`); the main window sends it the lines.
+#[tauri::command]
+pub fn open_lyrics_overlay<R: Runtime>(app: AppHandle<R>) -> Result<(), String> {
+    use tauri::{WebviewUrl, WebviewWindowBuilder};
+    if let Some(w) = app.get_webview_window(LYRICS_OVERLAY_LABEL) {
+        w.show().map_err(|e| e.to_string())?;
+        return Ok(());
+    }
+    let builder = WebviewWindowBuilder::new(
+        &app,
+        LYRICS_OVERLAY_LABEL,
+        WebviewUrl::App("index.html?window=lyrics".into()),
+    )
+    .title("Melodesk Lyrics")
+    .inner_size(820.0, 150.0)
+    .min_inner_size(320.0, 90.0)
+    .always_on_top(true)
+    .decorations(false)
+    .resizable(true)
+    .skip_taskbar(true)
+    .transparent(true);
+    builder.build().map_err(|e| e.to_string())?;
+    Ok(())
+}

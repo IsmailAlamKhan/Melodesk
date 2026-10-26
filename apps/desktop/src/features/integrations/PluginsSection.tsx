@@ -15,6 +15,7 @@ const PERMISSION_KEYS: Record<string, MessageKey> = {
 /** Plugins are listed by what they do, in this order; a group with no plugins is left out. */
 const GROUPS: { id: string; title: MessageKey; hint: MessageKey }[] = [
   { id: 'lyrics', title: 'plugins.group.lyrics', hint: 'plugins.group.lyrics.hint' },
+  { id: 'info', title: 'plugins.group.info', hint: 'plugins.group.info.hint' },
   { id: 'identify', title: 'plugins.group.identify', hint: 'plugins.group.identify.hint' },
   { id: 'activity', title: 'plugins.group.activity', hint: 'plugins.group.activity.hint' },
 ];
@@ -22,6 +23,7 @@ const GROUPS: { id: string; title: MessageKey; hint: MessageKey }[] = [
 function groupOf(p: PluginRecord): string {
   if (p.manifest.provides.includes('lyrics')) return 'lyrics';
   if (p.manifest.provides.includes('identify')) return 'identify';
+  if (p.manifest.provides.includes('info')) return 'info';
   return 'activity';
 }
 

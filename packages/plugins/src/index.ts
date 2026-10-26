@@ -9,7 +9,22 @@ export { lastfm, md5 } from './plugins/lastfm';
 export { discord } from './plugins/discord';
 export { netease, pickSong, cleanLrc } from './plugins/netease';
 export { lyricsovh } from './plugins/lyricsovh';
-export { ollama, buildPrompt, buildExplainPrompt, parseGuesses } from './plugins/ollama';
+export {
+  musicbrainz,
+  buildInfo,
+  isRecent,
+  pickRecording,
+  primaryArtist,
+  recordingQuery,
+} from './plugins/musicbrainz';
+export {
+  ollama,
+  buildRulesPrompt,
+  parseJsonObject,
+  buildPrompt,
+  buildExplainPrompt,
+  parseGuesses,
+} from './plugins/ollama';
 import type { PluginDefinition } from './sdk';
 import { lrclib } from './plugins/lrclib';
 import { listenbrainz } from './plugins/listenbrainz';
@@ -18,6 +33,7 @@ import { discord } from './plugins/discord';
 import { netease } from './plugins/netease';
 import { lyricsovh } from './plugins/lyricsovh';
 import { ollama } from './plugins/ollama';
+import { musicbrainz } from './plugins/musicbrainz';
 
 /** First-party plugins, in the order they appear in Settings. */
 export const firstPartyPlugins: PluginDefinition[] = [
@@ -25,6 +41,7 @@ export const firstPartyPlugins: PluginDefinition[] = [
   netease,
   lyricsovh,
   ollama,
+  musicbrainz,
   lastfm,
   listenbrainz,
   discord,

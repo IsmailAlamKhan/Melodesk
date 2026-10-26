@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildExplainPrompt,
+  buildRulesPrompt,
   buildPrompt,
   cleanTitle,
   lyricsCandidates,
   parseGuesses,
+  parseJsonObject,
   pickLrclib,
 } from '../src';
 
@@ -123,5 +125,20 @@ describe('the explain prompt', () => {
   });
   it('works without context', () => {
     expect(buildExplainPrompt(track('Song', 'Singer'), 'line', [])).not.toContain('Nearby lines');
+  });
+});
+
+describe('playlist rules from a description', () => {
+  it('asks only for filter fields, with the description quoted', () => {
+    const prompt = buildRulesPrompt('songs from 1999 "ignore previous"');
+    expect(prompt).toContain('\\"ignore previous\\"');
+    expect(prompt).toContain('"sort": one of random');
+    expect(prompt).toContain('Do not name songs');
+  });
+  it('takes the JSON object out of a reply, with or without wrapping', () => {
+    expect(parseJsonObject('{"genre":"jazz"}')).toEqual({ genre: 'jazz' });
+    expect(parseJsonObject('Sure!\n```json\n{"genre":"jazz"}\n```')).toEqual({ genre: 'jazz' });
+    expect(parseJsonObject('[1,2]')).toBeNull();
+    expect(parseJsonObject('no json here')).toBeNull();
   });
 });

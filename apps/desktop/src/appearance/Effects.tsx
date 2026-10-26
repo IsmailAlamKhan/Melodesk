@@ -38,7 +38,7 @@ export function AppearanceEffects({ children }: { children: ReactNode }) {
 
   // The tray and the macOS Playback menu are native, so they get their text from here.
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('window') === 'mini') return;
+    if (new URLSearchParams(window.location.search).get('window') !== null) return;
     void invoke('set_native_labels', {
       labels: {
         play: t('native.play'),

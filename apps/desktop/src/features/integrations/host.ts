@@ -10,6 +10,8 @@ import {
   plainName,
   type SongGuess,
   type LyricsResult,
+  type NewRelease,
+  type SongInfo,
   type PluginContext,
   type PluginDefinition,
   type PluginInstance,
@@ -322,6 +324,56 @@ export async function explainLyric(
   return within(
     60_000,
     p.instance.explainLyric({ track, line, context }).catch(() => null),
+    null,
+  );
+}
+
+/** Whether a plugin that knows facts about songs is switched on and running. */
+export function isInfoProviderOn(): boolean {
+  return usePluginHost
+    .getState()
+    .plugins.some((p) => p.enabled && p.instance?.songInfo !== undefined);
+}
+
+/** Facts about a song from the first plugin that has them; it gets a time limit. */
+export async function songInfoFromPlugins(track: PluginTrack): Promise<SongInfo | null> {
+  const p = usePluginHost.getState().plugins.find((x) => x.enabled && x.instance?.songInfo);
+  if (!p?.instance?.songInfo) return null;
+  return within(
+    25_000,
+    p.instance.songInfo(track).catch(() => null),
+    null,
+  );
+}
+
+/** What these artists released lately, from the first plugin that can say (these lookups are slow on purpose). */
+export async function newReleasesFromPlugins(
+  artists: string[],
+  days: number,
+): Promise<NewRelease[]> {
+  const p = usePluginHost.getState().plugins.find((x) => x.enabled && x.instance?.newReleases);
+  if (!p?.instance?.newReleases) return [];
+  return within(
+    180_000,
+    p.instance.newReleases(artists, days).catch(() => []),
+    [],
+  );
+}
+
+/** Whether a plugin that can turn a description into playlist rules is switched on and running. */
+export function canSuggestRules(): boolean {
+  return usePluginHost
+    .getState()
+    .plugins.some((p) => p.enabled && p.instance?.suggestRules !== undefined);
+}
+
+/** Ask the first plugin that can to make filter rules from a description; it gets a time limit. */
+export async function suggestRulesFromPlugins(description: string): Promise<unknown> {
+  const p = usePluginHost.getState().plugins.find((x) => x.enabled && x.instance?.suggestRules);
+  if (!p?.instance?.suggestRules) return null;
+  return within(
+    60_000,
+    p.instance.suggestRules(description).catch(() => null),
     null,
   );
 }

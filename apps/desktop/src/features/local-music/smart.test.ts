@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { upsertTracks, type LibraryDb, type ScannedTrack } from './library';
-import { compileSmart, smartTracks, type SmartRules } from './smart';
+import { compileSmart, rulesFromAi, smartTracks, type SmartRules } from './smart';
 
 const DAY = 24 * 60 * 60 * 1000;
 const NOW = Date.UTC(2026, 5, 15, 12);
@@ -179,5 +179,48 @@ describe('smart playlists', () => {
       )
       .run(NOW);
     expect(await titles(f, { minPlays: 1, sort: 'title' })).toEqual([]);
+  });
+});
+
+describe('rulesFromAi', () => {
+  it('keeps the known fields, made safe', () => {
+    expect(
+      rulesFromAi({
+        text: '  chill  ',
+        genre: 'jazz',
+        yearFrom: '1990.7',
+        yearTo: -5,
+        maxPlays: 0,
+        notPlayedDays: 1e12,
+        limit: 9999,
+        sort: 'random',
+        extra: 'DROP TABLE local_tracks',
+      }),
+    ).toEqual({
+      text: 'chill',
+      genre: 'jazz',
+      yearFrom: 1990,
+      maxPlays: 0,
+      notPlayedDays: 36_500,
+      limit: 500,
+      sort: 'random',
+    });
+  });
+
+  it('falls back to a known order, and gives nothing for an empty or wrong answer', () => {
+    expect(rulesFromAi({ text: 'x', sort: 'DROP' })?.sort).toBe('recentlyAdded');
+    expect(rulesFromAi({})).toBeNull();
+    expect(rulesFromAi({ nothing: 1 })).toBeNull();
+    expect(rulesFromAi(null)).toBeNull();
+    expect(rulesFromAi('rules')).toBeNull();
+    expect(rulesFromAi([1])).toBeNull();
+  });
+
+  it('compiles to SQL that only binds the values', () => {
+    const rules = rulesFromAi({ text: "x'; DROP TABLE local_tracks;--", sort: 'title' });
+    expect(rules).not.toBeNull();
+    const { sql, values } = compileSmart(rules ?? { sort: 'title' }, NOW);
+    expect(sql).not.toContain('DROP');
+    expect(values.some((v) => typeof v === 'string' && v.includes('DROP'))).toBe(true);
   });
 });

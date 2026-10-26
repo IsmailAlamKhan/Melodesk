@@ -1,4 +1,4 @@
-import type { LyricsResult, PluginTrack } from '@melodesk/plugins';
+import type { LyricsResult, NewRelease, PluginTrack, SongInfo } from '@melodesk/plugins';
 import { create } from 'zustand';
 
 /** A small registry of things features offer to each other, with change notifications for React. */
@@ -41,3 +41,29 @@ export interface LyricsSource {
 }
 
 export const lyricsSources = createRegistry<LyricsSource>();
+
+/** Somewhere facts about songs and artists, and new releases, can come from (an opt-in plugin). */
+export interface InfoSource {
+  id: string;
+  label: string;
+  isActive: () => boolean;
+  subscribe: (onChange: () => void) => () => void;
+  /** Turn it on (the views that use it offer this before anything is sent). */
+  activate: () => void;
+  songInfo: (track: PluginTrack) => Promise<SongInfo | null>;
+  newReleases: (artists: string[], days: number) => Promise<NewRelease[]>;
+}
+
+export const infoSources = createRegistry<InfoSource>();
+
+/** An AI helper the app can ask to do small jobs (a model on this computer, switched on by the user). */
+export interface AiSource {
+  id: string;
+  label: string;
+  isActive: () => boolean;
+  subscribe: (onChange: () => void) => () => void;
+  /** Filter rules for a playlist described in words, as untrusted JSON (null when it could not be made). */
+  suggestRules: (description: string) => Promise<unknown>;
+}
+
+export const aiSources = createRegistry<AiSource>();

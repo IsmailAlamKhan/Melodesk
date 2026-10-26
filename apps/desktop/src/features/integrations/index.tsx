@@ -1,10 +1,23 @@
 import { Plug } from 'lucide-react';
-import { defineFeature, lyricsSources, type LyricsSource } from '../../core';
+import {
+  aiSources,
+  defineFeature,
+  infoSources,
+  lyricsSources,
+  type AiSource,
+  type InfoSource,
+  type LyricsSource,
+} from '../../core';
 import {
   enablePlugin,
   canExplainLyrics,
+  canSuggestRules,
+  suggestRulesFromPlugins,
   explainLyric,
+  isInfoProviderOn,
   isLyricsProviderOn,
+  newReleasesFromPlugins,
+  songInfoFromPlugins,
   lyricsSignature,
   lyricsFromPlugins,
   startPluginHost,
@@ -29,6 +42,26 @@ const lrclib: LyricsSource = {
   fetch: lyricsFromPlugins,
 };
 
+/** Facts about songs and new releases come from MusicBrainz; the views ask before it is switched on. */
+const musicbrainz: InfoSource = {
+  id: 'musicbrainz',
+  label: 'MusicBrainz',
+  isActive: isInfoProviderOn,
+  subscribe: (onChange) => usePluginHost.subscribe(onChange),
+  activate: () => void enablePlugin('musicbrainz'),
+  songInfo: songInfoFromPlugins,
+  newReleases: newReleasesFromPlugins,
+};
+
+/** A model on this computer (Ollama) can fill in smart-playlist rules from a description. */
+const localAi: AiSource = {
+  id: 'ollama',
+  label: 'Ollama',
+  isActive: canSuggestRules,
+  subscribe: (onChange) => usePluginHost.subscribe(onChange),
+  suggestRules: suggestRulesFromPlugins,
+};
+
 export default defineFeature({
   id: 'integrations',
   name: 'feature.integrations.name',
@@ -40,8 +73,12 @@ export default defineFeature({
   start: () => {
     const stopHost = startPluginHost();
     const offLyrics = lyricsSources.register(lrclib);
+    const offInfo = infoSources.register(musicbrainz);
+    const offAi = aiSources.register(localAi);
     return () => {
+      offAi();
       offLyrics();
+      offInfo();
       stopHost();
     };
   },

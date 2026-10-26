@@ -81,8 +81,9 @@ input[type='range'] {
   accent-color: var(--color-accent);
 }
 
-/* Mini player window: transparent chrome so the rounded card floats. */
-:root[data-window='mini'] body {
+/* Mini player and lyrics overlay windows: transparent chrome so what is inside floats. */
+:root[data-window='mini'] body,
+:root[data-window='lyrics'] body {
   background: transparent;
 }
 

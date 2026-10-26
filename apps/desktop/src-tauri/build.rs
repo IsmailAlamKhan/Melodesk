@@ -13,6 +13,7 @@ fn main() {
             "discord_set_activity",
             "discord_clear",
             "open_mini_player",
+            "open_lyrics_overlay",
             "set_native_labels",
             "local_scan",
             "local_read_file",

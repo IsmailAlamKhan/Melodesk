@@ -137,6 +137,53 @@ interface Row {
   rg_peak: number | null;
 }
 
+const SORT_KEYS: readonly SmartSort[] = [
+  'random',
+  'mostPlayed',
+  'leastPlayed',
+  'recentlyAdded',
+  'lastPlayed',
+  'title',
+  'artist',
+];
+
+/**
+ * Rules from a model's JSON, which is not trusted: only the known fields are kept, numbers are
+ * made whole and non-negative, text is cut short and the order must be one we know. The result goes
+ * through `compileSmart` like hand-made rules, which only ever binds values, never builds SQL from them.
+ */
+export function rulesFromAi(raw: unknown): SmartRules | null {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null;
+  const o = raw as Record<string, unknown>;
+  const text = (v: unknown): string | undefined =>
+    typeof v === 'string' && v.trim() ? v.trim().slice(0, 80) : undefined;
+  const number = (v: unknown, max: number): number | undefined => {
+    const n = typeof v === 'string' && v.trim() !== '' ? Number(v) : v;
+    return typeof n === 'number' && Number.isFinite(n) && n >= 0
+      ? Math.min(Math.floor(n), max)
+      : undefined;
+  };
+  const rules: SmartRules = {
+    sort: SORT_KEYS.find((s) => s === o['sort']) ?? 'recentlyAdded',
+  };
+  const set = <K extends Exclude<keyof SmartRules, 'sort'>>(key: K, value: SmartRules[K]): void => {
+    if (value !== undefined) rules[key] = value;
+  };
+  set('text', text(o['text']));
+  set('genre', text(o['genre']));
+  set('yearFrom', number(o['yearFrom'], 3000));
+  set('yearTo', number(o['yearTo'], 3000));
+  set('minPlays', number(o['minPlays'], 100_000));
+  set('maxPlays', number(o['maxPlays'], 100_000));
+  set('notPlayedDays', number(o['notPlayedDays'], 36_500));
+  set('playedWithinDays', number(o['playedWithinDays'], 36_500));
+  set('addedWithinDays', number(o['addedWithinDays'], 36_500));
+  set('minMinutes', number(o['minMinutes'], 10_000));
+  set('maxMinutes', number(o['maxMinutes'], 10_000));
+  set('limit', number(o['limit'], MAX_LIMIT));
+  return Object.keys(rules).length > 1 || o['sort'] !== undefined ? rules : null;
+}
+
 /** The songs a smart playlist holds right now. */
 export async function smartTracks(
   rules: SmartRules,

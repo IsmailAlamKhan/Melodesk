@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main",
   "description": "Our own UI window: core window/event APIs, the player commands, and local SQLite.",
-  "windows": ["main", "mini"],
+  "windows": ["main", "mini", "lyrics-overlay"],
   "permissions": [
     "core:default",
     "core:window:allow-set-title",
@@ -21,6 +21,7 @@
     "allow-discord-set-activity",
     "allow-discord-clear",
     "allow-open-mini-player",
+    "allow-open-lyrics-overlay",
     "allow-set-native-labels",
     "allow-native-modules",
     "allow-local-scan",

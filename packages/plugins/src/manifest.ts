@@ -21,8 +21,8 @@ export const PluginManifestSchema = z.object({
   hosts: z.array(z.string().max(253)).default([]),
   /** Hosts whose https links the plugin may open in the user's browser. Required with `open:link`. */
   linkHosts: z.array(z.string().max(253)).default([]),
-  /** What the plugin adds to the app besides its own card: `lyrics` makes it a lyrics source, `identify` a helper that works out which song a track really is, `explain` one that explains a lyric line. */
-  provides: z.array(z.enum(['lyrics', 'identify', 'explain'])).default([]),
+  /** What the plugin adds to the app besides its own card: `lyrics` makes it a lyrics source, `identify` a helper that works out which song a track really is, `explain` one that explains a lyric line, `info` one that knows facts about songs and artists. */
+  provides: z.array(z.enum(['lyrics', 'identify', 'explain', 'info'])).default([]),
   /** Disabled by default unless true; integrations that send data stay opt-in. */
   enabledByDefault: z.boolean().default(false),
 });

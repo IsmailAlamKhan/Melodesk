@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-open-lyrics-overlay"
+description = "Enables the open_lyrics_overlay command without any pre-configured scope."
+commands.allow = ["open_lyrics_overlay"]
+
+[[permission]]
+identifier = "deny-open-lyrics-overlay"
+description = "Denies the open_lyrics_overlay command without any pre-configured scope."
+commands.deny = ["open_lyrics_overlay"]

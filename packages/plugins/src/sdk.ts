@@ -82,6 +82,37 @@ export interface LyricsResult {
   source: string;
 }
 
+/** Facts about a song and its artist, from an open database. */
+export interface SongInfo {
+  title: string;
+  artist: string;
+  album: string | null;
+  /** When it was first released, as the database writes it (a year, or a full date). */
+  released: string | null;
+  genres: string[];
+  artistDetails: {
+    country: string | null;
+    /** "Group", "Person"… */
+    kind: string | null;
+    /** Active from and until (a year, or "present"). */
+    active: string | null;
+    note: string | null;
+    genres: string[];
+  } | null;
+  /** Pages to read more, by label. */
+  links: { label: string; url: string }[];
+}
+
+/** An album, EP or single that came out lately. */
+export interface NewRelease {
+  artist: string;
+  title: string;
+  kind: string;
+  /** The date it came out, as the database writes it. */
+  date: string;
+  url: string;
+}
+
 export interface PluginContext {
   manifest: PluginManifest;
   player?: PlayerReadApi;
@@ -114,6 +145,12 @@ export interface PluginInstance {
     line: string;
     context: string[];
   }) => Promise<string | null>;
+  /** Optional: turns a plain-words description of a playlist into filter rules (as untrusted JSON). */
+  suggestRules?: (description: string) => Promise<unknown>;
+  /** Optional: facts about the song and its artist (country, years active, genres, release date). */
+  songInfo?: (track: PluginTrack) => Promise<SongInfo | null>;
+  /** Optional: what these artists released in the last `days` days. */
+  newReleases?: (artists: string[], days: number) => Promise<NewRelease[]>;
   /** Optional: a user-facing action shown in the plugin's settings card. */
   actions?: { label: string; run: () => Promise<void> }[];
   /** Optional: status line for the settings card. */

@@ -3,12 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { ListMusic, Pencil, Play, Plus, Shuffle, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
+import { aiSources } from '../../core';
 import { queryClient } from '../../data/queryClient';
 import { useT } from '../../i18n/index';
 import { Empty } from './LocalPage';
 import {
   loadSmartPlaylists,
   newSmartId,
+  rulesFromAi,
   saveSmartPlaylists,
   smartTracks,
   STARTERS,
@@ -150,6 +152,41 @@ function SmartEditor({
   const [sort, setSort] = useState<SmartSort>(r?.sort ?? 'recentlyAdded');
   const [limit, setLimit] = useState(str(r?.limit ?? 100));
   const [saving, setSaving] = useState(false);
+  const ai = aiSources.useAll()[0];
+  const [aiOn, setAiOn] = useState(() => ai?.isActive() ?? false);
+  useEffect(() => {
+    if (!ai) return undefined;
+    setAiOn(ai.isActive());
+    return ai.subscribe(() => {
+      setAiOn(ai.isActive());
+    });
+  }, [ai]);
+  const [described, setDescribed] = useState('');
+  const [asking, setAsking] = useState(false);
+  const [aiError, setAiError] = useState(false);
+  const fillFromAi = async (): Promise<void> => {
+    if (!ai) return;
+    setAsking(true);
+    setAiError(false);
+    const found = rulesFromAi(await ai.suggestRules(described.trim()));
+    setAsking(false);
+    if (!found) {
+      setAiError(true);
+      return;
+    }
+    setText(found.text ?? '');
+    setGenre(found.genre ?? '');
+    setYearFrom(str(found.yearFrom));
+    setYearTo(str(found.yearTo));
+    setMinPlays(str(found.minPlays));
+    setMaxPlays(str(found.maxPlays));
+    setNotPlayed(str(found.notPlayedDays));
+    setPlayedWithin(str(found.playedWithinDays));
+    setAddedWithin(str(found.addedWithinDays));
+    setSort(found.sort);
+    setLimit(str(found.limit ?? 100));
+    if (!name.trim()) setName(described.trim().slice(0, 40));
+  };
 
   const [yf, yt, mi, ma, np, pw, aw, lm] = [
     num(yearFrom),
@@ -220,6 +257,45 @@ function SmartEditor({
           void onSave({ id: initial?.id ?? newSmartId(), name: name.trim(), rules });
         }}
       >
+        {aiOn && (
+          <div className="flex flex-col gap-1 rounded-lg bg-bg-overlay p-3">
+            <label className="flex flex-col gap-1 text-xs text-fg-muted">
+              {t('local.smart.ai.label')}
+              <span className="flex gap-2">
+                <input
+                  className={inputClass}
+                  value={described}
+                  placeholder={t('local.smart.ai.placeholder')}
+                  onChange={(e) => {
+                    setDescribed(e.target.value);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (described.trim() && !asking) void fillFromAi();
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={asking || !described.trim()}
+                  onClick={() => {
+                    void fillFromAi();
+                  }}
+                >
+                  {asking ? t('local.smart.ai.thinking') : t('local.smart.ai.fill')}
+                </Button>
+              </span>
+            </label>
+            <span className="text-xs text-fg-subtle">{t('local.smart.ai.hint')}</span>
+            {aiError && (
+              <span role="alert" className="text-xs text-danger">
+                {t('local.smart.ai.failed')}
+              </span>
+            )}
+          </div>
+        )}
         {field(t('local.smart.name'), name, setName)}
         {field(t('local.smart.text'), text, setText)}
         <div className="grid grid-cols-3 gap-3">

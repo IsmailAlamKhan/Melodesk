@@ -21,8 +21,10 @@ document.documentElement.dataset['platform'] = navigator.userAgent.includes('Mac
   : navigator.userAgent.includes('Windows')
     ? 'windows'
     : 'linux';
-function isMiniWindowEarly(): boolean {
-  return new URLSearchParams(window.location.search).get('window') === 'mini';
+/** The name of an extra native window this page is (`mini`, `lyrics`), or null in the main window. */
+function extraWindowName(): string | null {
+  const name = new URLSearchParams(window.location.search).get('window');
+  return name === 'mini' || name === 'lyrics' ? name : null;
 }
 
 // Assemble the app from its features (every folder in src/features) before anything renders.
@@ -57,14 +59,14 @@ function WindowHost({ name }: { name: string }) {
 
 const root = document.getElementById('root');
 if (!root) throw new Error('missing #root');
-const isMiniWindow = isMiniWindowEarly();
-if (isMiniWindow) document.documentElement.dataset['window'] = 'mini';
+const extraWindow = extraWindowName();
+if (extraWindow) document.documentElement.dataset['window'] = extraWindow;
 
 createRoot(root).render(
-  isMiniWindow ? (
+  extraWindow ? (
     <StrictMode>
       <AppearanceEffects>
-        <WindowHost name="mini" />
+        <WindowHost name={extraWindow} />
       </AppearanceEffects>
     </StrictMode>
   ) : (

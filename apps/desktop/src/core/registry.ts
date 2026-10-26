@@ -6,11 +6,12 @@ import type { Feature } from './feature';
 const KV_KEY = 'features:overrides';
 const MIRROR_KEY = 'melodesk.features';
 
-export type WindowKind = 'main' | 'mini';
+export type WindowKind = 'main' | 'mini' | 'lyrics';
 
 export function windowKind(): WindowKind {
   if (typeof window === 'undefined') return 'main';
-  return new URLSearchParams(window.location.search).get('window') === 'mini' ? 'mini' : 'main';
+  const name = new URLSearchParams(window.location.search).get('window');
+  return name === 'mini' || name === 'lyrics' ? name : 'main';
 }
 
 /** Whether the user (or the default) wants the feature on, before dependencies are considered. */
