@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.10.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.9.0...melodesk-v0.10.0) (2026-10-26)
+
+
+### Features
+
+* skip ad button, settings sync through a git repository, and plugin settings sync ([3d39a6c](https://github.com/IsmailAlamKhan/Melodesk/commit/3d39a6c3138d14366f54e25c52c68e9b27357475))
+* YouTube Music can be switched off; What's new reaches people who used the app before it existed ([48df201](https://github.com/IsmailAlamKhan/Melodesk/commit/48df201a5608fc62a9356703ba1a697b618654bf))
+
+
+### Bug Fixes
+
+* git sync merges and commits without a git identity set up ([0c1313d](https://github.com/IsmailAlamKhan/Melodesk/commit/0c1313d45d5cd8583f32068a7b4305891560b25b))
+
 ## [0.9.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.8.0...melodesk-v0.9.0) (2026-10-26)
 
 
