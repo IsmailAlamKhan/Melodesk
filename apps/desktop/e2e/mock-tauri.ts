@@ -408,11 +408,6 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
         case 'youtube_set_enabled':
           sent.push({ type: 'youtube_set_enabled', enabled: args['enabled'] });
           return null;
-        case 'sync_git_clone':
-          sent.push({ type: 'sync_git_clone', url: args['url'] });
-          if (!/^(git@|ssh:|https:)/u.test(String(args['url'])))
-            throw new Error('not-a-repo-address');
-          return { path: '/data/settings-repo', git: true };
         case 'sync_cloud_options':
           return syncMock()?.clouds ?? [];
         case 'sync_use_cloud': {

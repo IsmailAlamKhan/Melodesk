@@ -98,7 +98,6 @@ pub fn run() {
             github::sync_github_sign_out,
             cloud::sync_cloud_options,
             cloud::sync_use_cloud,
-            sync::sync_git_clone,
             sync::sync_set_folder,
             sync::sync_read,
             sync::sync_write,

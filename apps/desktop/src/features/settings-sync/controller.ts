@@ -146,11 +146,6 @@ export async function connectCloud(id: string): Promise<void> {
   await adoptFolder(await invoke<Chosen>('sync_use_cloud', { id }));
 }
 
-/** Sync through a git repository (its SSH or HTTPS address): cloned into the app's own folder. */
-export async function connectGitRepo(url: string): Promise<void> {
-  await adoptFolder(await invoke<Chosen>('sync_git_clone', { url }));
-}
-
 export async function stopSyncing(): Promise<void> {
   const wasGithub = useSync.getState().mode === 'github';
   await invoke('sync_set_folder', { path: null });

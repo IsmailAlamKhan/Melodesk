@@ -22,7 +22,6 @@ fn main() {
             "sync_github_sign_out",
             "sync_cloud_options",
             "sync_use_cloud",
-            "sync_git_clone",
             "sync_set_folder",
             "sync_read",
             "sync_write",

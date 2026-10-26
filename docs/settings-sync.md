@@ -15,10 +15,6 @@ computer already has, one click each.
   the macOS Keychain or Windows Credential Manager, and on Linux in a file only you can read. Sign out
   (Stop syncing) forgets it; you can also revoke it at github.com/settings/applications. This works
   between any computers, whatever they run.
-- **A git repository**: under _Use a git repository instead_, paste an SSH or HTTPS address (make an
-  empty private repository first). Melodesk clones it into its own data folder and pulls and pushes
-  with the `git` and the sign-in this computer already has, such as an SSH key. For people who have
-  git; needs nothing else. Only `ssh://`, `git@host:path` and `https://` addresses are accepted.
 - **Any other folder**, including a clone of a private git repository (see below), for Syncthing, a
   network share and so on.
 

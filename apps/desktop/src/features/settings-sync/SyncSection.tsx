@@ -1,4 +1,4 @@
-import { Button, inputClass } from '@melodesk/ui';
+import { Button } from '@melodesk/ui';
 import { open } from '@tauri-apps/plugin-dialog';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { Cloud, FolderSync, GitBranch, RefreshCw } from 'lucide-react';
@@ -11,7 +11,6 @@ import {
   stopSyncing,
   syncNow,
   connectCloud,
-  connectGitRepo,
   useSync,
 } from './controller';
 
@@ -21,8 +20,6 @@ export function SyncSection() {
   const { mode, folder, git, account, status, lastAt, error, clouds, githubAvailable, signIn } =
     useSync();
   const [problem, setProblem] = useState<string | null>(null);
-  const [repo, setRepo] = useState('');
-  const [cloning, setCloning] = useState(false);
 
   const attempt = async (work: () => Promise<void>): Promise<void> => {
     setProblem(null);
@@ -39,14 +36,8 @@ export function SyncSection() {
       if (typeof picked === 'string') await chooseFolder(picked);
     });
 
-  const shownProblem =
-    problem === 'not-a-repo-address'
-      ? t('sync.repo.invalid')
-      : problem?.includes('cannot run git')
-        ? t('sync.repo.noGit')
-        : problem;
   const shownError =
-    shownProblem ??
+    problem ??
     (error === 'not-ours'
       ? t('sync.notOurs')
       : error === 'github-signed-out'
@@ -102,37 +93,6 @@ export function SyncSection() {
               </Button>
             </div>
             {clouds.length === 0 && <p className="text-xs text-fg-subtle">{t('sync.noClouds')}</p>}
-            <details className="text-sm">
-              <summary className="cursor-pointer text-fg-muted">{t('sync.repo.summary')}</summary>
-              <form
-                className="mt-2 flex flex-col gap-2"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  setCloning(true);
-                  void attempt(() => connectGitRepo(repo)).finally(() => {
-                    setCloning(false);
-                  });
-                }}
-              >
-                <label className="flex flex-col gap-1 text-xs text-fg-muted">
-                  {t('sync.repo.label')}
-                  <input
-                    className={inputClass}
-                    value={repo}
-                    placeholder="git@github.com:you/melodesk-settings.git"
-                    onChange={(e) => {
-                      setRepo(e.target.value);
-                    }}
-                  />
-                </label>
-                <p className="text-xs text-fg-subtle">{t('sync.repo.hint')}</p>
-                <div>
-                  <Button type="submit" variant="ghost" disabled={cloning || !repo.trim()}>
-                    {cloning ? t('sync.repo.cloning') : t('sync.repo.use')}
-                  </Button>
-                </div>
-              </form>
-            </details>
           </>
         ) : (
           <>

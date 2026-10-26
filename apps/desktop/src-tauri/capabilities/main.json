@@ -30,7 +30,6 @@
     "allow-sync-github-sign-out",
     "allow-sync-cloud-options",
     "allow-sync-use-cloud",
-    "allow-sync-git-clone",
     "allow-sync-set-folder",
     "allow-sync-read",
     "allow-sync-write",
