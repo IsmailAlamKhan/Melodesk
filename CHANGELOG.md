@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.7.0...melodesk-v0.8.0) (2026-10-26)
+
+
+### Features
+
+* a What's new window, shown once after an update and from the View menu or command palette ([22c65c5](https://github.com/IsmailAlamKhan/Melodesk/commit/22c65c500261dcfcddab3ccfbdae4d70e4969b52))
+
 ## [0.7.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.6.0...melodesk-v0.7.0) (2026-10-26)
 
 
