@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.12.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.11.0...melodesk-v0.12.0) (2026-10-26)
+
+
+### Features
+
+* sync through a git repository by pasting its SSH or HTTPS address ([16fad9e](https://github.com/IsmailAlamKhan/Melodesk/commit/16fad9edb2132839c31c7ccb5a3548f6094fda57))
+
+
+### Bug Fixes
+
+* lint (a hook-looking name, an interface) ([988d3f9](https://github.com/IsmailAlamKhan/Melodesk/commit/988d3f94acb91231f47a178b1c2bbd2b90295d6c))
+
 ## [0.11.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.10.0...melodesk-v0.11.0) (2026-10-26)
 
 
