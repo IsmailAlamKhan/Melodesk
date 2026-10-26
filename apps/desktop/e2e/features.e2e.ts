@@ -64,10 +64,12 @@ test('a feature takes its settings page with it', async ({ page }) => {
   await expect(pages.getByRole('link', { name: 'Storage' })).toBeVisible();
   await toggle(page, 'Local music').uncheck();
   await toggle(page, 'Backup and restore').uncheck();
+  await toggle(page, 'Settings sync').uncheck();
   await expect(pages.getByRole('link', { name: 'Storage' })).toHaveCount(0);
   await toggle(page, 'Offline cover art').check();
   await toggle(page, 'Local music').check();
   await toggle(page, 'Backup and restore').check();
+  await toggle(page, 'Settings sync').check();
   await expect(pages.getByRole('link', { name: 'Storage' })).toBeVisible();
   await pages.getByRole('link', { name: 'Storage' }).click();
   await expect(page.getByRole('heading', { name: 'Storage' })).toBeVisible();
