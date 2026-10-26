@@ -1,6 +1,6 @@
 [package]
 name = "melodesk"
-version = "0.6.0"
+version = "0.7.0"
 description = "Melodesk — an open-source native desktop client for YouTube Music (not affiliated with Google or YouTube)"
 authors = ["Melodesk contributors"]
 license = "MIT"
