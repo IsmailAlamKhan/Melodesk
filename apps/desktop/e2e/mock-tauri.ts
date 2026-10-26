@@ -93,6 +93,8 @@ export interface MockOptions {
   appVersion?: string;
   /** Saved settings the app starts with, as the database would have them (only on the first load). */
   kv?: Record<string, string>;
+  /** A folder for settings sync: what the picker answers, and the sync file already in it (if any). */
+  sync?: { folder: string; file?: string };
   /** A playlist file the picker offers (Import a playlist). */
   importFile?: { path: string; text: string };
 }
@@ -209,13 +211,20 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
     (window as unknown as Record<string, unknown>)['__nativeModules'] = modules;
   }, opts.nativeModules ?? null);
   await page.addInitScript(
-    ([local, file, server, web]) => {
+    ([local, file, server, web, sync]) => {
       (window as unknown as Record<string, unknown>)['__localMock'] = local;
       (window as unknown as Record<string, unknown>)['__importFile'] = file;
+      (window as unknown as Record<string, unknown>)['__syncMock'] = sync;
       (window as unknown as Record<string, unknown>)['__serverMock'] = server;
       (window as unknown as Record<string, unknown>)['__webMock'] = web;
     },
-    [opts.local ?? null, opts.importFile ?? null, opts.server ?? null, opts.web ?? null] as const,
+    [
+      opts.local ?? null,
+      opts.importFile ?? null,
+      opts.server ?? null,
+      opts.web ?? null,
+      opts.sync ?? null,
+    ] as const,
   );
   await page.addInitScript(
     ([version, seed]) => {
@@ -241,6 +250,16 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
       JSON.parse(localStorage.getItem('__mockKv') ?? '[]') as [string, string][],
     );
     const persistKv = (): void => localStorage.setItem('__mockKv', JSON.stringify([...kv]));
+    // When each setting last changed (the real table has an updated_at column).
+    const changedAt = new Map<string, number>(
+      JSON.parse(localStorage.getItem('__mockKvAt') ?? '[]') as [string, number][],
+    );
+    const persistAt = (): void =>
+      localStorage.setItem('__mockKvAt', JSON.stringify([...changedAt]));
+    const syncMock = (): { folder: string; file?: string } | null =>
+      (w['__syncMock'] as { folder: string; file?: string } | null) ?? null;
+    let syncFile: string | null = syncMock()?.file ?? null;
+    let syncStamp = 1;
     let settings = {
       closeToTray: true,
       launchAtLogin: false,
@@ -338,15 +357,28 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
             await w.__nodeLib('execute', q, v);
             return [1, 0];
           }
-          if (/INSERT INTO settings/iu.test(q)) kv.set(String(v[0]), String(v[1]));
-          if (/DELETE FROM settings/iu.test(q)) kv.delete(String(v[0]));
+          if (/INSERT INTO settings/iu.test(q)) {
+            kv.set(String(v[0]), String(v[1]));
+            changedAt.set(String(v[0]), Number(v[2]));
+          }
+          if (/DELETE FROM settings/iu.test(q)) {
+            kv.delete(String(v[0]));
+            changedAt.delete(String(v[0]));
+          }
           persistKv();
+          persistAt();
           return [1, 0];
         }
         case 'plugin:sql|select': {
           const q = String(args['query']);
           const v = args['values'] as unknown[];
           if (/local_tracks/iu.test(q)) return w.__nodeLib('select', q, v);
+          if (/SELECT key, value, updated_at FROM settings/iu.test(q))
+            return [...kv].map(([key, value]) => ({
+              key,
+              value,
+              updated_at: changedAt.get(key) ?? 0,
+            }));
           if (/FROM settings WHERE key/iu.test(q)) {
             const val = kv.get(String(v[0]));
             return val === undefined ? [] : [{ value: val }];
@@ -355,9 +387,21 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
         }
         case 'plugin:dialog|open': {
           const options = (args['options'] ?? {}) as { directory?: boolean };
-          if (options.directory) return localMock()?.pickFolder ?? null;
+          if (options.directory) return localMock()?.pickFolder ?? syncMock()?.folder ?? null;
           return importFile()?.path ?? null;
         }
+        case 'sync_set_folder':
+          sent.push({ type: 'sync_set_folder', path: args['path'] });
+          return args['path'] ?? null;
+        case 'sync_read':
+          return syncFile;
+        case 'sync_write':
+          syncFile = String(args['text']);
+          syncStamp += 1;
+          sent.push({ type: 'sync_write', text: syncFile });
+          return null;
+        case 'sync_stamp':
+          return syncFile === null ? null : syncStamp;
         case 'net_allow':
           sent.push({ type: 'net_allow', hosts: args['hosts'] });
           return null;

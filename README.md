@@ -75,6 +75,7 @@ Planned and in progress; ticked items work today.
 - [x] Translation framework with English strings; see [docs/translating.md](docs/translating.md)
 - [x] Listening stats (with a streak, favourite time of day, new artists and a copyable summary) and monthly or yearly recaps that compare with the period before, command palette, plugins, lyrics romanization and translation
 - [x] Theme presets you can share as a short code, on top of the accent, light / dark / AMOLED and contrast choices
+- [x] Sync settings between computers through a folder you pick (iCloud Drive, Dropbox, Syncthing…), with no server or account; see [docs/settings-sync.md](docs/settings-sync.md)
 - [x] Song info tab in Now Playing (release date, country, years active, genres) and a New releases card on Home for artists you play, both from MusicBrainz and both off until you allow them
 - [x] Describe a smart playlist in words and your local AI model (Ollama) fills in the rules; floating lyrics: a small always-on-top window with the line being sung
 - [x] Lyrics for covers and unusual titles: guesses of the real song, more sources (LRCLIB, NetEase, lyrics.ovh), an optional local AI helper (Ollama) and a "look up another song" box; a live list of where it is looking while it searches; lyrics (found or not) and AI explanations are kept on this computer; per-line actions (explain a line with the local AI, copy it, or copy it as a picture)

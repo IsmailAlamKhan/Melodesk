@@ -19,6 +19,7 @@ mod net;
 mod player;
 mod settings;
 mod shortcuts;
+mod sync;
 
 /// The optional native modules compiled into this build. The UI turns off the features that need
 /// a module that is not here (see `requires` in `src/core/feature.ts`).
@@ -87,6 +88,10 @@ pub fn run() {
             local::local_write_tags,
             control::control_start,
             control::control_stop,
+            sync::sync_set_folder,
+            sync::sync_read,
+            sync::sync_write,
+            sync::sync_stamp,
             net::net_allow,
             net::net_text,
             net::net_bytes,
@@ -99,6 +104,7 @@ pub fn run() {
             app.manage(local::LocalState::default());
             app.manage(control::ControlState::default());
             app.manage(net::NetState::default());
+            app.manage(sync::SyncState::default());
             app.manage(settings::SettingsState(std::sync::Mutex::new(
                 settings.clone(),
             )));

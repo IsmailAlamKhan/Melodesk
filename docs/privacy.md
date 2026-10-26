@@ -43,6 +43,9 @@ Everything below is off until you switch it on, and each one says in Settings wh
   you search, `itunes.apple.com` with what you typed. **Radio** contacts the stations you add and, when
   you search, `de1.api.radio-browser.info` with what you typed. Nothing else is sent; see
   [network-sources.md](network-sources.md).
+- **Settings sync** writes one file, `melodesk-sync.json`, in a folder you pick, holding preferences, smart
+  playlists, podcast subscriptions and radio stations (never passwords, servers, folders or history).
+  Melodesk contacts no server for it; whatever syncs that folder (iCloud, Dropbox…) has the file.
 - **Local music**: the folders you add are read on this computer only. What is written in the files
   (title, artist, album, length, lyrics) is remembered in the local database so the library opens at
   once. The files are never changed, copied or uploaded, and the app can read nothing outside the
