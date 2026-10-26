@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.8.0...melodesk-v0.9.0) (2026-10-26)
+
+
+### Features
+
+* sync settings between computers through a folder the user picks ([e12ad8e](https://github.com/IsmailAlamKhan/Melodesk/commit/e12ad8ed6c3b0bd83559b2f6fb77d82dc872790a))
+
 ## [0.8.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.7.0...melodesk-v0.8.0) (2026-10-26)
 
 
