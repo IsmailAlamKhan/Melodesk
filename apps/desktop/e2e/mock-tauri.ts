@@ -264,13 +264,13 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
     );
     const persistAt = (): void =>
       localStorage.setItem('__mockKvAt', JSON.stringify([...changedAt]));
-    type SyncMock = {
+    interface SyncMock {
       folder: string;
       file?: string;
       git?: boolean;
       clouds?: { id: string; name: string; path: string }[];
       github?: { code: string; pendingPolls?: number; login?: string };
-    };
+    }
     const syncMock = (): SyncMock | null => (w['__syncMock'] as SyncMock | null) ?? null;
     let githubPolls = 0;
     let syncFile: string | null = syncMock()?.file ?? null;

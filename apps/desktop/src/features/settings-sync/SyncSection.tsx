@@ -10,7 +10,7 @@ import {
   signInToGithub,
   stopSyncing,
   syncNow,
-  useCloud,
+  connectCloud,
   useSync,
 } from './controller';
 
@@ -71,7 +71,7 @@ export function SyncSection() {
                 <Button
                   key={c.id}
                   variant="primary"
-                  onClick={() => void attempt(() => useCloud(c.id))}
+                  onClick={() => void attempt(() => connectCloud(c.id))}
                 >
                   <Cloud className="size-4" />
                   {t('sync.useCloud', { name: c.name })}

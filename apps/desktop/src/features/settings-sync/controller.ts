@@ -142,7 +142,7 @@ export async function chooseFolder(path: string): Promise<void> {
 }
 
 /** One click: sync through iCloud Drive, OneDrive, Dropbox or Google Drive. */
-export async function useCloud(id: string): Promise<void> {
+export async function connectCloud(id: string): Promise<void> {
   await adoptFolder(await invoke<Chosen>('sync_use_cloud', { id }));
 }
 
