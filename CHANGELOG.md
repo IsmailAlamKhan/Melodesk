@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.6.0...melodesk-v0.7.0) (2026-10-26)
+
+
+### Features
+
+* song info and new-release radar (MusicBrainz), AI-described smart playlists, floating lyrics window ([b01528a](https://github.com/IsmailAlamKhan/Melodesk/commit/b01528a8085d909788c3185052fddaa8ad9a9663))
+
+
+### Bug Fixes
+
+* follow opt-in sources without effects, and open now playing with artwork in the new e2e tests ([96c3e17](https://github.com/IsmailAlamKhan/Melodesk/commit/96c3e17815e79eb8c88f4f7a6fcd24e72a248a42))
+
 ## [0.6.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.5.0...melodesk-v0.6.0) (2026-10-25)
 
 
