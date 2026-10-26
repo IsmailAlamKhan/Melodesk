@@ -10,7 +10,7 @@
  * (dsp.ts) for the equalizer, loudness leveling and the analyser the visuals read.
  *
  * One source plays at a time: starting a local song pauses the web player, and starting anything on
- * YouTube stops this one (`yieldToYouTube`).
+ * another source stops this one (its `yield`).
  */
 import type { PlayerCommand, QueueItem, QueueState, Track } from '@melodesk/bridge/protocol';
 import { invoke } from '@tauri-apps/api/core';
@@ -20,7 +20,8 @@ import { useAudioPrefs } from '../../audio/store';
 import { setLevelSource } from '../../core';
 import { kvGet, kvSet } from '../../data/kv';
 import { t } from '../../i18n';
-import { registerLocalPlayback } from '../../player/router';
+import { fallbackId, registerBackend } from '../../player/backends';
+import { localDescriptor, SOURCE_ID } from './backend';
 import { LOCAL_ID_PREFIX } from '../../player/sourceIds';
 import { sendCommand } from '../../player/ipc';
 import { usePlayerStore } from '../../player/store';
@@ -147,7 +148,7 @@ export function startLocalPlayer(): () => void {
   let stopOldTimer = 0;
 
   const store = usePlayerStore;
-  const active = (): boolean => store.getState().source === 'local';
+  const active = (): boolean => store.getState().source === SOURCE_ID;
   const current = (): LocalTrack | null => queue.items[queue.index] ?? null;
   const prefs = () => useAudioPrefs.getState();
 
@@ -274,7 +275,7 @@ export function startLocalPlayer(): () => void {
   const activate = (): void => {
     if (active()) return;
     void sendCommand({ type: 'pause' }).catch(() => undefined);
-    store.setState({ source: 'local' });
+    store.setState({ source: SOURCE_ID });
     void invoke('local_set_active', { active: true }).catch(() => undefined);
     if (graph && !offLevels) offLevels = setLevelSource(createAnalyserSource(graph));
   };
@@ -313,8 +314,10 @@ export function startLocalPlayer(): () => void {
       navigator.mediaSession.playbackState = 'none';
     }
     void invoke('local_set_active', { active: false }).catch(() => undefined);
-    store.setState({ source: 'youtube', track: null, state: null, queue: null, flags: null });
-    void emitTo('mini', 'local:snapshot', { source: 'youtube' }).catch(() => undefined);
+    // The player goes back to the source that answers when nothing else is playing.
+    const next = fallbackId();
+    store.setState({ source: next, track: null, state: null, queue: null, flags: null });
+    void emitTo('mini', 'local:snapshot', { source: next }).catch(() => undefined);
     // The web player still knows what it was doing: ask it to say so again.
     void sendCommand({ type: 'requestState' }).catch(() => undefined);
   };
@@ -725,10 +728,7 @@ export function startLocalPlayer(): () => void {
     if (active()) handle(e.payload);
   });
 
-  const unregister = registerLocalPlayback({
-    handle,
-    yieldToYouTube: deactivate,
-  });
+  const unregister = registerBackend({ ...localDescriptor, send: handle, yield: deactivate });
 
   player = {
     play: (tracks, start, opts) => {

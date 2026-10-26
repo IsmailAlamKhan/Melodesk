@@ -1,6 +1,7 @@
 import { HardDrive } from 'lucide-react';
 import { defineFeature, navigateTo } from '../../core';
 import { t } from '../../i18n';
+import './backend';
 import { startLocalMusic } from './start';
 import { LocalAlbumPage, LocalArtistPage } from './LocalDetail';
 import { LocalMusicSection } from './LocalSettings';

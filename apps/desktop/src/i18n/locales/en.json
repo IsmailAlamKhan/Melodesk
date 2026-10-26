@@ -953,5 +953,7 @@
   "sync.reload.now": "Reload now",
   "sync.reload.later": "Later",
   "whatsNew.v0_9_0.a": "Sync settings between computers through a folder you pick (iCloud Drive, Dropbox, Syncthing…). No Melodesk server or account; find it in Settings → Storage.",
-  "whatsNew.v0_9_0.b": "Appearance, sound, feature choices, lyrics settings, smart playlists, podcasts and radio stations follow you; passwords, servers and folders stay on each computer."
+  "whatsNew.v0_9_0.b": "Appearance, sound, feature choices, lyrics settings, smart playlists, podcasts and radio stations follow you; passwords, servers and folders stay on each computer.",
+  "feature.youtubeMusic.name": "YouTube Music",
+  "feature.youtubeMusic.description": "YouTube Music as a source of playback: the official web player does the playing, signing in and ads. It cannot be switched off yet, because the pages that browse YouTube Music need it."
 }

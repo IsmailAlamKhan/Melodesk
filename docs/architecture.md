@@ -76,6 +76,25 @@ except through `dependsOn`, nothing outside reaching in) are tests; see
 On the Rust side the optional parts (Discord presence, global shortcuts) are Cargo features with
 stubs, and the UI asks which exist (`native_modules`) before offering the features that need them.
 
+## Playback sources
+
+What plays is a **source**, and YouTube Music is one of them, not what the player is built on. Each
+source registers a `PlaybackBackend` in `player/backends.ts` (the id, which commands it answers, which
+would make it start something, how to send a command, how to listen to what it reports). The player
+bar, queue, tray, shortcuts and media keys send every command through `sendCommand`, which asks
+`resolveRoute` (a pure function, unit tested) where it goes: to the source that is playing if it
+answers, else to whoever starts or answers it, stepping the playing source aside first if the command
+starts something else. `player/` itself knows no source by name; the store's `source` is just an id.
+
+- `features/youtube-music`: the official web player in the hidden window (the bridge). It is also the
+  `fallback`: it answers when nothing is playing.
+- `features/local-music`: your own music, and servers, podcasts and radio through it.
+
+A new source is a backend plus the pages that browse it. **Still tied to YouTube Music**, to be done
+next: the pages that browse it (home, search, library, detail) and `player/data.ts` use its web player
+for data, the hidden window is always created, and its status (signed in, health) lives in the shared
+player store. So it cannot be switched off yet.
+
 ## Why a second window instead of a child webview
 
 Tauri 2 supports multiple webviews in one window only behind the `unstable` feature. A
