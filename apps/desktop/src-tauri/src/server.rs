@@ -21,10 +21,6 @@ use crate::vault;
 /// Where Melodesk's own sync server lives (apps/sync-server). A build can point somewhere else with
 /// `MELODESK_SYNC_URL`, which is how a fork uses its own.
 const OFFICIAL_URL: &str = "https://melodesk.ismailalam.com";
-/// The same server under the host name Vercel gave it, used when the main name cannot be reached (a
-/// resolver that has not heard of it yet, a network that blocks the domain).
-const FALLBACK_URL: &str = "https://melodesk-sync.vercel.app";
-
 fn default_url() -> &'static str {
     match option_env!("MELODESK_SYNC_URL") {
         Some(url) if !url.trim().is_empty() => url,
@@ -151,8 +147,10 @@ pub fn sync_server_default() -> Option<String> {
     normalize_url(default_url()).ok()
 }
 
-/// Ask one address whether a Melodesk sync server is there.
-async fn check_at(base: &str) -> Result<(), String> {
+/// Is there a Melodesk sync server at this address? Returns the address as it will be used.
+#[tauri::command]
+pub async fn sync_server_check(url: String) -> Result<String, String> {
+    let base = normalize_url(&url)?;
     let (status, _, text) =
         request(reqwest::Method::GET, format!("{base}/api/v1/health"), None).await?;
     let ok = status == 200
@@ -160,35 +158,9 @@ async fn check_at(base: &str) -> Result<(), String> {
             .map(|v| v["name"] == "melodesk-sync")
             .unwrap_or(false);
     if ok {
-        Ok(())
+        Ok(base)
     } else {
         Err("there is no Melodesk sync server at that address".into())
-    }
-}
-
-/// Whether a failure was not reaching the address at all (as opposed to something being there that is
-/// not our server).
-fn unreachable_error(message: &str) -> bool {
-    message.starts_with("cannot reach")
-}
-
-/// Is there a Melodesk sync server at this address? Returns the address that works. For Melodesk's own
-/// server, if its name cannot be reached the same server under its other name is tried.
-#[tauri::command]
-pub async fn sync_server_check(url: String) -> Result<String, String> {
-    let base = normalize_url(&url)?;
-    match check_at(&base).await {
-        Ok(()) => Ok(base),
-        Err(first)
-            if unreachable_error(&first)
-                && Some(base.as_str()) == normalize_url(OFFICIAL_URL).ok().as_deref() =>
-        {
-            check_at(FALLBACK_URL)
-                .await
-                .map(|()| FALLBACK_URL.to_string())
-                .map_err(|_| first)
-        }
-        Err(other) => Err(other),
     }
 }
 
@@ -374,16 +346,5 @@ mod tests {
             sync_server_default().as_deref(),
             Some("https://melodesk.ismailalam.com")
         );
-    }
-
-    #[test]
-    fn only_a_failure_to_connect_is_worth_trying_the_other_name_for() {
-        assert!(unreachable_error(
-            "cannot reach the sync server: error sending request"
-        ));
-        assert!(!unreachable_error(
-            "there is no Melodesk sync server at that address"
-        ));
-        assert_eq!(normalize_url(FALLBACK_URL).unwrap(), FALLBACK_URL);
     }
 }
