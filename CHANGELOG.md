@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.10.0...melodesk-v0.11.0) (2026-10-26)
+
+
+### Features
+
+* one-click settings sync through iCloud Drive, OneDrive, Dropbox or Google Drive, and sign in with GitHub ([7ef582a](https://github.com/IsmailAlamKhan/Melodesk/commit/7ef582a4849978e3da931f9c04bab471f87d3222))
+
 ## [0.10.0](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.9.0...melodesk-v0.10.0) (2026-10-26)
 
 
