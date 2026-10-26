@@ -58,7 +58,10 @@ test('song info asks before anything is sent, then shows facts about the song an
     },
   });
   await page.goto('/');
-  await startPlayback(page, { positionS: 2, track: TRACK });
+  await startPlayback(page, {
+    positionS: 2,
+    track: { ...TRACK, artworkUrl: 'https://i.ytimg.com/vi/sample/hq720.jpg' },
+  });
   await page.getByRole('button', { name: 'Open now playing' }).click();
   const view = page.getByRole('region', { name: /now playing/iu });
   await view.getByRole('tab', { name: 'Song info' }).click();
@@ -121,7 +124,11 @@ test('a smart playlist can be filled in from a description by the local AI model
   await page.getByRole('tab', { name: 'Playlists' }).click();
   await page.getByRole('button', { name: 'New smart playlist' }).click();
   await expect(page.getByLabel('Describe it in words')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Cancel' }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Cancel', exact: true })
+    .last()
+    .click();
 
   await enable(page, 'Local AI song finder');
   await page.getByRole('link', { name: 'Local music' }).first().click();

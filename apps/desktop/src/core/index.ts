@@ -51,6 +51,7 @@ export {
 export type { LevelSource, Levels } from './levels';
 export { bandEdges, levelsFromSpectrum, newBeatState } from './spectrum';
 export type { BeatState } from './spectrum';
+export { useSourceActive } from './useSourceActive';
 export { aiSources, createRegistry, infoSources, lyricsSources } from './services';
 export type { AiSource, InfoSource, LyricsSource } from './services';
 export { lyricsProgress, useLyricsProgress } from './lyricsProgress';

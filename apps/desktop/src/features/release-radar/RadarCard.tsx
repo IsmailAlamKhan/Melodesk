@@ -1,9 +1,8 @@
 import { IconButton } from '@melodesk/ui';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Disc3, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { infoSources } from '../../core';
+import { infoSources, useSourceActive } from '../../core';
 import { useT } from '../../i18n/index';
 import { dismiss, isDismissed, releases } from './radar';
 
@@ -13,14 +12,7 @@ export function RadarCard() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const source = infoSources.useAll()[0];
-  const [on, setOn] = useState(() => source?.isActive() ?? false);
-  useEffect(() => {
-    if (!source) return undefined;
-    setOn(source.isActive());
-    return source.subscribe(() => {
-      setOn(source.isActive());
-    });
-  }, [source]);
+  const on = useSourceActive(source);
   const hidden = useQuery({
     queryKey: ['radar-dismissed'],
     queryFn: isDismissed,

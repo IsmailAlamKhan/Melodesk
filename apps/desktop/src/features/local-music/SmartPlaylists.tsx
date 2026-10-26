@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ListMusic, Pencil, Play, Plus, Shuffle, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import { aiSources } from '../../core';
+import { aiSources, useSourceActive } from '../../core';
 import { queryClient } from '../../data/queryClient';
 import { useT } from '../../i18n/index';
 import { Empty } from './LocalPage';
@@ -153,14 +153,7 @@ function SmartEditor({
   const [limit, setLimit] = useState(str(r?.limit ?? 100));
   const [saving, setSaving] = useState(false);
   const ai = aiSources.useAll()[0];
-  const [aiOn, setAiOn] = useState(() => ai?.isActive() ?? false);
-  useEffect(() => {
-    if (!ai) return undefined;
-    setAiOn(ai.isActive());
-    return ai.subscribe(() => {
-      setAiOn(ai.isActive());
-    });
-  }, [ai]);
+  const aiOn = useSourceActive(ai);
   const [described, setDescribed] = useState('');
   const [asking, setAsking] = useState(false);
   const [aiError, setAiError] = useState(false);

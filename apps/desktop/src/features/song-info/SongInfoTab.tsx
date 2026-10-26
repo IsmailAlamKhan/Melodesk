@@ -1,26 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { openUrl } from '@tauri-apps/plugin-opener';
-import { useEffect, useState } from 'react';
-import { infoSources } from '../../core';
+import { infoSources, useSourceActive } from '../../core';
 import { useT } from '../../i18n/index';
 import { usePlayerStore } from '../../player/store';
-
-/** Whether the info source is switched on, following it as it changes. */
-function useActive(): {
-  source: ReturnType<typeof infoSources.all>[number] | undefined;
-  on: boolean;
-} {
-  const source = infoSources.useAll()[0];
-  const [on, setOn] = useState(() => source?.isActive() ?? false);
-  useEffect(() => {
-    if (!source) return undefined;
-    setOn(source.isActive());
-    return source.subscribe(() => {
-      setOn(source.isActive());
-    });
-  }, [source]);
-  return { source, on };
-}
 
 function Row({ label, value }: { label: string; value: string | null | undefined }) {
   if (!value) return null;
@@ -36,7 +18,8 @@ function Row({ label, value }: { label: string; value: string | null | undefined
 export function SongInfoTab() {
   const t = useT();
   const track = usePlayerStore((s) => s.track);
-  const { source, on } = useActive();
+  const source = infoSources.useAll()[0];
+  const on = useSourceActive(source);
   const key = track ? `${track.videoId ?? ''}|${track.title}|${track.artist}` : '';
   const q = useQuery({
     queryKey: ['song-info', key],
