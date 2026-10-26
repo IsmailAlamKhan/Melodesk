@@ -13,4 +13,54 @@ function theStore(): Store {
   return store;
 }
 
-export const respond = (request: Request): Promise<Response> => handle(request, theStore());
+/** The little of Node's request and response that Vercel's classic function style gives us. */
+export interface NodeRequest {
+  method?: string | undefined;
+  url?: string | undefined;
+  headers: Record<string, string | string[] | undefined>;
+  /** Vercel has parsed a JSON body already. */
+  body?: unknown;
+}
+export interface NodeResponse {
+  statusCode: number;
+  setHeader: (name: string, value: string) => void;
+  end: (body?: string) => void;
+}
+
+/** Turn a classic `(req, res)` call into a `Request`, run the handler, and write the `Response` back. */
+export async function respond(
+  req: NodeRequest,
+  res: NodeResponse,
+  useStore: Store = theStore(),
+): Promise<void> {
+  const method = (req.method ?? 'GET').toUpperCase();
+  const host = [req.headers['host']].flat()[0] ?? 'localhost';
+  const hasBody = method !== 'GET' && method !== 'HEAD';
+  const body = !hasBody
+    ? undefined
+    : typeof req.body === 'string'
+      ? req.body
+      : JSON.stringify(req.body ?? {});
+  const request = new Request(`https://${host}${req.url ?? '/'}`, {
+    method,
+    ...(body === undefined ? {} : { body }),
+  });
+  let answer: Response;
+  try {
+    answer = await handle(request, useStore);
+  } catch {
+    answer = new Response(JSON.stringify({ error: 'storage unavailable' }), {
+      status: 502,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+  res.statusCode = answer.status;
+  answer.headers.forEach((value, name) => {
+    res.setHeader(name, value);
+  });
+  res.end(method === 'HEAD' ? undefined : await answer.text());
+}
+
+export default function handler(req: NodeRequest, res: NodeResponse): Promise<void> {
+  return respond(req, res);
+}

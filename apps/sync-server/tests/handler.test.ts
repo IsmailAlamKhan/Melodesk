@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_BYTES, handle } from '../src/handler';
-import { memoryStore, upstashStore } from '../src/store';
+import { memoryStore, upstashStore, type Store } from '../src/store';
+import { respond, type NodeRequest, type NodeResponse } from '../src/vercel';
 
 const ID = 'a'.repeat(64);
 const url = (path: string): string => `https://sync.example.com${path}`;
@@ -103,5 +104,75 @@ describe('the Redis store', () => {
     await expect(upstashStore('https://r', 't', down).get(ID)).rejects.toThrow(
       'storage answered 500',
     );
+  });
+});
+
+describe('Vercel’s classic function style', () => {
+  const run = async (
+    req: Partial<NodeRequest> & { url: string },
+    store: Store,
+  ): Promise<{ status: number; body: string; headers: Record<string, string> }> => {
+    const headers: Record<string, string> = {};
+    let body = '';
+    const res: NodeResponse = {
+      statusCode: 0,
+      setHeader: (n, v) => {
+        headers[n.toLowerCase()] = v;
+      },
+      end: (b) => {
+        body = b ?? '';
+      },
+    };
+    await respond({ method: 'GET', headers: { host: 'sync.example.com' }, ...req }, res, store);
+    return { status: res.statusCode, body, headers };
+  };
+
+  it('answers the health check', async () => {
+    const out = await run({ url: '/api/v1/health' }, memoryStore());
+    expect(out.status).toBe(200);
+    expect(JSON.parse(out.body)).toMatchObject({ name: 'melodesk-sync' });
+  });
+
+  it('saves and reads back, with the body Vercel has already parsed', async () => {
+    const store = memoryStore();
+    const saved = await run(
+      { method: 'PUT', url: `/api/v1/blob/${ID}`, body: { data: 'cipher', ifVersion: 0 } },
+      store,
+    );
+    expect(JSON.parse(saved.body)).toEqual({ version: 1 });
+    const read = await run({ url: `/api/v1/blob/${ID}` }, store);
+    expect(JSON.parse(read.body)).toEqual({ version: 1, data: 'cipher' });
+    // A body that arrives as text is passed on as it is.
+    const again = await run(
+      {
+        method: 'PUT',
+        url: `/api/v1/blob/${ID}`,
+        body: JSON.stringify({ data: 'two', ifVersion: 1 }),
+      },
+      store,
+    );
+    expect(JSON.parse(again.body)).toEqual({ version: 2 });
+  });
+
+  it('says a refused write is a conflict, and a head request has no body', async () => {
+    const store = memoryStore();
+    await run({ method: 'PUT', url: `/api/v1/blob/${ID}`, body: { data: 'one' } }, store);
+    const stale = await run(
+      { method: 'PUT', url: `/api/v1/blob/${ID}`, body: { data: 'x', ifVersion: 0 } },
+      store,
+    );
+    expect(stale.status).toBe(409);
+    const head = await run({ method: 'HEAD', url: `/api/v1/blob/${ID}` }, store);
+    expect(head.status).toBe(200);
+    expect(head.body).toBe('');
+    expect(head.headers['x-version']).toBe('1');
+  });
+
+  it('turns a storage failure into an answer instead of a crash', async () => {
+    const broken: Store = {
+      get: () => Promise.reject(new Error('down')),
+      put: () => Promise.reject(new Error('down')),
+    };
+    expect((await run({ url: `/api/v1/blob/${ID}` }, broken)).status).toBe(502);
   });
 });
