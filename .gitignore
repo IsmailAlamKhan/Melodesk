@@ -10,3 +10,6 @@ coverage/
 playwright-report/
 test-results/
 apps/desktop/src-tauri/gen/schemas/
+
+# Vercel project link (made by `vercel deploy`)
+.vercel

@@ -1,5 +1,5 @@
-import { handle } from './handler';
-import { memoryStore, upstashStore, type Store } from './store';
+import { handle } from './handler.js';
+import { memoryStore, upstashStore, type Store } from './store.js';
 
 let store: Store | null = null;
 

@@ -1,4 +1,4 @@
-import type { Store } from './store';
+import type { Store } from './store.js';
 
 /** The biggest blob accepted: a settings file is a few kilobytes; this is only a safety limit. */
 export const MAX_BYTES = 1_000_000;

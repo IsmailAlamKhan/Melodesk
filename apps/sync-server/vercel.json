@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "echo \"the server has nothing to install\"",
-  "buildCommand": "echo \"nothing to build\""
+  "buildCommand": "echo \"nothing to build\"",
+  "outputDirectory": "public"
 }
