@@ -102,6 +102,8 @@ export interface MockOptions {
     clouds?: { id: string; name: string; path: string }[];
     /** GitHub sign-in is offered; the code it shows and how many "not yet" answers come first. */
     github?: { code: string; pendingPolls?: number; login?: string };
+    /** The Melodesk sync server: the address this build comes with (if any). */
+    server?: { url?: string };
   };
   /** A playlist file the picker offers (Import a playlist). */
   importFile?: { path: string; text: string };
@@ -270,9 +272,13 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
       git?: boolean;
       clouds?: { id: string; name: string; path: string }[];
       github?: { code: string; pendingPolls?: number; login?: string };
+      server?: { url?: string };
     }
     const syncMock = (): SyncMock | null => (w['__syncMock'] as SyncMock | null) ?? null;
     let githubPolls = 0;
+    // The sync server: what it holds under each id, and the code saved on this computer.
+    const serverBlobs = new Map<string, { version: number; data: string }>();
+    let serverCode: string | null = null;
     let syncFile: string | null = syncMock()?.file ?? null;
     let syncStamp = 1;
     let settings = {
@@ -407,6 +413,39 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
         }
         case 'youtube_set_enabled':
           sent.push({ type: 'youtube_set_enabled', enabled: args['enabled'] });
+          return null;
+        case 'sync_server_default':
+          return syncMock()?.server?.url ?? null;
+        case 'sync_server_check': {
+          const url = String(args['url']).trim().replace(/\/+$/u, '');
+          if (!url.startsWith('https://'))
+            throw new Error('the server address must start with https://');
+          if (url.includes('nothing-here'))
+            throw new Error('there is no Melodesk sync server at that address');
+          return url;
+        }
+        case 'sync_server_use':
+          if (typeof args['code'] === 'string') serverCode = args['code'];
+          if (serverCode === null) throw new Error('no-code');
+          return serverCode;
+        case 'sync_server_get': {
+          const blob = serverBlobs.get(String(args['id']));
+          return blob ?? null;
+        }
+        case 'sync_server_put': {
+          const id = String(args['id']);
+          const have = serverBlobs.get(id)?.version ?? 0;
+          if (args['ifVersion'] !== null && args['ifVersion'] !== have)
+            return { ok: false, version: have };
+          serverBlobs.set(id, { version: have + 1, data: String(args['data']) });
+          sent.push({ type: 'sync_server_put', id, data: String(args['data']) });
+          return { ok: true, version: have + 1 };
+        }
+        case 'sync_server_version':
+          return serverBlobs.get(String(args['id']))?.version ?? null;
+        case 'sync_server_forget':
+          serverCode = null;
+          sent.push({ type: 'sync_server_forget' });
           return null;
         case 'sync_cloud_options':
           return syncMock()?.clouds ?? [];

@@ -19,9 +19,11 @@ mod media;
 mod native;
 mod net;
 mod player;
+mod server;
 mod settings;
 mod shortcuts;
 mod sync;
+mod vault;
 
 /// The optional native modules compiled into this build. The UI turns off the features that need
 /// a module that is not here (see `requires` in `src/core/feature.ts`).
@@ -91,6 +93,13 @@ pub fn run() {
             local::local_write_tags,
             control::control_start,
             control::control_stop,
+            server::sync_server_default,
+            server::sync_server_check,
+            server::sync_server_use,
+            server::sync_server_get,
+            server::sync_server_put,
+            server::sync_server_version,
+            server::sync_server_forget,
             github::sync_github_available,
             github::sync_github_start,
             github::sync_github_poll,
@@ -116,6 +125,7 @@ pub fn run() {
             app.manage(net::NetState::default());
             app.manage(sync::SyncState::default());
             app.manage(github::GithubState::default());
+            app.manage(server::ServerState::default());
             app.manage(settings::SettingsState(std::sync::Mutex::new(
                 settings.clone(),
             )));

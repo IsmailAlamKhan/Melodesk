@@ -1,7 +1,7 @@
-import { Button } from '@melodesk/ui';
+import { Button, inputClass } from '@melodesk/ui';
 import { open } from '@tauri-apps/plugin-dialog';
 import { openUrl } from '@tauri-apps/plugin-opener';
-import { Cloud, FolderSync, GitBranch, RefreshCw } from 'lucide-react';
+import { Cloud, Copy, FolderSync, GitBranch, KeyRound, RefreshCw, Server } from 'lucide-react';
 import { useState } from 'react';
 import { useT } from '../../i18n/index';
 import {
@@ -11,14 +11,34 @@ import {
   stopSyncing,
   syncNow,
   connectCloud,
+  connectServer,
+  hideSyncCode,
+  showSyncCode,
   useSync,
 } from './controller';
 
 /** Keep settings the same on several computers, with as little to do as possible. */
 export function SyncSection() {
   const t = useT();
-  const { mode, folder, git, account, status, lastAt, error, clouds, githubAvailable, signIn } =
-    useSync();
+  const {
+    mode,
+    folder,
+    git,
+    account,
+    status,
+    lastAt,
+    error,
+    clouds,
+    githubAvailable,
+    signIn,
+    serverUrl,
+    shownCode,
+  } = useSync();
+  const [address, setAddress] = useState<string | null>(null);
+  const [joining, setJoining] = useState(false);
+  const [typedCode, setTypedCode] = useState('');
+  const [connecting, setConnecting] = useState(false);
+  const serverAddress = address ?? serverUrl ?? '';
   const [problem, setProblem] = useState<string | null>(null);
 
   const attempt = async (work: () => Promise<void>): Promise<void> => {
@@ -36,25 +56,37 @@ export function SyncSection() {
       if (typeof picked === 'string') await chooseFolder(picked);
     });
 
+  const shownProblem =
+    problem === 'bad-code'
+      ? t('sync.server.badCode')
+      : problem === 'no-such-code'
+        ? t('sync.server.noSuchCode')
+        : problem;
+
   const shownError =
-    problem ??
+    shownProblem ??
     (error === 'not-ours'
       ? t('sync.notOurs')
       : error === 'github-signed-out'
         ? t('sync.github.signedOut')
-        : error
-          ? t('sync.failed', { error })
-          : null);
-
+        : error === 'wrong-code' || error === 'no-code'
+          ? t('sync.server.lostCode')
+          : error === 'conflict'
+            ? t('sync.server.conflict')
+            : error
+              ? t('sync.failed', { error })
+              : null);
   const cloudName = clouds.find((c) => folder?.startsWith(c.path))?.name;
   const where =
-    mode === 'github'
-      ? account
-        ? t('sync.where.githubAs', { account })
-        : t('sync.where.github')
-      : cloudName
-        ? t('sync.where.cloud', { name: cloudName })
-        : t('sync.where.folder');
+    mode === 'server'
+      ? t('sync.where.server')
+      : mode === 'github'
+        ? account
+          ? t('sync.where.githubAs', { account })
+          : t('sync.where.github')
+        : cloudName
+          ? t('sync.where.cloud', { name: cloudName })
+          : t('sync.where.folder');
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="sync-title">
@@ -93,6 +125,88 @@ export function SyncSection() {
               </Button>
             </div>
             {clouds.length === 0 && <p className="text-xs text-fg-subtle">{t('sync.noClouds')}</p>}
+            <div className="flex flex-col gap-2 rounded-xl bg-bg-overlay p-3">
+              <h3 className="flex items-center gap-2 text-sm font-medium">
+                <Server className="size-4" />
+                {t('sync.server.title')}
+              </h3>
+              <p className="text-xs text-fg-muted">{t('sync.server.body')}</p>
+              <label className="flex flex-col gap-1 text-xs text-fg-muted">
+                {t('sync.server.address')}
+                <input
+                  className={inputClass}
+                  value={serverAddress}
+                  placeholder="https://your-project.vercel.app"
+                  onChange={(e) => {
+                    setAddress(e.target.value);
+                  }}
+                />
+              </label>
+              {joining && (
+                <label className="flex flex-col gap-1 text-xs text-fg-muted">
+                  {t('sync.server.codeLabel')}
+                  <input
+                    className={`${inputClass} font-mono`}
+                    value={typedCode}
+                    placeholder="ABCD-EFGH-IJKL-MNOP-QRST"
+                    onChange={(e) => {
+                      setTypedCode(e.target.value);
+                    }}
+                  />
+                </label>
+              )}
+              <div className="flex flex-wrap gap-2">
+                {joining ? (
+                  <>
+                    <Button
+                      variant="primary"
+                      disabled={connecting || !serverAddress.trim() || !typedCode.trim()}
+                      onClick={() => {
+                        setConnecting(true);
+                        void attempt(() => connectServer(serverAddress, typedCode)).finally(() => {
+                          setConnecting(false);
+                        });
+                      }}
+                    >
+                      {t('sync.server.join')}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setJoining(false);
+                        setTypedCode('');
+                      }}
+                    >
+                      {t('common.cancel')}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="primary"
+                      disabled={connecting || !serverAddress.trim()}
+                      onClick={() => {
+                        setConnecting(true);
+                        void attempt(() => connectServer(serverAddress)).finally(() => {
+                          setConnecting(false);
+                        });
+                      }}
+                    >
+                      {t('sync.server.start')}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setJoining(true);
+                      }}
+                    >
+                      <KeyRound className="size-4" />
+                      {t('sync.server.haveCode')}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
           </>
         ) : (
           <>
@@ -118,11 +232,48 @@ export function SyncSection() {
                 <RefreshCw className="size-4" />
                 {t('sync.now')}
               </Button>
+              {mode === 'server' && (
+                <Button variant="ghost" onClick={() => void attempt(showSyncCode)}>
+                  <KeyRound className="size-4" />
+                  {t('sync.server.showCode')}
+                </Button>
+              )}
               <Button variant="ghost" onClick={() => void stopSyncing()}>
                 {t('sync.stop')}
               </Button>
             </div>
           </>
+        )}
+
+        {shownCode && (
+          <div
+            className="flex flex-col gap-2 rounded-xl bg-bg-overlay p-3"
+            role="group"
+            aria-label={t('sync.server.yourCode')}
+          >
+            <p className="text-sm">{t('sync.server.writeDown')}</p>
+            <p
+              className="font-mono text-2xl tracking-widest"
+              aria-label={t('sync.server.yourCode')}
+            >
+              {shownCode}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  void navigator.clipboard.writeText(shownCode);
+                }}
+              >
+                <Copy className="size-4" />
+                {t('sync.server.copy')}
+              </Button>
+              <Button variant="primary" onClick={hideSyncCode}>
+                {t('sync.server.saved')}
+              </Button>
+            </div>
+            <p className="text-xs text-fg-subtle">{t('sync.server.noRecovery')}</p>
+          </div>
         )}
 
         {signIn && (

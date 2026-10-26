@@ -176,3 +176,33 @@ describe('plugins', () => {
     expect(io.writes()).toBe(writes);
   });
 });
+
+describe('the encrypted kind of sync', () => {
+  it('carries sign-ins and the music server, which the other kinds never do', async () => {
+    const a = computer();
+    const b = computer();
+    const io = folder();
+    a.set('plugin:lastfm:settings', '{"username":"ann","sessionKey":"SECRET-A"}', 100);
+    a.set('server:config', '{"url":"https://m.example.com","user":"ann","password":"pw"}', 100);
+    await syncOnce(a.db, io, 'a', new Date(0), true);
+    expect(io.text()).toContain('SECRET-A');
+    expect(io.text()).toContain('server:config');
+    const got = await syncOnce(b.db, io, 'b', new Date(0), true);
+    expect(got.applied.sort()).toEqual(['plugin:lastfm:settings', 'server:config']);
+    expect(JSON.parse(b.get('plugin:lastfm:settings') ?? '{}')).toEqual({
+      username: 'ann',
+      sessionKey: 'SECRET-A',
+    });
+    expect(b.get('server:config')).toContain('"password":"pw"');
+  });
+
+  it('is the only kind that sees the music server', async () => {
+    const a = computer();
+    const io = folder();
+    a.set('server:config', '{"password":"pw"}', 100);
+    a.set('audio:prefs', '{}', 100);
+    await syncOnce(a.db, io, 'a');
+    expect(io.text()).not.toContain('server:config');
+    expect(io.text()).not.toContain('pw');
+  });
+});

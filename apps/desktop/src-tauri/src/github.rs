@@ -3,8 +3,7 @@
 //! it at github.com/login/device and says yes), asking only for the `gist` permission, which can touch
 //! the person's gists and nothing else on their account. The sync file lives in one secret gist.
 //!
-//! The access token is kept in the operating system's keychain (macOS Keychain, Windows Credential
-//! Manager); on Linux, which has no keychain every desktop agrees on, in a file only the user can read.
+//! The access token is kept in the operating system's keychain (see `vault.rs`).
 //! It is never sent anywhere but api.github.com. Sign out forgets it (the person can also revoke it at
 //! github.com/settings/applications).
 //!
@@ -20,9 +19,12 @@ use tauri::{AppHandle, Runtime, State};
 use tauri_plugin_http::reqwest;
 
 use crate::sync::SyncState;
+use crate::vault;
 
 /// The client id of Melodesk's OAuth app on GitHub, set when it is built.
 const CLIENT_ID: Option<&str> = option_env!("MELODESK_GITHUB_CLIENT_ID");
+/// What the token is called in the keychain.
+const TOKEN_NAME: &str = "github-settings-sync";
 const API: &str = "https://api.github.com";
 const DEVICE_CODE_URL: &str = "https://github.com/login/device/code";
 const TOKEN_URL: &str = "https://github.com/login/oauth/access_token";
@@ -48,78 +50,16 @@ fn client_id() -> Option<&'static str> {
     CLIENT_ID.filter(|id| !id.trim().is_empty())
 }
 
-// ---- the token's home -----------------------------------------------------------------------
-
-#[cfg(any(target_os = "macos", target_os = "windows"))]
-mod vault {
-    const SERVICE: &str = "Melodesk";
-    const USER: &str = "github-settings-sync";
-
-    fn entry() -> Result<keyring::Entry, String> {
-        keyring::Entry::new(SERVICE, USER).map_err(|e| format!("cannot reach the keychain: {e}"))
-    }
-    pub fn load<R: tauri::Runtime>(_app: &tauri::AppHandle<R>) -> Option<String> {
-        entry().ok()?.get_password().ok()
-    }
-    pub fn save<R: tauri::Runtime>(_app: &tauri::AppHandle<R>, token: &str) -> Result<(), String> {
-        entry()?
-            .set_password(token)
-            .map_err(|e| format!("cannot save to the keychain: {e}"))
-    }
-    pub fn clear<R: tauri::Runtime>(_app: &tauri::AppHandle<R>) {
-        if let Ok(e) = entry() {
-            let _ = e.delete_credential();
-        }
-    }
-}
-
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
-mod vault {
-    use std::fs;
-    use std::path::PathBuf;
-    use tauri::Manager;
-
-    fn path<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Option<PathBuf> {
-        app.path()
-            .app_data_dir()
-            .ok()
-            .map(|d| d.join("github-token"))
-    }
-    pub fn load<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Option<String> {
-        let text = fs::read_to_string(path(app)?).ok()?;
-        let text = text.trim().to_string();
-        (!text.is_empty()).then_some(text)
-    }
-    pub fn save<R: tauri::Runtime>(app: &tauri::AppHandle<R>, token: &str) -> Result<(), String> {
-        let path = path(app).ok_or("cannot find the app's data folder")?;
-        if let Some(dir) = path.parent() {
-            fs::create_dir_all(dir).map_err(|e| e.to_string())?;
-        }
-        fs::write(&path, token).map_err(|e| format!("cannot save the token: {e}"))?;
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let _ = fs::set_permissions(&path, fs::Permissions::from_mode(0o600));
-        }
-        Ok(())
-    }
-    pub fn clear<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
-        if let Some(p) = path(app) {
-            let _ = fs::remove_file(p);
-        }
-    }
-}
-
 fn token<R: Runtime>(app: &AppHandle<R>, gh: &GithubState) -> Option<String> {
     let mut cached = gh.token.lock().ok()?;
     if cached.is_none() {
-        *cached = vault::load(app);
+        *cached = vault::load(app, TOKEN_NAME);
     }
     cached.clone()
 }
 
 fn forget_token<R: Runtime>(app: &AppHandle<R>, gh: &GithubState) {
-    vault::clear(app);
+    vault::clear(app, TOKEN_NAME);
     if let Ok(mut t) = gh.token.lock() {
         *t = None;
     }
@@ -509,7 +449,7 @@ pub async fn sync_github_poll<R: Runtime>(
         Poll::Failed(e) => Err(e),
         Poll::Done(token) => {
             *gh.pending.lock().map_err(|_| "lock")? = None;
-            vault::save(&app, &token)?;
+            vault::save(&app, TOKEN_NAME, &token)?;
             *gh.token.lock().map_err(|_| "lock")? = Some(token.clone());
             *gh.gist.lock().map_err(|_| "lock")? = None;
             sync.use_github();

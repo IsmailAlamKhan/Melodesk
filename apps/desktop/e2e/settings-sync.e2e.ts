@@ -124,3 +124,66 @@ test('signing in with GitHub shows a code, waits for approval, then syncs throug
     .toBe(true);
   await expect(page.getByText(/Not syncing yet/u)).toBeVisible();
 });
+
+test('the Melodesk sync server: start, see the code, and everything sent is unreadable', async ({
+  page,
+}) => {
+  await installTauri(page, {
+    sync: { folder: '/unused', server: { url: 'https://sync.example.com' } },
+    kv: {
+      'audio:prefs': '{"eqEnabled":true}',
+      'plugin:lastfm:settings': '{"username":"ann","sessionKey":"TOP-SECRET-KEY"}',
+      'server:config': '{"url":"https://m.example.com","user":"ann","password":"hunter2"}',
+    },
+  });
+  await open(page);
+  // The address the build comes with is filled in.
+  await expect(page.getByLabel('Server address')).toHaveValue('https://sync.example.com');
+  await page.getByRole('button', { name: /Start syncing/u }).click();
+  const code = page.getByLabel('Your sync code').last();
+  await expect(code).toHaveText(/^[A-Z2-7]{4}(-[A-Z2-7]{4}){4}$/u);
+  await expect(page.getByText('Syncing through the Melodesk sync server')).toBeVisible();
+  await expect
+    .poll(async () => (await sentCommands(page)).some((c) => c['type'] === 'sync_server_put'))
+    .toBe(true);
+  // What went to the server is encrypted: none of the sign-ins, nor the settings' names, can be read.
+  const put = (await sentCommands(page)).find((c) => c['type'] === 'sync_server_put');
+  const sent = String(put?.['data']);
+  for (const secret of ['TOP-SECRET-KEY', 'hunter2', 'audio:prefs', 'lastfm', 'eqEnabled'])
+    expect(sent).not.toContain(secret);
+  await page.getByRole('button', { name: 'I have saved it' }).click();
+  await expect(page.getByLabel('Your sync code')).toHaveCount(0);
+  // It can be shown again later.
+  await page.getByRole('button', { name: 'Show my sync code' }).click();
+  await expect(page.getByLabel('Your sync code').last()).toHaveText(
+    /^[A-Z2-7]{4}(-[A-Z2-7]{4}){4}$/u,
+  );
+});
+
+test('joining needs a real code, and a code with nothing under it is not accepted', async ({
+  page,
+}) => {
+  await installTauri(page, {
+    sync: { folder: '/unused', server: { url: 'https://sync.example.com' } },
+  });
+  await open(page);
+  await page.getByRole('button', { name: 'I already have a sync code' }).click();
+  await page.getByLabel('Sync code from your other computer').fill('nope');
+  await page.getByRole('button', { name: 'Join with this code' }).click();
+  await expect(page.getByRole('alert').filter({ hasText: 'not a sync code' })).toBeVisible();
+  await page.getByLabel('Sync code from your other computer').fill('abcd-efgh-ijkl-mnop-qrst');
+  await page.getByRole('button', { name: 'Join with this code' }).click();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Nothing is saved under that code' }),
+  ).toBeVisible();
+});
+
+test('an address with no sync server on it is said so', async ({ page }) => {
+  await installTauri(page, { sync: { folder: '/unused' } });
+  await open(page);
+  await page.getByLabel('Server address').fill('https://nothing-here.example.com');
+  await page.getByRole('button', { name: /Start syncing/u }).click();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'no Melodesk sync server' }),
+  ).toBeVisible();
+});

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-sync-server-default"
+description = "Enables the sync_server_default command without any pre-configured scope."
+commands.allow = ["sync_server_default"]
+
+[[permission]]
+identifier = "deny-sync-server-default"
+description = "Denies the sync_server_default command without any pre-configured scope."
+commands.deny = ["sync_server_default"]

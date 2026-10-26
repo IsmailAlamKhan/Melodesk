@@ -54,8 +54,17 @@ export function keepingSecrets(incoming: string, current: string | null): string
   return JSON.stringify({ ...theirs, ...secrets });
 }
 
-export const isSynced = (key: string): boolean =>
-  key.length < 256 && SYNCED.some((re) => re.test(key));
+/**
+ * Kept only when the file is encrypted end to end (the Melodesk sync server): a music server's address,
+ * user name and password. With the other places the file can be read by whoever runs them, so these
+ * stay on each computer.
+ */
+const ENCRYPTED_ONLY = [/^server:config$/u];
+
+/** Whether a setting is synced. `full` is the encrypted kind of sync, which also carries sign-ins. */
+export const isSynced = (key: string, full = false): boolean =>
+  key.length < 256 &&
+  (SYNCED.some((re) => re.test(key)) || (full && ENCRYPTED_ONLY.some((re) => re.test(key))));
 
 export interface SyncEntry {
   value: string;
@@ -89,7 +98,7 @@ export function buildFile(
 }
 
 /** The sync file in a text, or null if it is not one of ours (or from a newer version). */
-export function parseSyncFile(text: string): SyncFile | null {
+export function parseSyncFile(text: string, full = false): SyncFile | null {
   let data: unknown;
   try {
     data = JSON.parse(text);
@@ -105,7 +114,7 @@ export function parseSyncFile(text: string): SyncFile | null {
     for (const [key, e] of Object.entries(raw as Record<string, unknown>)) {
       const entry = e as Partial<SyncEntry> | null;
       if (
-        isSynced(key) &&
+        isSynced(key, full) &&
         typeof entry?.value === 'string' &&
         typeof entry.updatedAt === 'number' &&
         Number.isFinite(entry.updatedAt)

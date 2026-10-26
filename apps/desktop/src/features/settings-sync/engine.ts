@@ -28,15 +28,15 @@ export interface SyncResult {
 }
 
 /** This computer's synced settings, with when each last changed. */
-export async function collectLocal(db: SyncDb): Promise<Record<string, SyncEntry>> {
+export async function collectLocal(db: SyncDb, full = false): Promise<Record<string, SyncEntry>> {
   const rows = await db.select<{ key: string; value: string; updated_at: number | null }[]>(
     'SELECT key, value, updated_at FROM settings',
   );
   const entries: Record<string, SyncEntry> = {};
   for (const r of rows)
-    if (isSynced(r.key))
+    if (isSynced(r.key, full))
       entries[r.key] = {
-        value: isPluginSettings(r.key) ? withoutSecrets(r.value) : r.value,
+        value: !full && isPluginSettings(r.key) ? withoutSecrets(r.value) : r.value,
         updatedAt: r.updated_at ?? 0,
       };
   return entries;
@@ -52,17 +52,19 @@ export async function syncOnce(
   io: SyncIo,
   device: string,
   now: Date = new Date(),
+  /** The file is encrypted end to end, so it carries sign-ins and the music server too. */
+  full = false,
 ): Promise<SyncResult> {
   const text = await io.read();
-  const remote = text === null ? null : parseSyncFile(text);
+  const remote = text === null ? null : parseSyncFile(text, full);
   if (text !== null && remote === null) throw new Error('not-melodesk-sync-file');
-  const local = await collectLocal(db);
+  const local = await collectLocal(db, full);
   const merged = mergeEntries(local, remote?.entries ?? {});
   for (const key of merged.apply) {
     const entry = merged.entries[key];
     if (!entry) continue;
     let value = entry.value;
-    if (isPluginSettings(key)) {
+    if (!full && isPluginSettings(key)) {
       // Their settings, but this computer's own sign-ins stay as they are.
       const rows = await db.select<{ value: string }[]>(
         'SELECT value FROM settings WHERE key = $1',

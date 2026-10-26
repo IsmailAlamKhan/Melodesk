@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-sync-server-check"
+description = "Enables the sync_server_check command without any pre-configured scope."
+commands.allow = ["sync_server_check"]
+
+[[permission]]
+identifier = "deny-sync-server-check"
+description = "Denies the sync_server_check command without any pre-configured scope."
+commands.deny = ["sync_server_check"]

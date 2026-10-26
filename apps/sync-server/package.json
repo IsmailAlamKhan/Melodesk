@@ -1,0 +1,15 @@
+{
+  "name": "@melodesk/sync-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The small server behind Melodesk's optional end-to-end encrypted settings sync (runs on Vercel)",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "5.0.5"
+  }
+}
