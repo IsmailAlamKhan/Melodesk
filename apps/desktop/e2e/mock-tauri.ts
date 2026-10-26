@@ -89,6 +89,10 @@ export interface MockOptions {
   server?: { methods: Record<string, Record<string, unknown>>; password?: string };
   /** Answers to web requests that the UI makes through the app (feeds, stations): address -> text. */
   web?: Record<string, string>;
+  /** The version the app reports (default 0.0.1). */
+  appVersion?: string;
+  /** Saved settings the app starts with, as the database would have them (only on the first load). */
+  kv?: Record<string, string>;
   /** A playlist file the picker offers (Import a playlist). */
   importFile?: { path: string; text: string };
 }
@@ -212,6 +216,14 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
       (window as unknown as Record<string, unknown>)['__webMock'] = web;
     },
     [opts.local ?? null, opts.importFile ?? null, opts.server ?? null, opts.web ?? null] as const,
+  );
+  await page.addInitScript(
+    ([version, seed]) => {
+      (window as unknown as Record<string, unknown>)['__appVersion'] = version;
+      if (seed && localStorage.getItem('__mockKv') === null)
+        localStorage.setItem('__mockKv', JSON.stringify(Object.entries(seed)));
+    },
+    [opts.appVersion ?? '0.0.1', opts.kv ?? null] as const,
   );
   await page.addInitScript(() => {
     type Handler = (e: { event: string; id: number; payload: unknown }) => void;
@@ -518,6 +530,8 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
           return w['__nativeModules'] ?? null;
         case 'plugin:http|fetch_cancel':
         case 'plugin:http|fetch_cancel_body':
+        case 'plugin:app|version':
+          return w['__appVersion'];
         case 'plugin:deep-link|get_current':
         case 'set_native_labels':
         case 'player_reload':
