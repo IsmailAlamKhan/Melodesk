@@ -1,8 +1,8 @@
 import { Button } from '@melodesk/ui';
-import { Img } from '../../../core';
-import { useAccount } from '../../../data/hooks';
-import { useT } from '../../../i18n/index';
-import { sendCommand, setPlayerVisible } from '../../../player/ipc';
+import { Img } from '../../core';
+import { useAccount } from '../../data/hooks';
+import { useT } from '../../i18n/index';
+import { sendCommand, setPlayerVisible } from '../../player/ipc';
 
 export function AccountSection() {
   const t = useT();

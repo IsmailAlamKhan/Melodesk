@@ -390,6 +390,9 @@ export async function installTauri(page: Page, opts: MockOptions = {}): Promise<
           if (options.directory) return localMock()?.pickFolder ?? syncMock()?.folder ?? null;
           return importFile()?.path ?? null;
         }
+        case 'youtube_set_enabled':
+          sent.push({ type: 'youtube_set_enabled', enabled: args['enabled'] });
+          return null;
         case 'sync_set_folder':
           sent.push({ type: 'sync_set_folder', path: args['path'] });
           return args['path'] ?? null;

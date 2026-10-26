@@ -22,6 +22,7 @@
     "allow-discord-clear",
     "allow-open-mini-player",
     "allow-open-lyrics-overlay",
+    "allow-youtube-set-enabled",
     "allow-sync-set-folder",
     "allow-sync-read",
     "allow-sync-write",

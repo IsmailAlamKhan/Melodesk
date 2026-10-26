@@ -1,9 +1,9 @@
 import { Button } from '@melodesk/ui';
 import { getVersion } from '@tauri-apps/api/app';
 import { useEffect, useState } from 'react';
-import { toast } from '../../../app/toast';
-import { useT } from '../../../i18n/index';
-import { usePlayerStore } from '../../../player/store';
+import { toast } from '../../app/toast';
+import { useT } from '../../i18n/index';
+import { usePlayerStore } from '../../player/store';
 
 export function DiagnosticsSection() {
   const t = useT();

@@ -9,7 +9,7 @@ export default defineFeature({
   name: 'feature.search.name',
   description: 'feature.search.description',
   icon: Search,
-  core: true,
+  dependsOn: ['youtube-music'],
   contributes: {
     routes: [{ path: '/search', element: <SearchPage /> }],
     menus: [

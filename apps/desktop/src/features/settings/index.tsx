@@ -4,9 +4,7 @@ import { t } from '../../i18n';
 import { AppearanceSection } from './AppearanceSection';
 import { SettingsPage } from './SettingsPage';
 import { AboutSection } from './sections/AboutSection';
-import { AccountSection } from './sections/AccountSection';
 import { DesktopSection } from './sections/DesktopSection';
-import { DiagnosticsSection } from './sections/DiagnosticsSection';
 import { FeaturesSection } from './sections/FeaturesSection';
 import { UpdatesSection } from './sections/UpdatesSection';
 
@@ -19,12 +17,10 @@ export default defineFeature({
   contributes: {
     // Other features add their own sections (Shortcuts at 40, Storage at 50, Plugins at 60).
     settings: [
-      { id: 'account', category: 'general', order: 10, component: AccountSection },
       { id: 'appearance', category: 'appearance', order: 20, component: AppearanceSection },
       { id: 'desktop', category: 'general', order: 30, component: DesktopSection },
       { id: 'features', category: 'features', order: 45, component: FeaturesSection },
       { id: 'updates', category: 'about', order: 70, component: UpdatesSection },
-      { id: 'diagnostics', category: 'about', order: 80, component: DiagnosticsSection },
       { id: 'about', category: 'about', order: 90, component: AboutSection },
     ],
     routes: [{ path: '/settings', element: <SettingsPage /> }],

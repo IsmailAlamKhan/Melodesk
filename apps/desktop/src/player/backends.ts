@@ -1,4 +1,5 @@
 import type { PlayerCommand } from '@melodesk/bridge/protocol';
+import { useFeatures } from '../core/registry';
 
 /**
  * Where a playback command goes. The app has one player bar, one queue and one set of shortcuts, and
@@ -12,6 +13,8 @@ import type { PlayerCommand } from '@melodesk/bridge/protocol';
  */
 export interface PlaybackBackend {
   id: string;
+  /** The feature that provides it: the backend is left out while that feature is switched off. */
+  feature?: string;
   /** Whether it answers this command while it is the source that is playing. */
   handles: (command: PlayerCommand) => boolean;
   /** Whether this command would make it start something, so the playing source should step aside. */
@@ -40,7 +43,11 @@ export function registerBackend(backend: PlaybackBackend): () => void {
 }
 
 export const backendById = (id: string): PlaybackBackend | undefined => registry.get(id);
-export const allBackends = (): PlaybackBackend[] => [...registry.values()];
+/** The backends whose feature is on (a backend with no feature is always on). */
+export const allBackends = (): PlaybackBackend[] => {
+  const on = new Set(useFeatures.getState().active.map((f) => f.id));
+  return [...registry.values()].filter((b) => b.feature === undefined || on.has(b.feature));
+};
 export const fallbackId = (): string => allBackends().find((b) => b.fallback === true)?.id ?? '';
 
 export interface Route {
@@ -65,10 +72,24 @@ export function resolveRoute(
   return other ? { to: other.id, yieldFrom: null } : null;
 }
 
-/** Start every backend listening (once per window). Returns the way to stop them all. */
+const attached = new Map<string, () => void>();
+
+/** Start a backend listening to what its source reports. Does nothing if it already is. */
+export function attachBackend(id: string): void {
+  if (attached.has(id)) return;
+  const attach = registry.get(id)?.attach;
+  if (attach) attached.set(id, attach());
+}
+
+export function detachBackend(id: string): void {
+  attached.get(id)?.();
+  attached.delete(id);
+}
+
+/** Start every backend that is on listening (once per window). Returns the way to stop them all. */
 export function attachBackends(): () => void {
-  const stops = allBackends().flatMap((b) => (b.attach ? [b.attach()] : []));
+  for (const b of allBackends()) attachBackend(b.id);
   return () => {
-    for (const stop of stops) stop();
+    for (const id of [...attached.keys()]) detachBackend(id);
   };
 }

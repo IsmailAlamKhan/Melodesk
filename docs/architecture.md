@@ -90,10 +90,15 @@ starts something else. `player/` itself knows no source by name; the store's `so
   `fallback`: it answers when nothing is playing.
 - `features/local-music`: your own music, and servers, podcasts and radio through it.
 
-A new source is a backend plus the pages that browse it. **Still tied to YouTube Music**, to be done
-next: the pages that browse it (home, search, library, detail) and `player/data.ts` use its web player
-for data, the hidden window is always created, and its status (signed in, health) lives in the shared
-player store. So it cannot be switched off yet.
+A new source is a backend plus the pages that browse it. YouTube Music can be switched off in
+Settings → Features: Rust then closes the hidden player window (nothing is loaded from or sent to
+YouTube; the choice is kept for the next start), the pages that browse it (home, search, library,
+detail, browse, playlist import, resume, the audio engine) go with it, and the app opens on your own
+music. The backend is only offered to the router while its feature is on.
+
+Still shared rather than inside `features/youtube-music`: the data layer the pages use
+(`player/data.ts`, `data/hooks.ts`, `player/actions.ts`) and the web player's status fields in the
+player store. Moving those is cosmetic now that nothing depends on them being always there.
 
 ## Why a second window instead of a child webview
 
@@ -258,7 +263,7 @@ Besides the YouTube player the app has a second source, the user's own audio fil
 [local-music.md](local-music.md)). They play in an audio element of the main window, and the local
 player writes the same `track`, `state`, `queue` and `flags` into the player store as the bridge, so
 every screen that shows playback works on both. `usePlayerStore().source` says which one is playing;
-`player/router.ts` routes playback commands to it, and while it is `local` the web player's own
+`player/backends.ts` routes playback commands to it, and while it is `local` the web player's own
 events are ignored. Rust only walks folders, reads tags and cover art, and hands out the bytes of files
 inside the chosen folders (`src-tauri/src/local.rs`).
 

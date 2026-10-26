@@ -7,7 +7,7 @@ export default defineFeature({
   name: 'feature.detail.name',
   description: 'feature.detail.description',
   icon: Disc3,
-  core: true,
+  dependsOn: ['youtube-music'],
   contributes: {
     routes: [
       { path: '/artist/:id', element: <DetailPage kind="artist" /> },

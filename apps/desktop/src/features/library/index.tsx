@@ -16,7 +16,7 @@ export default defineFeature({
   name: 'feature.library.name',
   description: 'feature.library.description',
   icon: Library,
-  core: true,
+  dependsOn: ['youtube-music'],
   contributes: {
     routes: [
       {

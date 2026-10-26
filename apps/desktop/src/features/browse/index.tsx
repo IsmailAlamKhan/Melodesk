@@ -9,7 +9,7 @@ export default defineFeature({
   name: 'feature.browse.name',
   description: 'feature.browse.description',
   icon: Compass,
-  core: true,
+  dependsOn: ['youtube-music'],
   contributes: {
     routes: [
       {

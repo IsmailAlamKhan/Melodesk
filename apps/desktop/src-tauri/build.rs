@@ -7,6 +7,7 @@ fn main() {
             "player_command",
             "player_set_visible",
             "player_reload",
+            "youtube_set_enabled",
             "bridge_emit",
             "get_settings",
             "set_settings",

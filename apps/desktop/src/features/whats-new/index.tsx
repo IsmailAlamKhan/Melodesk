@@ -7,6 +7,7 @@ import { releasesUpTo } from './logic';
 import { RELEASES } from './releases';
 import { useWhatsNew } from './store';
 import { WhatsNewDialog } from './WhatsNewDialog';
+import { WhatsNewSection } from './WhatsNewSection';
 
 /** Open the window with everything that was added up to the version that is running. */
 const open = (): void => {
@@ -24,6 +25,7 @@ export default defineFeature({
   description: 'feature.whatsNew.description',
   icon: Gift,
   contributes: {
+    settings: [{ id: 'whats-new', category: 'about', order: 85, component: WhatsNewSection }],
     overlays: [
       { id: 'auto', component: AutoOpen },
       { id: 'dialog', component: WhatsNewDialog },

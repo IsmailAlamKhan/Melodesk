@@ -12,6 +12,7 @@ export default defineFeature({
   name: 'feature.audio-engine.name',
   description: 'feature.audio-engine.description',
   icon: SlidersVertical,
+  dependsOn: ['youtube-music'],
   defaultEnabled: false,
   start: startAudioSync,
 });

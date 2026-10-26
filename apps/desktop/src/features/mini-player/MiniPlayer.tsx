@@ -51,7 +51,8 @@ function MiniPlayerView() {
   const t = useT();
   const track = usePlayerStore((s) => s.track);
   const state = usePlayerStore((s) => s.state);
-  const ready = usePlayerStore((s) => s.ready);
+  // A source that plays here (your own music) does not wait for the web player.
+  const ready = usePlayerStore((s) => s.ready || (s.source !== '' && s.source !== 'youtube'));
   const position = usePosition();
   const [mode, setMode] = useState<Mode>(() => {
     try {

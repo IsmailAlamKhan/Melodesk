@@ -26,6 +26,7 @@ const COMMANDS = new Set<PlayerCommand['type']>([
 
 export const localDescriptor: PlaybackBackend = {
   id: SOURCE_ID,
+  feature: 'local-music',
   handles: (command) => COMMANDS.has(command.type),
 };
 

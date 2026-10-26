@@ -8,7 +8,7 @@ export default defineFeature({
   name: 'feature.home.name',
   description: 'feature.home.description',
   icon: Home,
-  core: true,
+  dependsOn: ['youtube-music'],
   contributes: {
     routes: [{ path: '/', element: <HomePage /> }],
     commands: () => [

@@ -1,4 +1,5 @@
 import { Button } from '@melodesk/ui';
+import { useFeatureActive } from '../../../core';
 import { useT } from '../../../i18n/index';
 import { setPlayerVisible } from '../../../player/ipc';
 import { usePlayerStore } from '../../../player/store';
@@ -8,6 +9,7 @@ import { Toggle } from './Toggle';
 export function DesktopSection() {
   const t = useT();
   const playerVisible = usePlayerStore((s) => s.playerVisible);
+  const youtube = useFeatureActive('youtube-music');
   const settings = useSettings((s) => s.settings);
   const settingsError = useSettings((s) => s.error);
   const update = useSettings((s) => s.update);
@@ -41,11 +43,13 @@ export function DesktopSection() {
           {settingsError}
         </p>
       )}
-      <div>
-        <Button onClick={() => void setPlayerVisible(!playerVisible)}>
-          {playerVisible ? t('settings.hidePlayer') : t('settings.showPlayer')}
-        </Button>
-      </div>
+      {youtube && (
+        <div>
+          <Button onClick={() => void setPlayerVisible(!playerVisible)}>
+            {playerVisible ? t('settings.hidePlayer') : t('settings.showPlayer')}
+          </Button>
+        </div>
+      )}
     </section>
   );
 }

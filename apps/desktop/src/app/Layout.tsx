@@ -1,7 +1,7 @@
 import { IconButton, cn } from '@melodesk/ui';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
-import { AppProviders, FeatureBoundary, Slot, useContribution } from '../core';
+import { AppProviders, FeatureBoundary, Slot, useContribution, useFeatureActive } from '../core';
 import { useT } from '../i18n';
 import { usePlayerStore } from '../player/store';
 import { HealthBanner } from './HealthBanner';
@@ -26,7 +26,10 @@ export function Layout() {
   const overlays = useContribution('overlays');
   const openPanel = useUiStore((s) => s.rightPanel);
   const togglePanel = useUiStore((s) => s.toggleRightPanel);
-  const ready = usePlayerStore((s) => s.ready);
+  // The page waits for the web player to attach; with YouTube Music off there is nothing to wait for.
+  const notReady = usePlayerStore((s) => !s.ready);
+  const youtubeOn = useFeatureActive('youtube-music');
+  const waiting = notReady && youtubeOn;
   const active = panels.find((p) => p.id === openPanel) ?? null;
   return (
     <AppProviders>
@@ -76,7 +79,7 @@ export function Layout() {
           </div>
           <OfflineBanner />
           <HealthBanner />
-          <main className={cn('min-h-0 flex-1 overflow-y-auto', !ready && 'opacity-80')}>
+          <main className={cn('min-h-0 flex-1 overflow-y-auto', waiting && 'opacity-80')}>
             {/* A page that throws shows an apology and a way out instead of a blank window; the
                 key gives the next page a fresh start. */}
             <FeatureBoundary key={location.pathname} featureId="page" fallback={<PageCrashed />}>

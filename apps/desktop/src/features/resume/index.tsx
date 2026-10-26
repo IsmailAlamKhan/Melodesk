@@ -9,6 +9,7 @@ export default defineFeature({
   name: 'feature.resume.name',
   description: 'feature.resume.description',
   icon: History,
+  dependsOn: ['youtube-music'],
   contributes: {
     slots: { 'home.top': [{ id: 'resume', order: 10, component: ResumeCard }] },
   },

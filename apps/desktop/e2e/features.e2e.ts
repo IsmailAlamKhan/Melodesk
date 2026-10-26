@@ -21,8 +21,10 @@ test('Settings lists the optional features and leaves the essential ones out', a
   await openFeatures(page);
   for (const name of ['Listening stats', 'Queue', 'Lyrics', 'Karaoke mode', 'Mini player'])
     await expect(toggle(page, name)).toBeVisible();
-  for (const name of ['Home', 'Settings', 'Search'])
-    await expect(toggle(page, name)).toHaveCount(0);
+  // Home and Search belong to YouTube Music now, so they switch off with it.
+  for (const name of ['YouTube Music', 'Home', 'Search'])
+    await expect(toggle(page, name)).toBeVisible();
+  await expect(toggle(page, 'Settings')).toHaveCount(0);
 });
 
 test('switching a feature off removes it from the sidebar and its page, and back on restores it', async ({

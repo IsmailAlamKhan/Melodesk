@@ -71,6 +71,7 @@ pub fn run() {
             player::player_command,
             player::player_set_visible,
             player::player_reload,
+            player::youtube_set_enabled,
             player::bridge_emit,
             settings::get_settings,
             settings::set_settings,
@@ -109,7 +110,9 @@ pub fn run() {
                 settings.clone(),
             )));
             discord::setup(&handle);
-            player::create_player_window(&handle)?;
+            if settings::youtube_enabled(&handle) {
+                player::create_player_window(&handle)?;
+            }
             native::setup(&handle)?;
             #[cfg(target_os = "linux")]
             media::setup(&handle);

@@ -6,6 +6,7 @@ use tauri::{AppHandle, Manager, Runtime};
 use tauri_plugin_store::StoreExt;
 
 const STORE_FILE: &str = "settings.json";
+const YOUTUBE_KEY: &str = "youtubeEnabled";
 const KEY: &str = "settings";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -87,6 +88,23 @@ pub fn load<R: Runtime>(app: &AppHandle<R>) -> Settings {
         }
     }
     settings
+}
+
+/// Whether YouTube Music is switched on (the default). It is kept apart from `Settings` so that the
+/// window settings page, which sends the whole `Settings` back, cannot change it by accident.
+pub fn youtube_enabled<R: Runtime>(app: &AppHandle<R>) -> bool {
+    app.store(STORE_FILE)
+        .ok()
+        .and_then(|store| store.get(YOUTUBE_KEY))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true)
+}
+
+pub fn set_youtube_enabled<R: Runtime>(app: &AppHandle<R>, enabled: bool) -> anyhow::Result<()> {
+    let store = app.store(STORE_FILE)?;
+    store.set(YOUTUBE_KEY, serde_json::Value::Bool(enabled));
+    store.save()?;
+    Ok(())
 }
 
 pub fn save<R: Runtime>(app: &AppHandle<R>, settings: &Settings) -> anyhow::Result<()> {

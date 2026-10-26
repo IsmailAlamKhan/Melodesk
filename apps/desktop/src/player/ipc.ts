@@ -18,7 +18,12 @@ const FORWARD_EVENT = 'local:command';
  */
 export async function sendCommand(command: PlayerCommand): Promise<void> {
   const route = resolveRoute(command, usePlayerStore.getState().source, allBackends());
-  if (!route) return;
+  if (!route) {
+    // Nothing is playing and no source answers (YouTube Music is switched off): a request for page
+    // data has to fail, not wait for an answer that cannot come.
+    if (command.type === 'data') throw new Error('no source is available for this');
+    return;
+  }
   if (route.yieldFrom) backendById(route.yieldFrom)?.yield?.();
   const target = backendById(route.to);
   if (target?.send) await target.send(command);

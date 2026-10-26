@@ -10,6 +10,7 @@ export default defineFeature({
   name: 'feature.playlist-import.name',
   description: 'feature.playlist-import.description',
   icon: FileUp,
+  dependsOn: ['youtube-music'],
   contributes: {
     overlays: [{ id: 'import-dialog', component: ImportHost }],
     slots: { 'sidebar.sections': [{ id: 'import', order: 20, component: SidebarImport }] },

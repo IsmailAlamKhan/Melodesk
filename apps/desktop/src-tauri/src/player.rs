@@ -281,11 +281,30 @@ pub fn create_player_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()>
     Ok(())
 }
 
+/// Switch YouTube Music on or off. Off closes the hidden player window, so nothing is loaded from
+/// YouTube and nothing is sent to it; on creates it again. The choice is kept for the next start.
+#[tauri::command]
+pub async fn youtube_set_enabled<R: Runtime>(
+    app: AppHandle<R>,
+    enabled: bool,
+) -> Result<(), String> {
+    crate::settings::set_youtube_enabled(&app, enabled).map_err(|e| e.to_string())?;
+    match (enabled, app.get_webview_window(PLAYER_LABEL)) {
+        (true, None) => create_player_window(&app).map_err(|e| e.to_string()),
+        (false, Some(window)) => window.destroy().map_err(|e| e.to_string()),
+        _ => Ok(()),
+    }
+}
+
 /// Fire-and-forget variant for native callers (tray, shortcuts, MPRIS); errors are logged.
 pub fn dispatch<R: Runtime>(app: &AppHandle<R>, command: PlayerCommand) {
     // A local song is playing: the UI's own player takes the command, not the YouTube page.
     if crate::local::is_active(app) {
         crate::local::forward(app, &command);
+        return;
+    }
+    // YouTube Music is switched off: there is no web player to take the command.
+    if app.get_webview_window(PLAYER_LABEL).is_none() {
         return;
     }
     if let Err(e) = player_command(app.clone(), command) {

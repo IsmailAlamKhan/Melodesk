@@ -120,6 +120,7 @@ function attach(): () => void {
 /** YouTube Music as a playback source: the official web player, in a hidden window, does the playing. */
 export const youtubeBackend: PlaybackBackend = {
   id: SOURCE_ID,
+  feature: 'youtube-music',
   fallback: true,
   // Everything the app can ask of a player, pages and account included, is answered by the web player.
   handles: () => true,
