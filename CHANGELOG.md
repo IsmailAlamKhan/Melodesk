@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.3](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.13.2...melodesk-v0.13.3) (2026-10-27)
+
+
+### Bug Fixes
+
+* video and Skip ad, checked against the real YouTube Music page ([accc050](https://github.com/IsmailAlamKhan/Melodesk/commit/accc05003159a0bfea976c2b00cc09e077750d86))
+
 ## [0.13.2](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.13.1...melodesk-v0.13.2) (2026-10-26)
 
 
