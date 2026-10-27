@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.13.2](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.13.1...melodesk-v0.13.2) (2026-10-26)
+
+
+### Bug Fixes
+
+* **sync:** fall back to the server's other name when the main one cannot be reached, and say what sync is now ([46a0d4f](https://github.com/IsmailAlamKhan/Melodesk/commit/46a0d4f64971bb1faeea890241822fc6139106f3))
+* **sync:** use only melodesk.ismailalam.com, no second address ([424cd8c](https://github.com/IsmailAlamKhan/Melodesk/commit/424cd8cc0fbc17cf62d34dfb1ac56906a1abc95d))
+
 ## [0.13.1](https://github.com/IsmailAlamKhan/Melodesk/compare/melodesk-v0.13.0...melodesk-v0.13.1) (2026-10-26)
 
 
