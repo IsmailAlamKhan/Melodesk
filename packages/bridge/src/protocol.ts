@@ -161,6 +161,8 @@ export const PlayerFlagsSchema = z.object({
   adPlaying: z.boolean(),
   /** The ad has a Skip button on the page right now (some ads cannot be skipped, others only after a few seconds). */
   adSkippable: z.boolean().default(false),
+  /** The playing song has a video to show (false only when the page's own switch says it has none). */
+  videoAvailable: z.boolean().default(true),
 });
 export type PlayerFlags = z.infer<typeof PlayerFlagsSchema>;
 

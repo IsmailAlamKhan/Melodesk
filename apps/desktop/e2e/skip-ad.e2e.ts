@@ -9,6 +9,7 @@ const flags = (over: Record<string, unknown>) => ({
     isVideo: false,
     adPlaying: false,
     adSkippable: false,
+    videoAvailable: true,
     ...over,
   },
 });

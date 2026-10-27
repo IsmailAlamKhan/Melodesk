@@ -105,6 +105,7 @@ test('light theme with a custom accent', async ({ page }) => {
       isVideo: false,
       adPlaying: false,
       adSkippable: false,
+      videoAvailable: true,
     },
   });
   await shot(page, 'light');

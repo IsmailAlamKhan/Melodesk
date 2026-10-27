@@ -246,9 +246,16 @@ export function PlayerBar() {
       <div className="hidden items-center justify-end gap-1 wide:flex">
         {track && fromYouTube && (
           <IconButton
-            label={flags?.isVideo ? t('player.switchToSong') : t('player.switchToVideo')}
+            label={
+              flags?.videoAvailable === false
+                ? t('player.noVideo')
+                : flags?.isVideo
+                  ? t('player.switchToSong')
+                  : t('player.switchToVideo')
+            }
             size="sm"
             aria-pressed={flags?.isVideo ?? false}
+            disabled={flags?.videoAvailable === false}
             className={cn(flags?.isVideo && 'text-accent')}
             onClick={() => {
               const video = !(flags?.isVideo ?? false);

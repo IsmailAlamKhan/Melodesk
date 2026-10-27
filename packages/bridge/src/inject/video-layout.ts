@@ -7,10 +7,18 @@
  */
 const CSS = `
 html, body { background: #000 !important; overflow: hidden !important; }
-ytmusic-app, ytmusic-app-layout, ytmusic-player-page, ytmusic-player {
-  transform: none !important; filter: none !important; contain: none !important;
+/* The page keeps its player page in a layer that is moved around (will-change: transform), which makes
+   it the frame of anything fixed inside it. Take the layer away, then lay the page over the window. */
+ytmusic-app, ytmusic-app-layout, ytmusic-player { transform: none !important; filter: none !important; contain: none !important; }
+ytmusic-player-page, ytmusic-player-page#player-page {
+  will-change: auto !important; transform: none !important; contain: none !important;
+  display: block !important; visibility: visible !important; opacity: 1 !important;
+  position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important;
+  z-index: 2147483645 !important; background: #000 !important; overflow: hidden !important;
 }
-ytmusic-player-page { display: block !important; visibility: visible !important; opacity: 1 !important; }
+/* Only the picture: no queue, lyrics tabs or switch. */
+ytmusic-player-page #side-panel, ytmusic-player-page .side-panel, ytmusic-player-page ytmusic-av-toggle,
+ytmusic-player-page .song-media-controls, ytmusic-player-page #player-bar-background { display: none !important; }
 #movie_player {
   position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important;
   max-width: none !important; max-height: none !important; margin: 0 !important;

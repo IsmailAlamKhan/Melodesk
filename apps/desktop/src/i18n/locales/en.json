@@ -1004,5 +1004,8 @@
   "sync.server.conflict": "Another computer changed the settings at the same moment. It will be tried again.",
   "whatsNew.v0_13_0.a": "Your whole configuration can sync, sign-ins included (Last.fm, ListenBrainz, your music server). It is encrypted on your computer with a sync code, so Melodesk’s server reads nothing.",
   "sync.server.useOwn": "Use my own server instead",
-  "sync.server.useDefault": "Use the Melodesk server"
+  "sync.server.useDefault": "Use the Melodesk server",
+  "player.noVideo": "This song has no video",
+  "whatsNew.v0_14_0.a": "Video works again: the video button now uses YouTube Music’s own Song/Video switch and shows the picture filling its window, and it says so when a song has no video.",
+  "whatsNew.v0_14_0.b": "Skip ad finds YouTube’s Skip button wherever the page puts it."
 }

@@ -15,11 +15,18 @@ export const selectors = {
   /** The "Video paused. Continue watching?" question (see idle-prompt.ts). */
   idlePrompt: 'ytmusic-you-there-renderer, yt-confirm-dialog-renderer, tp-yt-paper-dialog',
   /**
-   * The page's own "Skip" button on an ad that can be skipped. Only present once the ad allows it.
-   * We never click it by ourselves: only when the listener presses Skip ad in our player bar.
+   * The page's own "Skip" button on an ad that can be skipped. Only present once the ad allows it. It
+   * can sit outside the player element (the "detached" container), so this is looked for in the whole
+   * page. We never click it by ourselves: only when the listener presses Skip ad in our player bar.
    */
   skipAd:
-    '#movie_player .ytp-skip-ad-button, #movie_player .ytp-ad-skip-button, #movie_player .ytp-ad-skip-button-modern',
+    '.ytp-skip-ad-button, .ytp-ad-skip-button-modern, .ytp-ad-skip-button, .ytp-ad-skip-button-container button, .ytp-ad-skip-button-slot button',
+  /**
+   * The page's own Song / Video switch (it has `.song-button` and `.video-button`, and the attributes
+   * `is-video-playback-mode-selected` and `selected-item-has-video`). It is in the page even while the
+   * player page is closed. Missing for some accounts: then the picture is simply shown as it is.
+   */
+  avToggle: 'ytmusic-av-toggle',
   /** Present only while logged out. */
   signInLink: 'ytmusic-nav-bar a.sign-in-link, a[href*="accounts.google.com/ServiceLogin"]',
   /** Present only while logged in. */

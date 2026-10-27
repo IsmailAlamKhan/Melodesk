@@ -229,8 +229,14 @@ export class BridgeController {
         break;
       case 'skipAd': {
         // Only the page's own Skip button, only when it is there, only because the listener asked.
-        const skip = document.querySelector<HTMLElement>(selectors.skipAd);
-        if (skip && skip.offsetParent !== null) skip.click();
+        const skip = this.skipButton();
+        if (skip) {
+          skip.click();
+          // The page answers a moment later (the ad ends); report what is on screen then.
+          window.setTimeout(() => {
+            this.emitFlags(true);
+          }, 600);
+        }
         break;
       }
       case 'requestState':
@@ -292,13 +298,27 @@ export class BridgeController {
         p?.setPlaybackRate?.(cmd.rate);
         if (v) v.playbackRate = cmd.rate;
         break;
-      case 'setVideoMode':
-        getStore()?.dispatch({ type: 'SET_PLAYER_AUDIO_ONLY', payload: !cmd.video });
-        // The video lives in the player page, which the page only lays out while it is open.
-        if (cmd.video)
-          getStore()?.dispatch({ type: 'SET_PLAYER_PAGE_INFO', payload: { open: true } });
+      case 'setVideoMode': {
+        // The page's own Song / Video switch does the switching (it moves to the song's video version
+        // when there is one). Pressing it works while the player page is closed. Some accounts have
+        // no switch: then the picture is shown as the page has it.
+        const toggle = document.querySelector<HTMLElement>(selectors.avToggle);
+        if (toggle) {
+          const selected = toggle.getAttribute('is-video-playback-mode-selected') === 'true';
+          if (selected !== cmd.video)
+            toggle
+              .querySelector<HTMLElement>(cmd.video ? '.video-button' : '.song-button')
+              ?.click();
+        }
+        this.videoOn = cmd.video;
         setVideoLayout(cmd.video);
+        // The switch changes its attributes a moment after it is pressed.
+        for (const ms of [700, 2500])
+          window.setTimeout(() => {
+            this.emitFlags(true);
+          }, ms);
         break;
+      }
       case 'setAudio':
         this.audio.apply(cmd.config);
         break;
@@ -484,6 +504,22 @@ export class BridgeController {
   }
 
   private adTimer = 0;
+  /** The picture is on (this side's own record, for when the page has no Song / Video switch). */
+  private videoOn = false;
+
+  /** Whether an element can be seen (an element with a fixed position has no offsetParent). */
+  private shown(el: HTMLElement): boolean {
+    return el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
+  }
+
+  /** The ad's Skip button, if the page is showing one now. */
+  private skipButton(): HTMLElement | null {
+    for (const el of document.querySelectorAll<HTMLElement>(selectors.skipAd)) {
+      const button = el.closest<HTMLElement>('button') ?? el;
+      if (this.shown(button)) return button;
+    }
+    return null;
+  }
 
   private emitFlags(force: boolean): void {
     const state = safeCall(() => getStore()?.getState()) as
@@ -495,6 +531,19 @@ export class BridgeController {
       : undefined;
     const like =
       typeof likeRaw === 'string' ? likeRaw : (likeRaw as { status?: string } | undefined)?.status;
+    const toggle = document.querySelector<HTMLElement>(selectors.avToggle);
+    const isVideo = toggle
+      ? toggle.getAttribute('is-video-playback-mode-selected') === 'true'
+      : this.videoOn;
+    // With a switch, the page says whether this song has a video; without one, assume it can be shown.
+    const videoAvailable = toggle
+      ? toggle.hasAttribute('selected-item-has-video') || isVideo
+      : true;
+    const player = document.querySelector<HTMLElement>(selectors.moviePlayer);
+    const adPlaying =
+      state.player?.adPlaying === true ||
+      player?.classList.contains('ad-showing') === true ||
+      player?.classList.contains('ad-interrupting') === true;
     const flags: PlayerFlags = {
       likeStatus: like === 'LIKE' || like === 'DISLIKE' || like === 'INDIFFERENT' ? like : null,
       playbackRate: clamp(
@@ -504,11 +553,10 @@ export class BridgeController {
         0.1,
         4,
       ),
-      isVideo: state.player?.audioOnly === false,
-      adPlaying: state.player?.adPlaying === true,
-      adSkippable:
-        state.player?.adPlaying === true &&
-        (document.querySelector<HTMLElement>(selectors.skipAd)?.offsetParent ?? null) !== null,
+      isVideo,
+      adPlaying,
+      adSkippable: adPlaying && this.skipButton() !== null,
+      videoAvailable,
     };
     // The Skip button appears a few seconds into an ad without the page's state changing: look again.
     if (flags.adPlaying && !flags.adSkippable && !this.adTimer)
