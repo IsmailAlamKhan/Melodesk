@@ -25,8 +25,9 @@
     "fmt:rust": "node scripts/fmt-rust.mjs",
     "test:e2e": "pnpm --filter @melodesk/desktop test:e2e",
     "screenshots": "pnpm --filter @melodesk/desktop screenshots",
-    "check": "pnpm typecheck && pnpm lint && pnpm i18n:check && pnpm test && pnpm features:removable && pnpm test:e2e && pnpm fmt:rust && pnpm clippy && pnpm test:rust",
+    "check": "pnpm typecheck && pnpm lint && pnpm i18n:check && pnpm prompts:check && pnpm test && pnpm features:removable && pnpm test:e2e && pnpm fmt:rust && pnpm clippy && pnpm test:rust",
     "i18n:check": "node scripts/i18n-check.mjs",
+    "prompts:check": "node scripts/check-prompts.mjs",
     "i18n:new": "node scripts/i18n-check.mjs --new"
   },
   "devDependencies": {

@@ -30,7 +30,7 @@ skipped with a message).
   same `track`, `state`, `queue` and `flags` into the player store that the YouTube bridge writes, so
   the player bar, queue, Now Playing, lyrics, stats, sleep timer and keyboard shortcuts work on it
   without knowing the difference. Local ids look like `local:42`.
-- `player/router.ts` decides where a command goes: while a local song is playing (`store.source ===
+- `player/backends.ts` decides where a command goes: while a local song is playing (`store.source ===
 'local'`), playback commands go to the local player; pages and account actions still go to YouTube.
   Starting anything on YouTube stops the local song first. Tray, global shortcuts and media keys are
   routed by Rust (`local_set_active`) to the local player as `local:command` events. The mini player

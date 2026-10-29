@@ -13,8 +13,8 @@ export interface Release {
  */
 export const RELEASES: readonly Release[] = [
   {
-    version: '0.14.0',
-    highlights: ['whatsNew.v0_14_0.a', 'whatsNew.v0_14_0.b'],
+    version: '0.13.3',
+    highlights: ['whatsNew.v0_13_3.a', 'whatsNew.v0_13_3.b'],
   },
   {
     version: '0.13.0',

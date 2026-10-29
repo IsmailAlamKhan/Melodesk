@@ -28,6 +28,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm i18n:check
+      - run: pnpm prompts:check
       - run: pnpm test
       - run: pnpm features:removable
 

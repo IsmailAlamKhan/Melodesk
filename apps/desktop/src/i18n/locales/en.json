@@ -1006,6 +1006,6 @@
   "sync.server.useOwn": "Use my own server instead",
   "sync.server.useDefault": "Use the Melodesk server",
   "player.noVideo": "This song has no video",
-  "whatsNew.v0_14_0.a": "Video works again: the video button now uses YouTube Music’s own Song/Video switch and shows the picture filling its window, and it says so when a song has no video.",
-  "whatsNew.v0_14_0.b": "Skip ad finds YouTube’s Skip button wherever the page puts it."
+  "whatsNew.v0_13_3.a": "Video works again: the video button now uses YouTube Music’s own Song/Video switch and shows the picture filling its window, and it says so when a song has no video.",
+  "whatsNew.v0_13_3.b": "Skip ad finds YouTube’s Skip button wherever the page puts it."
 }
